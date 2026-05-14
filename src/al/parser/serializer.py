@@ -1,0 +1,143 @@
+"""AST → text serializer (canonical formatting).
+
+Roundtrip contract: ``parse(serialize(parse(x))) == parse(x)`` (AST equivalence,
+not byte equivalence). See docs/design/parser.md § 5.
+"""
+
+from __future__ import annotations
+
+from io import StringIO
+
+from al.parser.ast_nodes import (
+    Program,
+    Definition,
+    Field,
+    InlineText,
+    BlockScalar,
+    FieldGroup,
+    StepList,
+    Reference,
+    ReferenceList,
+    RefStep,
+    ParallelStep,
+    EachStep,
+    IfStep,
+    CANONICAL_FIELD_ORDER,
+)
+
+
+INDENT = "  "  # 2 spaces per level
+
+
+def serialize(program: Program) -> str:
+    """Serialize a :class:`Program` AST back to ``.al`` text."""
+    out = StringIO()
+    for i, d in enumerate(program.defs):
+        if i > 0:
+            out.write("\n\n")  # 2 blank lines between top-level defs
+        _emit_definition(d, out)
+    out.write("\n")  # trailing newline
+    return out.getvalue()
+
+
+def _emit_definition(d: Definition, out: StringIO) -> None:
+    """Emit a single top-level definition. Top-level fields are reordered
+    to canonical order; nested FieldGroup keys preserve original order
+    (they're user data, not part of the keyword set)."""
+    out.write(f"{d.kind} {d.name}:\n")
+    for f in _ordered_top_fields(d.fields):
+        _emit_field(f, depth=1, out=out)
+
+
+def _ordered_top_fields(fields: list[Field]) -> list[Field]:
+    """Sort top-level fields by canonical order; unknown keys keep their
+    relative order. **Only used at definition top level.**"""
+    order = {k: i for i, k in enumerate(CANONICAL_FIELD_ORDER)}
+    known = sorted(
+        [f for f in fields if f.name in order],
+        key=lambda f: order[f.name],
+    )
+    unknown = [f for f in fields if f.name not in order]
+    return known + unknown
+
+
+def _emit_field(f: Field, depth: int, out: StringIO) -> None:
+    """Emit a single field at the given indent depth."""
+    pad = INDENT * depth
+    v = f.value
+
+    if isinstance(v, InlineText):
+        out.write(f"{pad}{f.name}: {v.text}\n")
+        return
+
+    if isinstance(v, Reference):
+        out.write(f"{pad}{f.name}: {v.name}\n")
+        return
+
+    if isinstance(v, BlockScalar):
+        out.write(f"{pad}{f.name}: |\n")
+        body_pad = INDENT * (depth + 1)
+        for ln in v.text.splitlines() or [""]:
+            if ln:
+                out.write(f"{body_pad}{ln}\n")
+            else:
+                out.write("\n")
+        return
+
+    if isinstance(v, FieldGroup):
+        out.write(f"{pad}{f.name}:\n")
+        # nested groups: preserve user's original order (no canonical reordering)
+        for sub in v.fields:
+            _emit_field(sub, depth=depth + 1, out=out)
+        return
+
+    if isinstance(v, ReferenceList):
+        out.write(f"{pad}{f.name}:\n")
+        item_pad = INDENT * (depth + 1)
+        for n in v.names:
+            out.write(f"{item_pad}- {n}\n")
+        return
+
+    if isinstance(v, StepList):
+        out.write(f"{pad}{f.name}:\n")
+        for it in v.items:
+            _emit_step_item(it, depth=depth + 1, out=out)
+        return
+
+    raise TypeError(f"unknown FieldValue type: {type(v).__name__}")
+
+
+def _emit_step_item(it, depth: int, out: StringIO) -> None:
+    """Emit one StepItem at the given indent depth."""
+    pad = INDENT * depth
+
+    if isinstance(it, RefStep):
+        out.write(f"{pad}- {it.name}\n")
+        return
+
+    if isinstance(it, ParallelStep):
+        out.write(f"{pad}- parallel:\n")
+        for c in it.items:
+            _emit_step_item(c, depth=depth + 2, out=out)
+        return
+
+    if isinstance(it, EachStep):
+        out.write(f"{pad}- each {it.binding}:\n")
+        for c in it.items:
+            _emit_step_item(c, depth=depth + 2, out=out)
+        return
+
+    if isinstance(it, IfStep):
+        out.write(f"{pad}- if {it.cond}:\n")
+        for c in it.then:
+            _emit_step_item(c, depth=depth + 2, out=out)
+        if it.else_ is not None:
+            out.write(f"{pad}  else:\n")
+            for c in it.else_:
+                _emit_step_item(c, depth=depth + 2, out=out)
+        return
+
+    raise TypeError(f"unknown StepItem type: {type(it).__name__}")
+
+
+__all__ = ["serialize"]

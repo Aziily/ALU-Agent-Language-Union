@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}{{ repo }} @ {{ ts }} — agent-lang benchmark{% endblock %}
+
+{% block breadcrumb %}/ <a href="{{ url_for('run', ts=ts) }}"><code>{{ ts }}</code></a>
+/ <strong>{{ repo }}</strong>{% endblock %}
+
+{% macro pass_class(pct) -%}
+  {%- if pct >= 90 -%}pass-100
+  {%- elif pct >= 70 -%}pass-80
+  {%- elif pct >= 40 -%}pass-50
+  {%- else -%}pass-0
+  {%- endif -%}
+{%- endmacro %}
+
+{% block content %}
+<h1>{{ repo }} <small class="text-muted">@ {{ ts }}</small></h1>
+
+<div class="row mb-4">
+  {% for pipeline in ['baseline', 'al'] %}
+    {% set s = summary.get(pipeline, {}) %}
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">{{ pipeline }}</div>
+        <div class="card-body">
+          <h4 class="{{ pass_class(s.get('pass_pct', 0)) }}">
+            {{ "%.1f" | format(s.get('pass_pct', 0)) }}%
+          </h4>
+          <div class="meta-strip">
+            {{ s.get('total_passing', 0) }}/{{ s.get('total_tests', 0) }} tests pass<br>
+            {{ s.get('n_runs', 0) }} runs, {{ s.get('n_errors', 0) }} implementer errors<br>
+            {{ "{:,}".format(s.get('tokens', 0)) }} tokens
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<h2>Per-iteration</h2>
+
+<table class="table table-sm matrix">
+  <thead>
+    <tr>
+      <th>k</th>
+      <th colspan="6">Baseline</th>
+      <th colspan="6">Agent-lang</th>
+      <th>diff</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th>pass</th><th>fail</th><th>pass%</th><th>tokens</th><th>inject</th><th>err</th>
+      <th>pass</th><th>fail</th><th>pass%</th><th>tokens</th><th>inject</th><th>err</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% set bl_runs = per_repo.get('baseline', []) %}
+    {% set al_runs = per_repo.get('al', []) %}
+    {% set k_max = [bl_runs|length, al_runs|length] | max %}
+    {% for k in range(k_max) %}
+      {% set bl = bl_runs[k] if k < bl_runs|length else {} %}
+      {% set al = al_runs[k] if k < al_runs|length else {} %}
+      {% set bl_pct = (100.0 * bl.get('test_passing', 0) / bl.get('test_total', 1)) if bl.get('test_total', 0) > 0 else 0.0 %}
+      {% set al_pct = (100.0 * al.get('test_passing', 0) / al.get('test_total', 1)) if al.get('test_total', 0) > 0 else 0.0 %}
+      <tr>
+        <td><strong>k{{ k }}</strong></td>
+        <td>{{ bl.get('test_passing', '-') }}</td>
+        <td>{{ bl.get('test_failing', '-') }}</td>
+        <td class="{{ pass_class(bl_pct) }}">{{ "%.0f" | format(bl_pct) }}%</td>
+        <td>{{ "{:,}".format(bl.get('llm_total_tokens', 0)) }}</td>
+        <td>{{ bl.get('inject_injected', 0) }}/{{ bl.get('inject_injected', 0) + bl.get('inject_skipped', 0) }}</td>
+        <td>
+          {% if bl.get('error') %}
+            <span class="text-danger" title="{{ bl.get('error') }}">⚠</span>
+          {% endif %}
+          <a href="{{ url_for('cell', ts=ts, repo=repo, k=k, pipeline='baseline') }}">→</a>
+        </td>
+        <td>{{ al.get('test_passing', '-') }}</td>
+        <td>{{ al.get('test_failing', '-') }}</td>
+        <td class="{{ pass_class(al_pct) }}">{{ "%.0f" | format(al_pct) }}%</td>
+        <td>{{ "{:,}".format(al.get('llm_total_tokens', 0)) }}</td>
+        <td>{{ al.get('inject_injected', 0) }}/{{ al.get('inject_injected', 0) + al.get('inject_skipped', 0) }}</td>
+        <td>
+          {% if al.get('error') %}
+            <span class="text-danger" title="{{ al.get('error') }}">⚠</span>
+          {% endif %}
+          <a href="{{ url_for('cell', ts=ts, repo=repo, k=k, pipeline='al') }}">→</a>
+        </td>
+        <td>
+          <a href="{{ url_for('diff_prompts', ts=ts, repo=repo, k=k) }}"
+             title="BL vs AL side-by-side diff">⇆</a>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

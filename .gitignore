@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Reports — skeletons + summary stay tracked, raw transcripts + workdirs don't
+benchmarks/reports/**/raw/
+benchmarks/reports/**/workdirs/
+
+# Local env
+.env

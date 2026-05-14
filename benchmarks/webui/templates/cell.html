@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}{{ cell.project }}/k{{ cell.k_iter }}/{{ cell.pipeline }}{% endblock %}
+
+{% block breadcrumb %}/ <a href="{{ url_for('run', ts=ts) }}"><code>{{ ts }}</code></a>
+/ <a href="{{ url_for('repo', ts=ts, repo=cell.project) }}">{{ cell.project }}</a>
+/ <strong>k{{ cell.k_iter }} / {{ cell.pipeline }}</strong>{% endblock %}
+
+{% block content %}
+<h1>{{ cell.project }} <small class="text-muted">k{{ cell.k_iter }} · {{ cell.pipeline }}</small></h1>
+
+<div class="row mb-3">
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Test result</div>
+      <h4>{{ cell.test_passing }} / {{ cell.test_total }}
+        <small>{{ cell.test_failing }} fail</small></h4>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Tokens</div>
+      <h4>{{ "{:,}".format(cell.llm_total_tokens) }}</h4>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Inject</div>
+      <h4>{{ cell.inject_injected }}<small> / +{{ cell.inject_skipped }} skip</small></h4>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Implementer</div>
+      <h4>{% if cell.implementer_ok %}<span class="text-success">✓</span>{% else %}<span class="text-danger">✗</span>{% endif %}</h4>
+    </div></div>
+  </div>
+</div>
+
+{% if cell.error %}
+<div class="alert alert-danger">
+  <strong>Error:</strong> {{ cell.error }}
+</div>
+{% endif %}
+
+{% if cell.iter_outcomes %}
+<h3>Iter convergence
+  <small class="text-muted">
+    ({{ cell.n_iterations }} iter{{ 's' if cell.n_iterations != 1 else '' }},
+    {% if cell.final_iter_idx >= 0 %}
+      passed on iter {{ cell.final_iter_idx }}
+    {% else %}
+      never passed
+    {% endif %})
+  </small>
+</h3>
+<table class="table table-sm matrix">
+  <thead>
+    <tr>
+      <th>iter</th>
+      <th>passing</th>
+      <th>(w/xfail)</th>
+      <th>total</th>
+      <th>failing</th>
+      <th>tokens</th>
+      <th>impl_ok</th>
+      <th>inject</th>
+      <th>json_report</th>
+      <th>error</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for o in cell.iter_outcomes %}
+      <tr {% if o.iter == cell.final_iter_idx %}class="pass-100"{% endif %}>
+        <td><strong>{{ o.iter }}</strong></td>
+        <td>{{ o.test_passing }}</td>
+        <td>{{ o.test_passing_with_xfail }}</td>
+        <td>{{ o.test_total }}</td>
+        <td>{{ o.test_failing }}</td>
+        <td>{{ "{:,}".format(o.tokens) }}</td>
+        <td>{% if o.implementer_ok %}✓{% else %}✗{% endif %}</td>
+        <td>{{ o.inject_injected }}/{{ o.inject_injected + o.inject_skipped }}</td>
+        <td>{% if o.json_report_ok %}✓{% else %}—{% endif %}</td>
+        <td>{% if o.error %}<span class="text-danger small" title="{{ o.error }}">⚠</span>{% endif %}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<ul class="nav nav-tabs" role="tablist">
+  <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#prompt">Prompt ({{ "{:,}".format(cell.prompt_chars) }} ch)</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#completion">Completion ({{ "{:,}".format(cell.completion_chars) }} ch)</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#workdir">Workdir files ({{ workdir_files|length }}{% if workdir_truncated %}+{% endif %})</a></li>
+  <li class="nav-item">
+    <a class="nav-link" target="_blank"
+       href="{{ url_for('raw_passthrough', ts=ts, repo=cell.project, k=cell.k_iter, pipeline=cell.pipeline) }}">Raw file ↗</a>
+  </li>
+</ul>
+
+<div class="tab-content mt-3">
+  <div class="tab-pane fade show active" id="prompt">
+    <pre>{{ cell.prompt }}</pre>
+  </div>
+  <div class="tab-pane fade" id="completion">
+    <pre>{{ cell.completion }}</pre>
+  </div>
+  <div class="tab-pane fade" id="workdir">
+    {% if workdir_files %}
+      <table class="table table-sm">
+        <thead><tr><th>Path</th><th class="text-end">Size</th></tr></thead>
+        <tbody>
+        {% for path, size in workdir_files %}
+          <tr>
+            <td><a href="{{ url_for('cell_file', ts=ts, repo=cell.project, k=cell.k_iter, pipeline=cell.pipeline, rel_path=path) }}">{{ path }}</a></td>
+            <td class="text-end">{{ "{:,}".format(size) }} B</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% if workdir_truncated %}<p class="meta-strip">Listing truncated.</p>{% endif %}
+    {% else %}
+      <p class="meta-strip">No workdir saved.</p>
+    {% endif %}
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

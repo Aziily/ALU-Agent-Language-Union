@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Runs — agent-lang benchmark{% endblock %}
+
+{% block content %}
+<h1>Benchmark runs</h1>
+<p class="meta-strip">All runs under {{ config.RUNS_ROOT }}</p>
+
+{% if not runs %}
+  <div class="alert alert-info">No runs found. Run <code>./benchmark.sh</code> first.</div>
+{% else %}
+  <table class="table table-sm table-hover">
+    <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th class="text-end">Projects</th>
+        <th class="text-end">k</th>
+        <th class="text-end">BL pass%</th>
+        <th class="text-end">AL pass%</th>
+        <th class="text-end">Tax pp</th>
+        <th class="text-end">Tokens</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in runs %}
+      <tr>
+        <td><a href="{{ url_for('run', ts=r.timestamp) }}"><code>{{ r.timestamp }}</code></a></td>
+        <td class="text-end">{{ r.n_projects }}</td>
+        <td class="text-end">{{ r.k_repeats }}</td>
+        <td class="text-end pass-cell">{{ "%.1f" | format(r.baseline_pass_pct) }}%</td>
+        <td class="text-end pass-cell">{{ "%.1f" | format(r.al_pass_pct) }}%</td>
+        <td class="text-end pass-cell">{{ "%+.1f" | format(r.tax_pp) }}</td>
+        <td class="text-end pass-cell">{{ "{:,}".format(r.total_llm_tokens) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+{% endblock %}

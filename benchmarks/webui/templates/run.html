@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Run {{ ts }} — agent-lang benchmark{% endblock %}
+
+{% block breadcrumb %}/ <a href="{{ url_for('run', ts=ts) }}"><code>{{ ts }}</code></a>{% endblock %}
+
+{% macro pass_class(pct) -%}
+  {%- if pct >= 90 -%}pass-100
+  {%- elif pct >= 70 -%}pass-80
+  {%- elif pct >= 40 -%}pass-50
+  {%- else -%}pass-0
+  {%- endif -%}
+{%- endmacro %}
+
+{% block content %}
+<h1>Run <code>{{ ts }}</code></h1>
+
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="text-muted small">Baseline mean pass%</div>
+        <h3>{{ "%.1f" | format(bl_aggregate.mean_pct) }}%</h3>
+        <div class="meta-strip">n={{ bl_aggregate.n }} cells</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="text-muted small">Agent-lang mean pass%</div>
+        <h3>{{ "%.1f" | format(al_aggregate.mean_pct) }}%</h3>
+        <div class="meta-strip">n={{ al_aggregate.n }} cells</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="text-muted small">Tax (BL − AL)</div>
+        <h3>{{ "%+.1f" | format(meta.tax_pp) }} pp</h3>
+        <div class="meta-strip">per-test, not binary</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="text-muted small">Tokens</div>
+        <h3>{{ "{:,}".format(meta.total_llm_tokens) }}</h3>
+        <div class="meta-strip">
+          BL {{ "{:,}".format(tokens.get('baseline', 0)) }} ·
+          AL {{ "{:,}".format(tokens.get('al', 0)) }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>Per-project</h2>
+
+<table class="table table-sm table-hover matrix">
+  <thead>
+    <tr>
+      <th rowspan="2">Repo</th>
+      <th colspan="3">Baseline</th>
+      <th colspan="3">Agent-lang</th>
+      <th rowspan="2">Δ</th>
+    </tr>
+    <tr>
+      <th>pass%</th><th>runs</th><th>errors</th>
+      <th>pass%</th><th>runs</th><th>errors</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for repo in repos %}
+    {% set s = repo_summaries.get(repo, {}) %}
+    {% set bl = s.get('baseline', {}) %}
+    {% set al = s.get('al', {}) %}
+    {% set delta = bl.get('pass_pct', 0) - al.get('pass_pct', 0) %}
+    <tr>
+      <td><a href="{{ url_for('repo', ts=ts, repo=repo) }}">{{ repo }}</a></td>
+      <td class="pass-cell {{ pass_class(bl.get('pass_pct', 0)) }}">{{ "%.0f" | format(bl.get('pass_pct', 0)) }}%</td>
+      <td class="pass-cell">{{ bl.get('total_passing', 0) }}/{{ bl.get('total_tests', 0) }} · {{ bl.get('n_runs', 0) }}k</td>
+      <td class="pass-cell">{{ bl.get('n_errors', 0) }}</td>
+      <td class="pass-cell {{ pass_class(al.get('pass_pct', 0)) }}">{{ "%.0f" | format(al.get('pass_pct', 0)) }}%</td>
+      <td class="pass-cell">{{ al.get('total_passing', 0) }}/{{ al.get('total_tests', 0) }} · {{ al.get('n_runs', 0) }}k</td>
+      <td class="pass-cell">{{ al.get('n_errors', 0) }}</td>
+      <td class="pass-cell">{{ "%+.0f" | format(delta) }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<p class="meta-strip mt-3">
+  Note: "pass%" is per-test passing rate (passing / total) across {{ meta.k_repeats }} k-iter, not the binary all-pass metric.
+</p>
+{% endblock %}

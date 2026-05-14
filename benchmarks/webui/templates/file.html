@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ rel_path }}{% endblock %}
+
+{% block breadcrumb %}/ <a href="{{ url_for('run', ts=ts) }}"><code>{{ ts }}</code></a>
+/ <a href="{{ url_for('repo', ts=ts, repo=repo) }}">{{ repo }}</a>
+/ <a href="{{ url_for('cell', ts=ts, repo=repo, k=k, pipeline=pipeline) }}">k{{ k }}/{{ pipeline }}</a>
+/ <strong>{{ rel_path }}</strong>{% endblock %}
+
+{% block content %}
+<h2><code>{{ rel_path }}</code></h2>
+{% if truncated %}
+<div class="alert alert-warning">File truncated (>256 KB shown only first portion).</div>
+{% endif %}
+<pre>{{ content }}</pre>
+{% endblock %}

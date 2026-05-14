@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}{{ repo }}/k{{ k }} diff — {{ ts }}{% endblock %}
+
+{% block breadcrumb %}/ <a href="{{ url_for('run', ts=ts) }}"><code>{{ ts }}</code></a>
+/ <a href="{{ url_for('repo', ts=ts, repo=repo) }}">{{ repo }}</a>
+/ <strong>diff k{{ k }}</strong>{% endblock %}
+
+{% block head_extra %}
+<style>
+  /* difflib.HtmlDiff() emits <table class="diff"> with classes
+     diff_header / diff_next / diff_add / diff_sub / diff_chg */
+  table.diff {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 0.5em;
+  }
+  table.diff td { padding: 1px 4px; vertical-align: top; }
+  table.diff td.diff_header {
+    background: #f5f5f5; color: #888; text-align: right;
+    padding-right: 6px; user-select: none;
+  }
+  table.diff .diff_next { background: #f0f0f0; }
+  .diff_add { background: #ddffdd; }
+  .diff_chg { background: #ffffaa; }
+  .diff_sub { background: #ffdddd; }
+  table.diff th { background: #e9ecef; padding: 4px 8px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>{{ repo }} <small class="text-muted">k{{ k }} — Baseline vs Agent-lang</small></h1>
+
+<div class="alert alert-info">
+  <strong>Phase 1.H'.E diff view.</strong> Inspect what extra context the
+  AL pipeline receives over BL: skeleton text + authoring guide. The
+  "Prompt" tab is usually the interesting one (shows the AL extras).
+</div>
+
+<div class="row mb-3">
+  <div class="col-md-6">
+    <div class="card border-primary">
+      <div class="card-header bg-primary text-white">Baseline (k{{ k }})</div>
+      <div class="card-body">
+        <strong>Tests:</strong> {{ bl.test_passing }}/{{ bl.test_total }} pass
+        ({{ "%.1f"|format(100.0 * bl.test_passing / bl.test_total if bl.test_total else 0) }}%)<br>
+        <strong>Tokens:</strong> {{ "{:,}".format(bl.llm_total_tokens) }}<br>
+        <strong>Prompt:</strong> {{ "{:,}".format(bl.prompt_chars) }} chars,
+        <strong>Completion:</strong> {{ "{:,}".format(bl.completion_chars) }} chars<br>
+        <a href="{{ url_for('cell', ts=ts, repo=repo, k=k, pipeline='baseline') }}">
+          → full cell view
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card border-success">
+      <div class="card-header bg-success text-white">Agent-lang (k{{ k }})</div>
+      <div class="card-body">
+        <strong>Tests:</strong> {{ al.test_passing }}/{{ al.test_total }} pass
+        ({{ "%.1f"|format(100.0 * al.test_passing / al.test_total if al.test_total else 0) }}%)<br>
+        <strong>Tokens:</strong> {{ "{:,}".format(al.llm_total_tokens) }}<br>
+        <strong>Prompt:</strong> {{ "{:,}".format(al.prompt_chars) }} chars,
+        <strong>Completion:</strong> {{ "{:,}".format(al.completion_chars) }} chars<br>
+        <a href="{{ url_for('cell', ts=ts, repo=repo, k=k, pipeline='al') }}">
+          → full cell view
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ul class="nav nav-tabs" id="diffTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="prompt-tab" data-bs-toggle="tab"
+            data-bs-target="#prompt-pane" type="button" role="tab">
+      Prompt diff
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="completion-tab" data-bs-toggle="tab"
+            data-bs-target="#completion-pane" type="button" role="tab">
+      Completion diff
+    </button>
+  </li>
+</ul>
+
+<div class="tab-content border-start border-end border-bottom p-2">
+  <div class="tab-pane fade show active" id="prompt-pane" role="tabpanel">
+    {{ prompt_diff_html }}
+  </div>
+  <div class="tab-pane fade" id="completion-pane" role="tabpanel">
+    {{ completion_diff_html }}
+  </div>
+</div>
+{% endblock %}

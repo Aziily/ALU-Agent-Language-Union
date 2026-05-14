@@ -1,0 +1,83 @@
+# Dockerfile.benchmark — runs the Phase 1.H benchmark with Claude Code as
+# the implementer LLM. Claude Code is in turn redirected (via standard
+# ANTHROPIC_* env vars) to a third-party gateway (traxnode) so each LLM
+# call ultimately hits whatever model the gateway resolves
+# ``ANTHROPIC_DEFAULT_OPUS_MODEL`` to (e.g. gemini-3-flash).
+#
+# Build:
+#   docker build -f Dockerfile.benchmark -t agentlang-bench:latest .
+# Run (preferred — via ./benchmark.sh):
+#   ./benchmark.sh --n-projects 5 --k-repeats 5
+# Run (manual):
+#   docker run --rm \
+#     --env-file .env \
+#     -v "$(pwd)/thirdparty/commit0_repos:/workspace/thirdparty/commit0_repos:ro" \
+#     -v "$(pwd)/benchmarks/reports:/workspace/benchmarks/reports" \
+#     agentlang-bench:latest python -m benchmarks.harness --use-claude-code
+#
+# Required env (.env passed via --env-file):
+#   ANTHROPIC_AUTH_TOKEN          gateway token (rotate after sharing!)
+#   ANTHROPIC_BASE_URL            e.g. https://canvas.aipaibox.com
+#   ANTHROPIC_DEFAULT_OPUS_MODEL  e.g. gemini-3-flash
+#
+# Optional env (already baked in below or harmless extras):
+#   ANTHROPIC_DEFAULT_SONNET_MODEL / ANTHROPIC_DEFAULT_HAIKU_MODEL
+#   ANTHROPIC_DEFAULT_OPUS_MODEL_NAME / ..._SUPPORTED_CAPABILITIES
+
+FROM python:3.11-slim
+
+# Node 20 — for `@anthropic-ai/claude-code`
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+        curl ca-certificates gnupg git build-essential \
+ && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+ && apt-get install -y --no-install-recommends nodejs \
+ && rm -rf /var/lib/apt/lists/*
+
+# Container hygiene env (these don't carry secrets)
+ENV DISABLE_AUTOUPDATER=1 \
+    CLAUDE_CODE_ATTRIBUTION_HEADER=0 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Claude Code CLI
+RUN npm install -g --no-fund --no-audit @anthropic-ai/claude-code \
+ && claude --version
+
+WORKDIR /workspace
+
+# Copy project source (excludes via .dockerignore)
+COPY pyproject.toml ./
+COPY src/ ./src/
+COPY benchmarks/ ./benchmarks/
+COPY docs/ ./docs/
+COPY examples/ ./examples/
+COPY thirdparty/commit0/ ./thirdparty/commit0/
+COPY thirdparty/README.md ./thirdparty/
+COPY README.md README.zh.md LICENSE CONTRIBUTING.md ./
+
+# Install editable so `python -m agentlang` / `python -m benchmarks.harness` work,
+# plus commit0 CLI (its setup.py uses pyproject.toml — pin via editable install).
+# commit0 0.1.8 imports pydantic but doesn't list it in pyproject.toml deps —
+# install it explicitly so `commit0 test` doesn't ModuleNotFoundError.
+#
+# Phase 1.H'.B: full commit0 lite split needs cryptography (pyjwt), lxml
+# (parsel HTML/XML), numpy (minitorch). pre-install once at image-build
+# time so per-repo `pip install -e .` doesn't re-fetch them.
+RUN pip install --no-cache-dir -e . \
+ && pip install --no-cache-dir -e ./thirdparty/commit0 \
+ && pip install --no-cache-dir pydantic \
+ && pip install --no-cache-dir cryptography lxml numpy \
+ && pip install --no-cache-dir pytest-json-report
+
+# Reports + commit0 setup workdir are mounted at runtime (see benchmark.sh).
+RUN mkdir -p /workspace/benchmarks/reports /workspace/thirdparty/commit0_repos
+
+# commit0 test reads .commit0.yaml from CWD. We generate a container-local one
+# with container-internal paths so commit0 finds its bind-mounted repos.
+RUN printf 'base_dir: /workspace/thirdparty/commit0_repos\ndataset_name: wentingzhao/commit0_combined\ndataset_split: test\nrepo_split: lite\n' > /workspace/.commit0.yaml
+
+# Default entrypoint = mock run (sanity), override via `docker run ... <args>`.
+ENTRYPOINT ["python", "-m", "benchmarks.harness"]
+CMD ["--use-claude-code", "--n-projects", "1", "--k-repeats", "1"]

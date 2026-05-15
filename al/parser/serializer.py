@@ -30,9 +30,20 @@ INDENT = "  "  # 2 spaces per level
 
 
 def serialize(program: Program) -> str:
-    """Serialize a :class:`Program` AST back to ``.al`` text."""
+    """Serialize a :class:`Program` AST back to ``.al`` text.
+
+    Phase 1.AL.2: ``preamble`` declarations are emitted FIRST (in their
+    original relative order), then everything else in source order.
+    Preambles are conceptually module-level context shown to the LLM;
+    putting them at the top mirrors how Python ``import`` + module-level
+    constants appear at the top of a real source file.
+    """
     out = StringIO()
-    for i, d in enumerate(program.defs):
+    # Stable partition: preambles in original order, then the rest.
+    preambles = [d for d in program.defs if d.kind == "preamble"]
+    others = [d for d in program.defs if d.kind != "preamble"]
+    ordered = preambles + others
+    for i, d in enumerate(ordered):
         if i > 0:
             out.write("\n\n")  # 2 blank lines between top-level defs
         _emit_definition(d, out)

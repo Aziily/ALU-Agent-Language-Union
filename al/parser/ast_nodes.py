@@ -167,12 +167,17 @@ class Field:
 
 @dataclass
 class Definition:
-    """A top-level ``flow|agent|code|set <name>:`` definition.
+    """A top-level ``flow|agent|code|set|preamble <name>:`` definition.
 
     v0.6 added ``"set"`` as a valid kind.
+    v0.7 (Phase 1.AL.2) added ``"preamble"`` to express module-level Python
+    (imports, classes, constants, type aliases) as context for the LLM —
+    preambles are NOT injected into the workdir during the benchmark
+    pipeline; the original stripped Python already contains them. See
+    ``docs/preamble-design.md`` for rationale.
     """
 
-    kind: Literal["flow", "code", "agent", "set"]
+    kind: Literal["flow", "code", "agent", "set", "preamble"]
     name: str
     fields: list[Field] = field(default_factory=list)
     loc: Loc = field(default_factory=lambda: Loc(1, 1))
@@ -207,12 +212,15 @@ FIELD_VALUE_HINTS: dict[str, tuple[type, ...]] = {
     "tools": (ReferenceList,),
     "skills": (ReferenceList,),
     "extensions": (ReferenceList,),
+    # Phase 1.AL.2: preamble fields
+    "source": (InlineText,),  # optional file-path hint on preamble
 }
 
 #: The ordered key sequence used by the canonical serializer.
 CANONICAL_FIELD_ORDER: tuple[str, ...] = (
     "intent",
     "schedule",
+    "source",     # Phase 1.AL.2: preamble's file-path hint, near top
     "input",
     "output",
     "use",
@@ -225,3 +233,17 @@ CANONICAL_FIELD_ORDER: tuple[str, ...] = (
     "steps",
     "fallback",
 )
+
+
+#: Which fields each declarator-kind allows.
+#: Used by serializer + new fairness tests as a single source of truth.
+ALLOWED_FIELDS_BY_KIND: dict[str, set[str]] = {
+    "flow": {"intent", "schedule", "input", "output", "steps"},
+    "code": {"intent", "input", "output", "body"},
+    "agent": {"intent", "input", "output", "prompt", "fallback", "use"},
+    "set": {"intent", "tools", "skills", "extensions", "memory"},
+    # Phase 1.AL.2: preamble only takes optional `source:` hint and
+    # required `body:` (raw Python). It is shown to the LLM as
+    # module-level context but never injected by the benchmark pipeline.
+    "preamble": {"source", "body"},
+}

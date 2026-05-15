@@ -48,7 +48,7 @@ class Token:
 # Constants
 # ---------------------------------------------------------------------------
 
-DECLARATORS = {"flow", "agent", "code", "set"}
+DECLARATORS = {"flow", "agent", "code", "set", "preamble"}
 CONTROL_HEADS = {"parallel", "each", "if", "else"}
 
 _IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
@@ -148,8 +148,8 @@ def tokenize(source: str) -> list[Token]:
             i = j
             continue
 
-        # Top-level declarator: ``flow|agent|code|set <name>:``
-        m = re.match(r"(flow|agent|code|set)\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(?:#.*)?$", body)
+        # Top-level declarator: ``flow|agent|code|set|preamble <name>:``
+        m = re.match(r"(flow|agent|code|set|preamble)\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(?:#.*)?$", body)
         if m and indent == 0:
             decl, name = m.group(1), m.group(2)
             tokens.append(Token("DECL", decl, lineno, 1, 0))

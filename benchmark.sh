@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# benchmark.sh — run Phase 1.H benchmark inside the Docker container.
+# benchmark.sh — run the commit0 benchmark inside the al-bench Docker container.
 #
 # Prerequisites (host):
 #   1. Docker daemon running
@@ -22,7 +22,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-IMAGE="agentlang-bench:latest"
+IMAGE="al-bench:latest"
 ENV_FILE=".env"
 
 # --- 1. Sanity check .env ---------------------------------------------------

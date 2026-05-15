@@ -29,11 +29,10 @@ webui = ["flask>=3"]
 dev = ["pytest>=8.0", "ruff>=0.5", "black>=24.0"]
 
 [tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-dir]
-"" = "src"
+where = ["."]
+include = ["al*"]
+exclude = ["benchmarks*", "tests*", "docs*", "thirdparty*", "examples*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = [".", "src"]
+pythonpath = ["."]

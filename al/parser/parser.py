@@ -125,8 +125,12 @@ class _Parser:
     # ------------------------------------------------------------------
 
     def parse_definition(self) -> Definition:
-        """``Definition ::= ('flow'|'agent'|'code'|'set') IDENT ':' NEWLINE Field*``"""
-        decl = self.expect("DECL", "flow|agent|code|set")
+        """``Definition ::= ('flow'|'agent'|'code'|'set'|'preamble') IDENT ':' NEWLINE Field*``
+
+        Phase 1.AL.2: ``preamble`` added as a 5th declarator for
+        module-level Python context (see ``docs/preamble-design.md``).
+        """
+        decl = self.expect("DECL", "flow|agent|code|set|preamble")
         name_tok = self.expect("IDENT", "definition name")
         self.expect("COLON", "after definition header")
         self.expect("NEWLINE")

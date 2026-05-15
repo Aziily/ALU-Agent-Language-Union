@@ -49,7 +49,7 @@ WORKDIR /workspace
 
 # Copy project source (excludes via .dockerignore)
 COPY pyproject.toml ./
-COPY src/ ./src/
+COPY al/ ./al/
 COPY benchmarks/ ./benchmarks/
 COPY docs/ ./docs/
 COPY examples/ ./examples/

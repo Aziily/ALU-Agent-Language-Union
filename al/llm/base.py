@@ -1,6 +1,6 @@
 """LLMClient Protocol + CompletionResult dataclass.
 
-Both ``YunwuClient`` (real) and ``MockLLMClient`` (test) satisfy this
+Both ``OpenAICompatClient`` (real) and ``MockLLMClient`` (test) satisfy this
 Protocol. Phase ①.1 only needs sync ``complete``; streaming留 phase ②+。
 
 Token counting follows the OpenAI convention (prompt + completion tokens).

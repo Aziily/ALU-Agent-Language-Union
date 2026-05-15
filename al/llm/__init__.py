@@ -1,15 +1,24 @@
-"""LLM client abstraction for benchmark and (future) editor backend.
+"""LLM client abstraction for the agent-lang benchmark.
 
-公共符号：
+Public symbols:
 
-    LLMClient        Protocol (call: ``complete(prompt, *, system, ...)``)
-    CompletionResult dataclass (text + token counts + raw)
-    MockLLMClient    canned-response client for tests / dry-runs
-    YunwuClient      OpenAI-compatible POST against yunwu (spec § 8 default)
-    LLMConfig        dataclass loaded from ``.env``
-    load_api_config  helper to build LLMConfig
+    LLMClient              Protocol (callable: ``complete(prompt, *, system, ...)``)
+    CompletionResult       dataclass (text + token counts + raw)
+    MockLLMClient          canned-response client for tests / dry-runs
+    OpenAICompatClient     generic HTTP client for any OpenAI-compatible API
+                           (openai / yunwu / aipaibox / localhost proxies / ...)
+    ClaudeCodeClient       wrapper around ``claude -p`` CLI (Anthropic format)
+    LLMConfig              resolved config (api_key + base_url + model)
+    load_api_config        helper to load LLMConfig from .env + process env
 
-设计依据：`docs/PROJECT_PLAN.md § 2 阶段 ①.1` D-γ (yunwu / gpt-5.4-nano)。
+Two transports, one abstraction:
+  - ``OpenAICompatClient`` for any vendor that speaks OpenAI's
+    ``/v1/chat/completions`` shape (the common case).
+  - ``ClaudeCodeClient``  for Anthropic-format gateways via the
+    ``claude -p`` subprocess CLI.
+
+For backward compatibility, ``YunwuClient`` is re-exported as an alias
+for ``OpenAICompatClient`` (will be removed in a future release).
 """
 
 from __future__ import annotations
@@ -18,7 +27,7 @@ from al.llm.base import CompletionResult, LLMClient
 from al.llm.claude_code import ClaudeCodeClient, ClaudeCodeConfig
 from al.llm.env import LLMConfig, load_api_config
 from al.llm.mock import MockLLMClient
-from al.llm.yunwu import YunwuClient
+from al.llm.openai_compat import OpenAICompatClient, YunwuClient
 
 
 __all__ = [
@@ -28,6 +37,7 @@ __all__ = [
     "LLMClient",
     "LLMConfig",
     "MockLLMClient",
-    "YunwuClient",
+    "OpenAICompatClient",
+    "YunwuClient",  # alias for OpenAICompatClient — deprecated
     "load_api_config",
 ]

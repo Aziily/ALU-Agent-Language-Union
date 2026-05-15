@@ -1,4 +1,4 @@
-"""Tests for al.llm.yunwu.YunwuClient.
+"""Tests for al.llm.openai_compat.OpenAICompatClient.
 
 覆盖：
 - 缺 key 时 complete() raise（不发请求）
@@ -18,7 +18,7 @@ import json
 import httpx
 import pytest
 
-from al.llm import LLMClient, YunwuClient
+from al.llm import LLMClient, OpenAICompatClient
 from al.llm.env import LLMConfig
 
 
@@ -51,7 +51,7 @@ def _default_ok_body():
 def _client(transport, *, api_key="sk-test"):
     cfg = LLMConfig(api_key=api_key, base_url="https://yunwu.example/v1",
                     model="gpt-5.4-nano")
-    return YunwuClient(cfg, transport=transport, timeout=5.0)
+    return OpenAICompatClient(cfg, transport=transport, timeout=5.0)
 
 
 # ---------------------------------------------------------------------------
@@ -62,7 +62,7 @@ def _client(transport, *, api_key="sk-test"):
 def test_yunwu_satisfies_protocol():
     """No transport needed — just check the class implements the Protocol."""
     cfg = LLMConfig(api_key="x", base_url="https://x.example", model="m")
-    c = YunwuClient(cfg, transport=httpx.MockTransport(lambda r: httpx.Response(200, json={})))
+    c = OpenAICompatClient(cfg, transport=httpx.MockTransport(lambda r: httpx.Response(200, json={})))
     assert isinstance(c, LLMClient)
     c.close()
 
@@ -76,7 +76,7 @@ def test_complete_raises_when_no_api_key():
     cfg = LLMConfig(api_key=None, base_url="https://x.example/v1", model="m")
     captured = {}
     transport = _mock_response_factory(capture=captured)
-    c = YunwuClient(cfg, transport=transport)
+    c = OpenAICompatClient(cfg, transport=transport)
     with pytest.raises(RuntimeError, match="api_key is empty"):
         c.complete("hi")
     # And no HTTP request was made
@@ -193,7 +193,7 @@ def test_4xx_raises_runtime_error():
 
 def test_response_without_choices_raises():
     c = _client(_mock_response_factory(body={"weird": "shape"}))
-    with pytest.raises(RuntimeError, match="unexpected response"):
+    with pytest.raises(RuntimeError, match="unexpected OpenAI-compat response"):
         c.complete("p")
     c.close()
 
@@ -206,7 +206,7 @@ def test_response_without_choices_raises():
 def test_context_manager_closes_client():
     transport = _mock_response_factory()
     cfg = LLMConfig(api_key="k", base_url="https://x.example/v1", model="m")
-    with YunwuClient(cfg, transport=transport) as c:
+    with OpenAICompatClient(cfg, transport=transport) as c:
         r = c.complete("p")
         assert r.text  # responded
     # After exit, internal client closed — can still get config but no requests

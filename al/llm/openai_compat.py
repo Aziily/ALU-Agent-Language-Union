@@ -1,12 +1,22 @@
-"""YunwuClient — OpenAI-compatible POST to yunwu's chat completions API.
+"""Generic OpenAI-compatible chat-completions client.
 
-spec § 8 default: ``gpt-5.4-nano over yunwu``. yunwu mimics the OpenAI
-``/v1/chat/completions`` shape, so this implementation reuses the same
-request/response schema. If yunwu deviates, override ``base_url`` /
-override ``_build_request`` in a subclass.
+A single HTTP client that works against ANY OpenAI-compatible endpoint:
+  - openai.com         /v1/chat/completions
+  - yunwu.ai           /v1/chat/completions
+  - canvas.aipaibox    /v1/chat/completions
+  - localhost proxies  /v1/chat/completions
+  - mistral / together / anyscale / groq / ollama / ...
 
-Cost-tracking and rate-limiting are caller responsibility (Phase 1.G
-runner does it via ``CompletionResult.total_tokens``).
+Configuration is via :class:`LLMConfig` (loaded from .env). No
+endpoint-specific code lives here — every OpenAI-compatible API speaks
+the same request shape, so one client suffices.
+
+For Anthropic-format APIs (``/v1/messages`` with ``x-api-key`` header),
+use :class:`al.llm.claude_code.ClaudeCodeClient` instead (it wraps the
+``claude -p`` CLI which talks Anthropic format natively).
+
+Cost-tracking and rate-limiting are caller responsibility (the benchmark
+runner does it via :attr:`CompletionResult.total_tokens`).
 """
 
 from __future__ import annotations
@@ -20,8 +30,14 @@ from al.llm.base import CompletionResult
 from al.llm.env import LLMConfig, load_api_config
 
 
-class YunwuClient:
-    """Real LLM client. Implements the LLMClient Protocol."""
+class OpenAICompatClient:
+    """OpenAI-compatible HTTP client. Implements the ``LLMClient`` Protocol.
+
+    Generic over any endpoint that accepts the standard
+    ``POST /chat/completions`` shape with bearer auth. Endpoint specifics
+    (yunwu vs openai vs local proxy) are entirely configured via
+    :class:`LLMConfig` — there is no per-vendor code in this class.
+    """
 
     def __init__(
         self,
@@ -34,7 +50,8 @@ class YunwuClient:
 
         Args:
             config: Pre-loaded :class:`LLMConfig`. If None, calls
-                :func:`load_api_config()`.
+                :func:`load_api_config()` which reads ``.env`` /
+                process environment.
             timeout: Per-request HTTP timeout (seconds).
             transport: Override httpx transport for testing.
         """
@@ -62,7 +79,7 @@ class YunwuClient:
         temperature: float = 0.0,
         stop: list[str] | None = None,
     ) -> CompletionResult:
-        """POST to /chat/completions and parse the response.
+        """POST to ``/chat/completions`` and parse the response.
 
         Raises:
             RuntimeError: if API key missing or server returns non-2xx.
@@ -79,8 +96,8 @@ class YunwuClient:
         resp = self._client.post("/chat/completions", json=payload)
         if resp.status_code >= 300:
             raise RuntimeError(
-                f"yunwu chat/completions returned {resp.status_code}: "
-                f"{resp.text[:500]}"
+                f"{self.config.base_url}/chat/completions returned "
+                f"{resp.status_code}: {resp.text[:500]}"
             )
 
         data = resp.json()
@@ -95,7 +112,7 @@ class YunwuClient:
         temperature: float,
         stop: list[str] | None,
     ) -> dict[str, Any]:
-        """Construct an OpenAI-compatible chat completions payload."""
+        """Standard OpenAI chat completions payload."""
         messages: list[dict[str, str]] = []
         if system:
             messages.append({"role": "system", "content": system})
@@ -117,7 +134,7 @@ class YunwuClient:
             text = data["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as e:
             raise RuntimeError(
-                f"unexpected response shape from yunwu: {json.dumps(data)[:500]}"
+                f"unexpected OpenAI-compat response: {json.dumps(data)[:500]}"
             ) from e
 
         usage = data.get("usage") or {}
@@ -133,8 +150,13 @@ class YunwuClient:
         """Close the underlying HTTP client."""
         self._client.close()
 
-    def __enter__(self) -> "YunwuClient":
+    def __enter__(self) -> "OpenAICompatClient":
         return self
 
     def __exit__(self, *exc) -> None:
         self.close()
+
+
+# Backward-compat alias — keep ``YunwuClient`` working for one release so
+# external scripts that imported it don't break on this rename.
+YunwuClient = OpenAICompatClient

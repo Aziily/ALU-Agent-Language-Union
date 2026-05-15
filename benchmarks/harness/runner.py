@@ -7,7 +7,7 @@ per-step results to ``benchmarks/reports/runs/<timestamp>/``.
 Key design: ``run_pipeline`` accepts an ``llm: LLMClient`` and a
 ``run_tests`` callable for dependency injection — tests use MockLLMClient
 and a stub that doesn't actually subprocess into commit0. CLI usage in
-``__main__`` constructs real ``YunwuClient`` + ``run_tests`` from
+``__main__`` constructs real ``OpenAICompatClient`` + ``run_tests`` from
 ``commit0_adapter``.
 
 Pipeline A flow (per project, per k):

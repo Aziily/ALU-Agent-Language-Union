@@ -3,8 +3,16 @@
 Usage:
     python -m benchmarks.harness --mock --n-projects 2 --k-repeats 2
     python -m benchmarks.harness --real --n-projects 5 --k-repeats 5
+    python -m benchmarks.harness --use-claude-code --n-projects 16 --k-repeats 3
 
-Real mode reads YUNWU_API_KEY from .env and uses commit0 CLI for tests.
+Real mode uses :class:`al.llm.OpenAICompatClient` (an OpenAI-compatible
+HTTP client) configured via .env. Default resolution order for env vars:
+``LLM_API_KEY`` > ``OPENAI_API_KEY`` > ``YUNWU_API_KEY`` (same for
+``_BASE_URL`` / ``_MODEL``).
+
+``--use-claude-code`` mode uses :class:`al.llm.ClaudeCodeClient`
+(wraps the ``claude -p`` subprocess CLI) for Anthropic-format gateways.
+
 Mock mode uses MockLLMClient + a stub run_tests (everything 'passes')
 just to validate plumbing end-to-end without LLM cost.
 """
@@ -18,7 +26,7 @@ from pathlib import Path
 from al.llm import (
     ClaudeCodeClient,
     MockLLMClient,
-    YunwuClient,
+    OpenAICompatClient,
     load_api_config,
 )
 from al.llm.claude_code import ClaudeCodeConfig
@@ -39,7 +47,7 @@ def main(argv: list[str] | None = None) -> int:
         description="Phase 1 benchmark — agent-lang scaffolded vibe coding vs direct",
     )
     parser.add_argument("--real", action="store_true",
-                        help="use real YunwuClient + commit0 test runner")
+                        help="use real OpenAICompatClient + commit0 test runner")
     parser.add_argument("--mock", action="store_true",
                         help="use MockLLMClient + stub run_tests (default)")
     parser.add_argument("--use-claude-code", action="store_true",
@@ -110,9 +118,9 @@ def main(argv: list[str] | None = None) -> int:
         except RuntimeError as e:
             print(f"error: {e}", file=sys.stderr)
             return 1
-        llm = YunwuClient(cfg)
+        llm = OpenAICompatClient(cfg)
         run_tests_fn = real_run_tests
-        print(f"running REAL: yunwu @ {cfg.base_url} model={cfg.model}", file=sys.stderr)
+        print(f"running REAL: {cfg.base_url} model={cfg.model}", file=sys.stderr)
     else:
         llm = MockLLMClient(default=(
             "# === FILE: <see workdir> ===\n"

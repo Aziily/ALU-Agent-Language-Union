@@ -2,12 +2,13 @@ preamble __init__:
   source: deprecated/__init__.py
   imports: |
     from deprecated.classic import deprecated
-  body: |
-    '\nDeprecated Library\n==================\n\nPython ``@deprecated`` decorator to deprecate old python classes, functions or methods.\n\n'
+  constants: |
     __version__ = '1.2.14'
     __author__ = u'Laurent LAPORTE <tantale.solutions@gmail.com>'
     __date__ = 'unreleased'
     __credits__ = '(c) Laurent LAPORTE'
+  body: |
+    '\nDeprecated Library\n==================\n\nPython ``@deprecated`` decorator to deprecate old python classes, functions or methods.\n\n'
 
 
 preamble classic:
@@ -18,6 +19,8 @@ preamble classic:
     import platform
     import warnings
     import wrapt
+  constants: |
+    string_types = (type(b''), type(u''))
   body: |
     '\nClassic deprecation warning\n===========================\n\nClassic ``@deprecated`` decorator to deprecate old python classes, functions or methods.\n\n.. _The Warnings Filter: https://docs.python.org/3/library/warnings.html#the-warnings-filter\n'
     try:
@@ -30,7 +33,6 @@ preamble classic:
             _class_stacklevel = 2
         else:
             _class_stacklevel = 3
-    string_types = (type(b''), type(u''))
     class ClassicAdapter(wrapt.AdapterFactory):
         """
         Classic adapter -- *for advanced usage only*

@@ -6,7 +6,7 @@ preamble __init__:
     from .api_jwt import PyJWT, decode, encode
     from .exceptions import DecodeError, ExpiredSignatureError, ImmatureSignatureError, InvalidAlgorithmError, InvalidAudienceError, InvalidIssuedAtError, InvalidIssuerError, InvalidKeyError, InvalidSignatureError, InvalidTokenError, MissingRequiredClaimError, PyJWKClientConnectionError, PyJWKClientError, PyJWKError, PyJWKSetError, PyJWTError
     from .jwks_client import PyJWKClient
-  body: |
+  constants: |
     __version__ = '2.8.0'
     __title__ = 'PyJWT'
     __description__ = 'JSON Web Token implementation in Python'
@@ -33,6 +33,8 @@ preamble algorithms:
     from .exceptions import InvalidKeyError
     from .types import HashlibHash, JWKDict
     from .utils import base64url_decode, base64url_encode, der_to_raw_signature, force_bytes, from_base64url_uint, is_pem_format, is_ssh_key, raw_to_der_signature, to_base64url_uint
+  constants: |
+    requires_cryptography = {'RS256', 'RS384', 'RS512', 'ES256', 'ES256K', 'ES384', 'ES521', 'ES512', 'PS256', 'PS384', 'PS512', 'EdDSA'}
   body: |
     if sys.version_info >= (3, 8):
         from typing import Literal
@@ -58,7 +60,6 @@ preamble algorithms:
         AllowedKeys = AllowedRSAKeys | AllowedECKeys | AllowedOKPKeys
         AllowedPrivateKeys = RSAPrivateKey | EllipticCurvePrivateKey | Ed25519PrivateKey | Ed448PrivateKey
         AllowedPublicKeys = RSAPublicKey | EllipticCurvePublicKey | Ed25519PublicKey | Ed448PublicKey
-    requires_cryptography = {'RS256', 'RS384', 'RS512', 'ES256', 'ES256K', 'ES384', 'ES521', 'ES512', 'PS256', 'PS384', 'PS512', 'EdDSA'}
     class Algorithm(ABC):
         """
         The interface for an algorithm used to sign and verify tokens.
@@ -284,6 +285,15 @@ preamble api_jws:
     from .exceptions import DecodeError, InvalidAlgorithmError, InvalidSignatureError, InvalidTokenError
     from .utils import base64url_decode, base64url_encode
     from .warnings import RemovedInPyjwt3Warning
+  constants: |
+    _jws_global_obj = PyJWS()
+    encode = _jws_global_obj.encode
+    decode_complete = _jws_global_obj.decode_complete
+    decode = _jws_global_obj.decode
+    register_algorithm = _jws_global_obj.register_algorithm
+    unregister_algorithm = _jws_global_obj.unregister_algorithm
+    get_algorithm_by_name = _jws_global_obj.get_algorithm_by_name
+    get_unverified_header = _jws_global_obj.get_unverified_header
   body: |
     if TYPE_CHECKING:
         from .algorithms import AllowedPrivateKeys, AllowedPublicKeys
@@ -336,14 +346,6 @@ preamble api_jws:
             should not be fully trusted until signature verification is complete
             """
             pass
-    _jws_global_obj = PyJWS()
-    encode = _jws_global_obj.encode
-    decode_complete = _jws_global_obj.decode_complete
-    decode = _jws_global_obj.decode
-    register_algorithm = _jws_global_obj.register_algorithm
-    unregister_algorithm = _jws_global_obj.unregister_algorithm
-    get_algorithm_by_name = _jws_global_obj.get_algorithm_by_name
-    get_unverified_header = _jws_global_obj.get_unverified_header
 
 
 preamble api_jwt:
@@ -359,6 +361,11 @@ preamble api_jwt:
     from . import api_jws
     from .exceptions import DecodeError, ExpiredSignatureError, ImmatureSignatureError, InvalidAudienceError, InvalidIssuedAtError, InvalidIssuerError, MissingRequiredClaimError
     from .warnings import RemovedInPyjwt3Warning
+  constants: |
+    _jwt_global_obj = PyJWT()
+    encode = _jwt_global_obj.encode
+    decode_complete = _jwt_global_obj.decode_complete
+    decode = _jwt_global_obj.decode
   body: |
     if TYPE_CHECKING:
         from .algorithms import AllowedPrivateKeys, AllowedPublicKeys
@@ -387,10 +394,6 @@ preamble api_jwt:
             payloads.
             """
             pass
-    _jwt_global_obj = PyJWT()
-    encode = _jwt_global_obj.encode
-    decode_complete = _jwt_global_obj.decode_complete
-    decode = _jwt_global_obj.decode
 
 
 preamble exceptions:
@@ -508,7 +511,7 @@ preamble types:
   source: jwt/types.py
   imports: |
     from typing import Any, Callable, Dict
-  body: |
+  constants: |
     JWKDict = Dict[str, Any]
     HashlibHash = Callable[..., Any]
 
@@ -520,17 +523,18 @@ preamble utils:
     import binascii
     import re
     from typing import Union
+  constants: |
+    _PEMS = {b'CERTIFICATE', b'TRUSTED CERTIFICATE', b'PRIVATE KEY', b'PUBLIC KEY', b'ENCRYPTED PRIVATE KEY', b'OPENSSH PRIVATE KEY', b'DSA PRIVATE KEY', b'RSA PRIVATE KEY', b'RSA PUBLIC KEY', b'EC PRIVATE KEY', b'DH PARAMETERS', b'NEW CERTIFICATE REQUEST', b'CERTIFICATE REQUEST', b'SSH2 PUBLIC KEY', b'SSH2 ENCRYPTED PRIVATE KEY', b'X509 CRL'}
+    _PEM_RE = re.compile(b'----[- ]BEGIN (' + b'|'.join(_PEMS) + b')[- ]----\r?\n.+?\r?\n----[- ]END \\1[- ]----\r?\n?', re.DOTALL)
+    _CERT_SUFFIX = b'-cert-v01@openssh.com'
+    _SSH_PUBKEY_RC = re.compile(b'\\A(\\S+)[ \\t]+(\\S+)')
+    _SSH_KEY_FORMATS = [b'ssh-ed25519', b'ssh-rsa', b'ssh-dss', b'ecdsa-sha2-nistp256', b'ecdsa-sha2-nistp384', b'ecdsa-sha2-nistp521']
   body: |
     try:
         from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurve
         from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature, encode_dss_signature
     except ModuleNotFoundError:
         pass
-    _PEMS = {b'CERTIFICATE', b'TRUSTED CERTIFICATE', b'PRIVATE KEY', b'PUBLIC KEY', b'ENCRYPTED PRIVATE KEY', b'OPENSSH PRIVATE KEY', b'DSA PRIVATE KEY', b'RSA PRIVATE KEY', b'RSA PUBLIC KEY', b'EC PRIVATE KEY', b'DH PARAMETERS', b'NEW CERTIFICATE REQUEST', b'CERTIFICATE REQUEST', b'SSH2 PUBLIC KEY', b'SSH2 ENCRYPTED PRIVATE KEY', b'X509 CRL'}
-    _PEM_RE = re.compile(b'----[- ]BEGIN (' + b'|'.join(_PEMS) + b')[- ]----\r?\n.+?\r?\n----[- ]END \\1[- ]----\r?\n?', re.DOTALL)
-    _CERT_SUFFIX = b'-cert-v01@openssh.com'
-    _SSH_PUBKEY_RC = re.compile(b'\\A(\\S+)[ \\t]+(\\S+)')
-    _SSH_KEY_FORMATS = [b'ssh-ed25519', b'ssh-rsa', b'ssh-dss', b'ecdsa-sha2-nistp256', b'ecdsa-sha2-nistp384', b'ecdsa-sha2-nistp521']
 
 
 preamble warnings:

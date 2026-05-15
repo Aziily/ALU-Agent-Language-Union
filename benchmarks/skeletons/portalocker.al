@@ -1,6 +1,6 @@
 preamble __about__:
   source: portalocker/__about__.py
-  body: |
+  constants: |
     __package_name__ = 'portalocker'
     __author__ = 'Rick van Hattem'
     __email__ = 'wolph@wol.ph'
@@ -14,11 +14,7 @@ preamble __init__:
   imports: |
     from . import __about__, constants, exceptions, portalocker
     from .utils import BoundedSemaphore, Lock, RLock, TemporaryFileLock, open_atomic
-  body: |
-    try:
-        from .redis import RedisLock
-    except ImportError:
-        RedisLock = None
+  constants: |
     __package_name__ = __about__.__package_name__
     __author__ = __about__.__author__
     __email__ = __about__.__email__
@@ -35,6 +31,11 @@ preamble __init__:
     LOCK_UN: constants.LockFlags = constants.LockFlags.UNBLOCK
     LockFlags = constants.LockFlags
     __all__ = ['lock', 'unlock', 'LOCK_EX', 'LOCK_SH', 'LOCK_NB', 'LOCK_UN', 'LockFlags', 'LockException', 'Lock', 'RLock', 'AlreadyLocked', 'BoundedSemaphore', 'TemporaryFileLock', 'open_atomic', 'RedisLock']
+  body: |
+    try:
+        from .redis import RedisLock
+    except ImportError:
+        RedisLock = None
 
 
 preamble __main__:
@@ -46,7 +47,7 @@ preamble __main__:
     import pathlib
     import re
     import typing
-  body: |
+  constants: |
     base_path = pathlib.Path(__file__).parent.parent
     src_path = base_path / 'portalocker'
     dist_path = base_path / 'dist'
@@ -56,6 +57,7 @@ preamble __main__:
     _USELESS_ASSIGNMENT_RE = re.compile('^(?P<name>\\w+) = \\1\\n$')
     _TEXT_TEMPLATE = "'''\n{}\n'''\n\n"
     logger = logging.getLogger(__name__)
+  body: |
     if __name__ == '__main__':
         logging.basicConfig(level=logging.INFO)
         main()
@@ -114,11 +116,12 @@ preamble portalocker:
     import os
     import typing
     from . import constants, exceptions
-  body: |
+  constants: |
     LockFlags = constants.LockFlags
+    LOCKER: typing.Optional[typing.Callable[[typing.Union[int, HasFileno], int], typing.Any]] = None
+  body: |
     class HasFileno(typing.Protocol):
         pass
-    LOCKER: typing.Optional[typing.Callable[[typing.Union[int, HasFileno], int], typing.Any]] = None
     if os.name == 'nt':
         import msvcrt
         import pywintypes
@@ -145,10 +148,11 @@ preamble redis:
     import typing
     from redis import client
     from . import exceptions, utils
-  body: |
+  constants: |
     logger = logging.getLogger(__name__)
     DEFAULT_UNAVAILABLE_TIMEOUT = 1
     DEFAULT_THREAD_SLEEP_TIME = 0.1
+  body: |
     class PubSubWorkerThread(client.PubSubWorkerThread):
         pass
     class RedisLock(utils.LockBase):
@@ -227,7 +231,7 @@ preamble utils:
     import typing
     import warnings
     from . import constants, exceptions, portalocker
-  body: |
+  constants: |
     logger = logging.getLogger(__name__)
     DEFAULT_TIMEOUT = 5
     DEFAULT_CHECK_INTERVAL = 0.25
@@ -235,6 +239,7 @@ preamble utils:
     LOCK_METHOD = constants.LockFlags.EXCLUSIVE | constants.LockFlags.NON_BLOCKING
     __all__ = ['Lock', 'open_atomic']
     Filename = typing.Union[str, pathlib.Path]
+  body: |
     class LockBase(abc.ABC):
         timeout: float
         check_interval: float

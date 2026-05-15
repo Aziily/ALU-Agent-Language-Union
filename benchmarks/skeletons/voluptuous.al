@@ -5,10 +5,11 @@ preamble __init__:
     from voluptuous.util import *
     from voluptuous.validators import *
     from voluptuous.error import *
-  body: |
-    "Schema validation for Python data structures.\n\nGiven eg. a nested data structure like this:\n\n    {\n        'exclude': ['Users', 'Uptime'],\n        'include': [],\n        'set': {\n            'snmp_community': 'public',\n            'snmp_timeout': 15,\n            'snmp_version': '2c',\n        },\n        'targets': {\n            'localhost': {\n                'exclude': ['Uptime'],\n                'features': {\n                    'Uptime': {\n                        'retries': 3,\n                    },\n                    'Users': {\n                        'snmp_community': 'monkey',\n                        'snmp_port': 15,\n                    },\n                },\n                'include': ['Users'],\n                'set': {\n                    'snmp_community': 'monkeys',\n                },\n            },\n        },\n    }\n\nA schema like this:\n\n    >>> settings = {\n    ...   'snmp_community': str,\n    ...   'retries': int,\n    ...   'snmp_version': All(Coerce(str), Any('3', '2c', '1')),\n    ... }\n    >>> features = ['Ping', 'Uptime', 'Http']\n    >>> schema = Schema({\n    ...    'exclude': features,\n    ...    'include': features,\n    ...    'set': settings,\n    ...    'targets': {\n    ...      'exclude': features,\n    ...      'include': features,\n    ...      'features': {\n    ...        str: settings,\n    ...      },\n    ...    },\n    ... })\n\nValidate like so:\n\n    >>> schema({\n    ...   'set': {\n    ...     'snmp_community': 'public',\n    ...     'snmp_version': '2c',\n    ...   },\n    ...   'targets': {\n    ...     'exclude': ['Ping'],\n    ...     'features': {\n    ...       'Uptime': {'retries': 3},\n    ...       'Users': {'snmp_community': 'monkey'},\n    ...     },\n    ...   },\n    ... }) == {\n    ...   'set': {'snmp_version': '2c', 'snmp_community': 'public'},\n    ...   'targets': {\n    ...     'exclude': ['Ping'],\n    ...     'features': {'Uptime': {'retries': 3},\n    ...                  'Users': {'snmp_community': 'monkey'}}}}\n    True\n"
+  constants: |
     __version__ = '0.15.2'
     __author__ = 'alecthomas'
+  body: |
+    "Schema validation for Python data structures.\n\nGiven eg. a nested data structure like this:\n\n    {\n        'exclude': ['Users', 'Uptime'],\n        'include': [],\n        'set': {\n            'snmp_community': 'public',\n            'snmp_timeout': 15,\n            'snmp_version': '2c',\n        },\n        'targets': {\n            'localhost': {\n                'exclude': ['Uptime'],\n                'features': {\n                    'Uptime': {\n                        'retries': 3,\n                    },\n                    'Users': {\n                        'snmp_community': 'monkey',\n                        'snmp_port': 15,\n                    },\n                },\n                'include': ['Users'],\n                'set': {\n                    'snmp_community': 'monkeys',\n                },\n            },\n        },\n    }\n\nA schema like this:\n\n    >>> settings = {\n    ...   'snmp_community': str,\n    ...   'retries': int,\n    ...   'snmp_version': All(Coerce(str), Any('3', '2c', '1')),\n    ... }\n    >>> features = ['Ping', 'Uptime', 'Http']\n    >>> schema = Schema({\n    ...    'exclude': features,\n    ...    'include': features,\n    ...    'set': settings,\n    ...    'targets': {\n    ...      'exclude': features,\n    ...      'include': features,\n    ...      'features': {\n    ...        str: settings,\n    ...      },\n    ...    },\n    ... })\n\nValidate like so:\n\n    >>> schema({\n    ...   'set': {\n    ...     'snmp_community': 'public',\n    ...     'snmp_version': '2c',\n    ...   },\n    ...   'targets': {\n    ...     'exclude': ['Ping'],\n    ...     'features': {\n    ...       'Uptime': {'retries': 3},\n    ...       'Users': {'snmp_community': 'monkey'},\n    ...     },\n    ...   },\n    ... }) == {\n    ...   'set': {'snmp_version': '2c', 'snmp_community': 'public'},\n    ...   'targets': {\n    ...     'exclude': ['Ping'],\n    ...     'features': {'Uptime': {'retries': 3},\n    ...                  'Users': {'snmp_community': 'monkey'}}}}\n    True\n"
 
 
 preamble error:
@@ -127,7 +128,7 @@ preamble humanize:
     from voluptuous import Invalid, MultipleInvalid
     from voluptuous.error import Error
     from voluptuous.schema_builder import Schema
-  body: |
+  constants: |
     MAX_VALIDATION_ERROR_ITEM_LENGTH = 500
 
 
@@ -146,10 +147,17 @@ preamble schema_builder:
     from functools import cache, wraps
     from voluptuous import error as er
     from voluptuous.error import Error
-  body: |
+  constants: |
     PREVENT_EXTRA = 0
     ALLOW_EXTRA = 1
     REMOVE_EXTRA = 2
+    UNDEFINED = Undefined()
+    DefaultFactory = typing.Union[Undefined, typing.Callable[[], typing.Any]]
+    extra = Extra
+    primitive_types = (bool, bytes, int, str, float, complex)
+    Schemable = typing.Union['Schema', 'Object', collections.abc.Mapping, list, tuple, frozenset, set, bool, bytes, int, str, float, complex, type, object, dict, None, typing.Callable]
+    _sort_item = _compile_itemsort()
+  body: |
     class Undefined(object):
 
         def __nonzero__(self):
@@ -157,11 +165,6 @@ preamble schema_builder:
 
         def __repr__(self):
             return '...'
-    UNDEFINED = Undefined()
-    DefaultFactory = typing.Union[Undefined, typing.Callable[[], typing.Any]]
-    extra = Extra
-    primitive_types = (bool, bytes, int, str, float, complex)
-    Schemable = typing.Union['Schema', 'Object', collections.abc.Mapping, list, tuple, frozenset, set, bool, bytes, int, str, float, complex, type, object, dict, None, typing.Callable]
     class Schema(object):
         """A validation schema.
 
@@ -434,7 +437,6 @@ preamble schema_builder:
             :param extra: if set, overrides `extra` of this `Schema`
             """
             pass
-    _sort_item = _compile_itemsort()
     class Msg(object):
         """Report a user-friendly message if a schema fails to validate.
 
@@ -698,8 +700,9 @@ preamble util:
     from voluptuous.error import Invalid, LiteralInvalid, TypeInvalid
     from voluptuous.schema_builder import DefaultFactory
     from voluptuous.schema_builder import Schema, default_factory, raises
-  body: |
+  constants: |
     __author__ = 'tusharmakkar08'
+  body: |
     class DefaultTo(object):
         """Sets a value to default_value if none provided.
 
@@ -795,10 +798,17 @@ preamble validators:
     from functools import wraps
     from voluptuous.error import AllInvalid, AnyInvalid, BooleanInvalid, CoerceInvalid, ContainsInvalid, DateInvalid, DatetimeInvalid, DirInvalid, EmailInvalid, ExactSequenceInvalid, FalseInvalid, FileInvalid, InInvalid, Invalid, LengthInvalid, MatchInvalid, MultipleInvalid, NotEnoughValid, NotInInvalid, PathInvalid, RangeInvalid, TooManyValid, TrueInvalid, TypeInvalid, UrlInvalid
     from voluptuous.schema_builder import Schema, Schemable, message, raises
+  constants: |
+    Enum: typing.Union[type, None]
+    USER_REGEX = re.compile('(?:(^[-!#$%&\'*+/=?^_`{}|~0-9A-Z]+(\\.[-!#$%&\'*+/=?^_`{}|~0-9A-Z]+)*$|^"([\\001-\\010\\013\\014\\016-\\037!#-\\[\\]-\\177]|\\\\[\\001-\\011\\013\\014\\016-\\177])*"$))\\Z', re.IGNORECASE)
+    DOMAIN_REGEX = re.compile('(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\\.)+(?:[A-Z]{2,6}\\.?|[A-Z0-9-]{2,}\\.?$)|^\\[(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}\\]$)\\Z', re.IGNORECASE)
+    __author__ = 'tusharmakkar08'
+    Or = Any
+    Switch = Union
+    And = All
   body: |
     if typing.TYPE_CHECKING:
         from _typeshed import SupportsAllComparisons
-    Enum: typing.Union[type, None]
     try:
         from enum import Enum
     except ImportError:
@@ -808,9 +818,6 @@ preamble validators:
         basestring = str
     else:
         import urlparse
-    USER_REGEX = re.compile('(?:(^[-!#$%&\'*+/=?^_`{}|~0-9A-Z]+(\\.[-!#$%&\'*+/=?^_`{}|~0-9A-Z]+)*$|^"([\\001-\\010\\013\\014\\016-\\037!#-\\[\\]-\\177]|\\\\[\\001-\\011\\013\\014\\016-\\177])*"$))\\Z', re.IGNORECASE)
-    DOMAIN_REGEX = re.compile('(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\\.)+(?:[A-Z]{2,6}\\.?|[A-Z0-9-]{2,}\\.?$)|^\\[(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}\\]$)\\Z', re.IGNORECASE)
-    __author__ = 'tusharmakkar08'
     class Coerce(object):
         """Coerce a value to a type.
 
@@ -901,7 +908,6 @@ preamble validators:
         >>> with raises(MultipleInvalid, "Expected 1 2 or 3"):
         ...   validate(4)
         """
-    Or = Any
     class Union(_WithSubValidators):
         """Use the first validated value among those selected by discriminant.
 
@@ -922,7 +928,6 @@ preamble validators:
 
         Without the discriminant, the exception would be "extra keys not allowed @ data['b_val']"
         """
-    Switch = Union
     class All(_WithSubValidators):
         """Value must pass all validators.
 
@@ -935,7 +940,6 @@ preamble validators:
         >>> validate('10')
         10
         """
-    And = All
     class Match(object):
         """Value must be a string that matches the regular expression.
 

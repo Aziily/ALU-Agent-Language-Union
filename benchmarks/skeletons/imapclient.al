@@ -21,7 +21,7 @@ preamble config:
     import urllib.request
     from typing import Any, Callable, Dict, Optional, Tuple, TYPE_CHECKING, TypeVar
     import imapclient
-  body: |
+  constants: |
     T = TypeVar('T')
     OAUTH2_REFRESH_URLS = {'imap.gmail.com': 'https://accounts.google.com/o/oauth2/token', 'imap.mail.yahoo.com': 'https://api.login.yahoo.com/oauth2/get_token'}
     _oauth2_cache: Dict[Tuple[str, str, str, str], str] = {}
@@ -34,7 +34,7 @@ preamble datetime_util:
     from datetime import datetime
     from email.utils import parsedate_tz
     from .fixed_offset import FixedOffset
-  body: |
+  constants: |
     _SHORT_MONTHS = ' Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' ')
     _rfc822_dotted_time = re.compile('\\w+, ?\\d{1,2} \\w+ \\d\\d(\\d\\d)? \\d\\d?\\.\\d\\d?\\.\\d\\d?.*')
 
@@ -43,10 +43,11 @@ preamble exceptions:
   source: imapclient/exceptions.py
   imports: |
     import imaplib
-  body: |
+  constants: |
     IMAPClientError = imaplib.IMAP4.error
     IMAPClientAbortError = imaplib.IMAP4.abort
     IMAPClientReadOnlyError = imaplib.IMAP4.readonly
+  body: |
     class CapabilityError(IMAPClientError):
         """
         The command tried by the user needs a capability not installed
@@ -78,8 +79,9 @@ preamble fixed_offset:
     import datetime
     import time
     from typing import Optional
-  body: |
+  constants: |
     ZERO = datetime.timedelta(0)
+  body: |
     class FixedOffset(datetime.tzinfo):
         """
         This class describes fixed timezone offsets in hours and minutes
@@ -121,7 +123,7 @@ preamble imap_utf7:
   imports: |
     import binascii
     from typing import List, Union
-  body: |
+  constants: |
     AMPERSAND_ORD = ord('&')
     DASH_ORD = ord('-')
 
@@ -149,27 +151,9 @@ preamble imapclient:
     from .imap_utf7 import encode as encode_utf7
     from .response_parser import parse_fetch_response, parse_message_list, parse_response
     from .util import assert_imap_protocol, chunk, to_bytes, to_unicode
-  body: |
-    if hasattr(select, 'poll'):
-        POLL_SUPPORT = True
-    else:
-        POLL_SUPPORT = False
+  constants: |
     logger = getLogger(__name__)
     __all__ = ['IMAPClient', 'SocketTimeout', 'DELETED', 'SEEN', 'ANSWERED', 'FLAGGED', 'DRAFT', 'RECENT']
-    if 'XLIST' not in imaplib.Commands:
-        imaplib.Commands['XLIST'] = ('NONAUTH', 'AUTH', 'SELECTED')
-    if 'IDLE' not in imaplib.Commands:
-        imaplib.Commands['IDLE'] = ('NONAUTH', 'AUTH', 'SELECTED')
-    if 'STARTTLS' not in imaplib.Commands:
-        imaplib.Commands['STARTTLS'] = ('NONAUTH',)
-    if 'ID' not in imaplib.Commands:
-        imaplib.Commands['ID'] = ('NONAUTH', 'AUTH', 'SELECTED')
-    if 'UNSELECT' not in imaplib.Commands:
-        imaplib.Commands['UNSELECT'] = ('AUTH', 'SELECTED')
-    if 'ENABLE' not in imaplib.Commands:
-        imaplib.Commands['ENABLE'] = ('AUTH',)
-    if 'MOVE' not in imaplib.Commands:
-        imaplib.Commands['MOVE'] = ('AUTH', 'SELECTED')
     DELETED = b'\\Deleted'
     SEEN = b'\\Seen'
     ANSWERED = b'\\Answered'
@@ -185,6 +169,26 @@ preamble imapclient:
     _POPULAR_PERSONAL_NAMESPACES = (('', ''), ('INBOX.', '.'))
     _POPULAR_SPECIAL_FOLDERS = {SENT: ('Sent', 'Sent Items', 'Sent items'), DRAFTS: ('Drafts',), ARCHIVE: ('Archive',), TRASH: ('Trash', 'Deleted Items', 'Deleted Messages', 'Deleted'), JUNK: ('Junk', 'Spam')}
     _RE_SELECT_RESPONSE = re.compile(b'\\[(?P<key>[A-Z-]+)( \\((?P<data>.*)\\))?\\]')
+    _not_present = object()
+  body: |
+    if hasattr(select, 'poll'):
+        POLL_SUPPORT = True
+    else:
+        POLL_SUPPORT = False
+    if 'XLIST' not in imaplib.Commands:
+        imaplib.Commands['XLIST'] = ('NONAUTH', 'AUTH', 'SELECTED')
+    if 'IDLE' not in imaplib.Commands:
+        imaplib.Commands['IDLE'] = ('NONAUTH', 'AUTH', 'SELECTED')
+    if 'STARTTLS' not in imaplib.Commands:
+        imaplib.Commands['STARTTLS'] = ('NONAUTH',)
+    if 'ID' not in imaplib.Commands:
+        imaplib.Commands['ID'] = ('NONAUTH', 'AUTH', 'SELECTED')
+    if 'UNSELECT' not in imaplib.Commands:
+        imaplib.Commands['UNSELECT'] = ('AUTH', 'SELECTED')
+    if 'ENABLE' not in imaplib.Commands:
+        imaplib.Commands['ENABLE'] = ('AUTH',)
+    if 'MOVE' not in imaplib.Commands:
+        imaplib.Commands['MOVE'] = ('AUTH', 'SELECTED')
     class Namespace(tuple):
 
         def __new__(cls, personal, other, shared):
@@ -1240,7 +1244,6 @@ preamble imapclient:
             access to the original unquoted source.
             """
             pass
-    _not_present = object()
     class _dict_bytes_normaliser:
         """Wrap a dict with unicode/bytes keys and normalise the keys to
         bytes.
@@ -1276,8 +1279,7 @@ preamble response_lexer:
   imports: |
     from typing import Iterator, List, Optional, Tuple, TYPE_CHECKING, Union
     from .util import assert_imap_protocol
-  body: |
-    '\nA lexical analyzer class for IMAP responses.\n\nAlthough Lexer does all the work, TokenSource is the class to use for\nexternal callers.\n'
+  constants: |
     __all__ = ['TokenSource']
     CTRL_CHARS = frozenset((c for c in range(32)))
     ALL_CHARS = frozenset((c for c in range(256)))
@@ -1288,6 +1290,8 @@ preamble response_lexer:
     OPEN_SQUARE = ord('[')
     CLOSE_SQUARE = ord(']')
     DOUBLE_QUOTE = ord('"')
+  body: |
+    '\nA lexical analyzer class for IMAP responses.\n\nAlthough Lexer does all the work, TokenSource is the class to use for\nexternal callers.\n'
     class TokenSource:
         """
         A simple iterator for the Lexer class that also provides access to
@@ -1358,11 +1362,12 @@ preamble response_parser:
     from .response_lexer import TokenSource
     from .response_types import Address, BodyData, Envelope, SearchIds
     from .typing_imapclient import _Atom
-  body: |
-    '\nParsing for IMAP command responses with focus on FETCH responses as\nreturned by imaplib.\n\nInitially inspired by http://effbot.org/zone/simple-iterator-parser.htm\n'
+  constants: |
     __all__ = ['parse_response', 'parse_message_list']
     _msg_id_pattern = re.compile('(\\d+(?: +\\d+)*)')
     _ParseFetchResponseInnerDict = Dict[bytes, Optional[Union[datetime.datetime, int, BodyData, Envelope, _Atom]]]
+  body: |
+    '\nParsing for IMAP command responses with focus on FETCH responses as\nreturned by imaplib.\n\nInitially inspired by http://effbot.org/zone/simple-iterator-parser.htm\n'
 
 
 preamble response_types:
@@ -1374,6 +1379,8 @@ preamble response_types:
     from typing import Any, List, Optional, Tuple, TYPE_CHECKING, Union
     from .typing_imapclient import _Atom
     from .util import to_unicode
+  constants: |
+    _BodyDataType = Tuple[Union[bytes, int, 'BodyData'], '_BodyDataType']
   body: |
     @dataclasses.dataclass
     class Envelope:
@@ -1473,7 +1480,6 @@ preamble response_types:
         def __init__(self, *args: Any):
             super().__init__(*args)
             self.modseq: Optional[int] = None
-    _BodyDataType = Tuple[Union[bytes, int, 'BodyData'], '_BodyDataType']
     class BodyData(_BodyDataType):
         """
         Returned when parsing BODY and BODYSTRUCTURE responses.
@@ -1537,7 +1543,7 @@ preamble typing_imapclient:
   source: imapclient/typing_imapclient.py
   imports: |
     from typing import Tuple, Union
-  body: |
+  constants: |
     _AtomPart = Union[None, int, bytes]
     _Atom = Union[_AtomPart, Tuple['_Atom', ...]]
 
@@ -1548,7 +1554,7 @@ preamble util:
     import logging
     from typing import Iterator, Optional, Tuple, Union
     from . import exceptions
-  body: |
+  constants: |
     logger = logging.getLogger(__name__)
     _TupleAtomPart = Union[None, int, bytes]
     _TupleAtom = Tuple[Union[_TupleAtomPart, '_TupleAtom'], ...]
@@ -1558,7 +1564,7 @@ preamble version:
   source: imapclient/version.py
   imports: |
     from typing import Tuple
-  body: |
+  constants: |
     version_info = (3, 0, 1, 'final')
     version = _imapclient_version_string(version_info)
     maintainer = 'IMAPClient Maintainers'

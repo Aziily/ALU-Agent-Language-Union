@@ -4,12 +4,13 @@ preamble __init__:
     from parsel import xpathfuncs
     from parsel.csstranslator import css2xpath
     from parsel.selector import Selector, SelectorList
-  body: |
-    '\nParsel lets you extract text from XML/HTML documents using XPath\nor CSS selectors\n'
+  constants: |
     __author__ = 'Scrapy project'
     __email__ = 'info@scrapy.org'
     __version__ = '1.9.1'
     __all__ = ['Selector', 'SelectorList', 'css2xpath', 'xpathfuncs']
+  body: |
+    '\nParsel lets you extract text from XML/HTML documents using XPath\nor CSS selectors\n'
 
 
 preamble csstranslator:
@@ -22,6 +23,8 @@ preamble csstranslator:
     from cssselect.parser import Element, FunctionalPseudoElement, PseudoElement
     from cssselect.xpath import ExpressionError
     from cssselect.xpath import XPathExpr as OriginalXPathExpr
+  constants: |
+    _translator = HTMLTranslator()
   body: |
     if TYPE_CHECKING:
         from typing_extensions import Self
@@ -68,7 +71,6 @@ preamble csstranslator:
         pass
     class HTMLTranslator(TranslatorMixin, OriginalHTMLTranslator):
         pass
-    _translator = HTMLTranslator()
 
 
 preamble selector:
@@ -85,14 +87,17 @@ preamble selector:
     from packaging.version import Version
     from .csstranslator import GenericTranslator, HTMLTranslator
     from .utils import extract_regex, flatten, iflatten, shorten
-  body: |
-    'XPath and JMESPath selectors based on the lxml and jmespath Python\npackages.'
+  constants: |
     _SelectorType = TypeVar('_SelectorType', bound='Selector')
     _ParserType = Union[etree.XMLParser, etree.HTMLParser]
     _TostringMethodType = Literal['html', 'xml']
     lxml_version = Version(etree.__version__)
     lxml_huge_tree_version = Version('4.2')
     LXML_SUPPORTS_HUGE_TREE = lxml_version >= lxml_huge_tree_version
+    _ctgroup: Dict[str, CTGroupValue] = {'html': {'_parser': html.HTMLParser, '_csstranslator': HTMLTranslator(), '_tostring_method': 'html'}, 'xml': {'_parser': SafeXMLParser, '_csstranslator': GenericTranslator(), '_tostring_method': 'xml'}}
+    _NOT_SET = object()
+  body: |
+    'XPath and JMESPath selectors based on the lxml and jmespath Python\npackages.'
     class CannotRemoveElementWithoutRoot(Exception):
         pass
     class CannotRemoveElementWithoutParent(Exception):
@@ -108,7 +113,6 @@ preamble selector:
         _parser: Union[Type[etree.XMLParser], Type[html.HTMLParser]]
         _csstranslator: Union[GenericTranslator, HTMLTranslator]
         _tostring_method: str
-    _ctgroup: Dict[str, CTGroupValue] = {'html': {'_parser': html.HTMLParser, '_csstranslator': HTMLTranslator(), '_tostring_method': 'html'}, 'xml': {'_parser': SafeXMLParser, '_csstranslator': GenericTranslator(), '_tostring_method': 'xml'}}
     class SelectorList(List[_SelectorType]):
         """
         The :class:`SelectorList` class is a subclass of the builtin ``list``
@@ -235,7 +239,6 @@ preamble selector:
             Drop matched nodes from the parent for each element in this list.
             """
             pass
-    _NOT_SET = object()
     class Selector:
         """Wrapper for input data in HTML, JSON, or XML format, that allows
         selecting parts of it using selection expressions.
@@ -464,7 +467,7 @@ preamble xpathfuncs:
     from typing import Any, Callable, Optional
     from lxml import etree
     from w3lib.html import HTML5_WHITESPACE
-  body: |
+  constants: |
     regex = f'[{HTML5_WHITESPACE}]+'
     replace_html5_whitespaces = re.compile(regex).sub
 

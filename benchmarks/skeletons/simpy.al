@@ -11,10 +11,11 @@ preamble __init__:
     from simpy.resources.resource import PreemptiveResource, PriorityResource, Resource
     from simpy.resources.store import FilterStore, PriorityItem, PriorityStore, Store
     from simpy.rt import RealtimeEnvironment
-  body: |
-    "\nThe ``simpy`` module aggregates SimPy's most used components into a single\nnamespace. This is purely for convenience. You can of course also access\neverything (and more!) via their actual submodules.\n\nThe following tables list all the available components in this module.\n\n{toc}\n\n"
+  constants: |
     __all__ = ['AllOf', 'AnyOf', 'Container', 'Environment', 'Event', 'FilterStore', 'Interrupt', 'PreemptiveResource', 'PriorityItem', 'PriorityResource', 'PriorityStore', 'Process', 'RealtimeEnvironment', 'Resource', 'SimPyException', 'Store', 'Timeout']
     _toc = (('Environments', (Environment, RealtimeEnvironment)), ('Events', (Event, Timeout, Process, AllOf, AnyOf, Interrupt)), ('Resources', (Resource, PriorityResource, PreemptiveResource, Container, Store, PriorityItem, PriorityStore, FilterStore)), ('Exceptions', (SimPyException, Interrupt)))
+  body: |
+    "\nThe ``simpy`` module aggregates SimPy's most used components into a single\nnamespace. This is purely for convenience. You can of course also access\neverything (and more!) via their actual submodules.\n\nThe following tables list all the available components in this module.\n\n{toc}\n\n"
     if __doc__:
         __doc__ = __doc__.format(toc=_compile_toc(_toc))
         assert set(__all__) == {obj.__name__ for _, objs in _toc for obj in objs}
@@ -33,10 +34,12 @@ preamble core:
     from types import MethodType
     from typing import TYPE_CHECKING, Any, Generic, Iterable, List, Optional, Tuple, Type, TypeVar, Union
     from simpy.events import NORMAL, URGENT, AllOf, AnyOf, Event, EventPriority, Process, ProcessGenerator, Timeout
-  body: |
-    '\nCore components for event-discrete simulation environments.\n\n'
+  constants: |
     Infinity: float = float('inf')
     T = TypeVar('T')
+    SimTime = Union[int, float]
+  body: |
+    '\nCore components for event-discrete simulation environments.\n\n'
     class BoundClass(Generic[T]):
         """Allows classes to behave like methods.
 
@@ -70,7 +73,6 @@ preamble core:
             """Used as callback in :meth:`Environment.run()` to stop the simulation
             when the *until* event occurred."""
             pass
-    SimTime = Union[int, float]
     class Environment:
         """Execution environment for an event-based simulation. The passing of time
         is simulated by stepping from event to event.
@@ -174,15 +176,20 @@ preamble events:
     from __future__ import annotations
     from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, Iterable, Iterator, List, NewType, Optional, Tuple, TypeVar
     from simpy.exceptions import Interrupt
+  constants: |
+    PENDING: object = object()
+    EventPriority = NewType('EventPriority', int)
+    URGENT: EventPriority = EventPriority(0)
+    NORMAL: EventPriority = EventPriority(1)
+    EventType = TypeVar('EventType', bound=Event)
+    EventCallback = Callable[[EventType], None]
+    EventCallbacks = List[EventCallback]
+    ProcessGenerator = Generator[Event, Any, Any]
   body: |
     '\nThis module contains the basic event types used in SimPy.\n\nThe base class for all events is :class:`Event`. Though it can be directly\nused, there are several specialized subclasses of it.\n\n.. autosummary::\n\n    ~simpy.events.Event\n    ~simpy.events.Timeout\n    ~simpy.events.Process\n    ~simpy.events.AnyOf\n    ~simpy.events.AllOf\n\n'
     if TYPE_CHECKING:
         from types import FrameType
         from simpy.core import Environment, SimTime
-    PENDING: object = object()
-    EventPriority = NewType('EventPriority', int)
-    URGENT: EventPriority = EventPriority(0)
-    NORMAL: EventPriority = EventPriority(1)
     class Event:
         """An event that may happen at some point in time.
 
@@ -323,9 +330,6 @@ preamble events:
             either this event or *other* have been processed (or even both, if they
             happened concurrently)."""
             return Condition(self.env, Condition.any_events, [self, other])
-    EventType = TypeVar('EventType', bound=Event)
-    EventCallback = Callable[[EventType], None]
-    EventCallbacks = List[EventCallback]
     class Timeout(Event):
         """A :class:`~simpy.events.Event` that gets processed after a *delay* has
         passed.
@@ -381,7 +385,6 @@ preamble events:
                 raise RuntimeError('A process is not allowed to interrupt itself.')
             self.process = process
             self.env.schedule(self, URGENT)
-    ProcessGenerator = Generator[Event, Any, Any]
     class Process(Event):
         """Process an event yielding generator.
 
@@ -621,11 +624,14 @@ preamble resources_base:
     from typing import TYPE_CHECKING, ClassVar, ContextManager, Generic, MutableSequence, Optional, Type, TypeVar, Union
     from simpy.core import BoundClass, Environment
     from simpy.events import Event, Process
+  constants: |
+    ResourceType = TypeVar('ResourceType', bound='BaseResource')
+    PutType = TypeVar('PutType', bound=Put)
+    GetType = TypeVar('GetType', bound=Get)
   body: |
     "\nBase classes of for SimPy's shared resource types.\n\n:class:`BaseResource` defines the abstract base resource. It supports *get* and\n*put* requests, which return :class:`Put` and :class:`Get` events respectively.\nThese events are triggered once the request has been completed.\n\n"
     if TYPE_CHECKING:
         from types import TracebackType
-    ResourceType = TypeVar('ResourceType', bound='BaseResource')
     class Put(Event, ContextManager['Put'], Generic[ResourceType]):
         """Generic event for requesting to put something into the *resource*.
 
@@ -710,8 +716,6 @@ preamble resources_base:
 
             """
             pass
-    PutType = TypeVar('PutType', bound=Put)
-    GetType = TypeVar('GetType', bound=Get)
     class BaseResource(Generic[PutType, GetType]):
         """Abstract base class for a shared resource.
 
@@ -821,9 +825,10 @@ preamble resources_container:
     from typing import TYPE_CHECKING, Optional, Union
     from simpy.core import BoundClass, Environment
     from simpy.resources import base
+  constants: |
+    ContainerAmount = Union[int, float]
   body: |
     "\nResource for sharing homogeneous matter between processes, either continuous\n(like water) or discrete (like apples).\n\nA :class:`Container` can be used to model the fuel tank of a gasoline station.\nTankers increase and refuelled cars decrease the amount of gas in the station's\nfuel tanks.\n\n"
-    ContainerAmount = Union[int, float]
     class ContainerPut(base.Put):
         """Request to put *amount* of matter into the *container*. The request will
         be triggered once there is enough space in the *container* available.

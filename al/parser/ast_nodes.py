@@ -220,6 +220,12 @@ FIELD_VALUE_HINTS: dict[str, tuple[type, ...]] = {
     # constants and lets the skeleton shrink by extracting imports out of
     # the preamble ``body:`` block.
     "imports": (BlockScalar,),
+    # Phase 1.AL-LOOP H5 (Round 3): structured constants field on preamble.
+    # BlockScalar carrying module-level value assignments whose target is a
+    # simple Name (``__all__ = (...)``, ``PI = 3.14``, ``X: int = 1``).
+    # Tuple-unpack assignments and attribute / subscript assignments stay
+    # in ``body:`` because they're often computation, not pure constants.
+    "constants": (BlockScalar,),
 }
 
 #: The ordered key sequence used by the canonical serializer.
@@ -228,6 +234,7 @@ CANONICAL_FIELD_ORDER: tuple[str, ...] = (
     "schedule",
     "source",     # Phase 1.AL.2: preamble's file-path hint, near top
     "imports",    # Phase 1.AL-LOOP H4: preamble structured imports
+    "constants",  # Phase 1.AL-LOOP H5: preamble structured constants
     "input",
     "output",
     "use",
@@ -255,5 +262,9 @@ ALLOWED_FIELDS_BY_KIND: dict[str, set[str]] = {
     # Phase 1.AL-LOOP H4 (Round 2): `imports:` is an optional structured
     # block scalar that holds the file's import lines, hoisted out of
     # the body so LLM sees them as a separate unit.
-    "preamble": {"source", "imports", "body"},
+    # Phase 1.AL-LOOP H5 (Round 3): `constants:` is an optional structured
+    # block scalar that holds module-level value assignments (simple
+    # ``NAME = value`` / ``NAME: type = value``) — hoisted out of body
+    # too, so the body conveys class / docstring only.
+    "preamble": {"source", "imports", "constants", "body"},
 }

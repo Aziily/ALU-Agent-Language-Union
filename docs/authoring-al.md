@@ -44,6 +44,7 @@
 | `body:` | code, **preamble** | block scalar `|` | 字面 Python 源 |
 | `source:` | **preamble** | inline | 该 preamble 对应的源 `.py` 文件相对路径（hint） |
 | `imports:` | **preamble** | block scalar `|` | 该 module 的所有 `import` / `from ... import ...` 行（H4 引入，单独 hoist 出来便于 LLM 把"导入"作为独立单元看待） |
+| `constants:` | **preamble** | block scalar `|` | 该 module 的简单名字模块级赋值（`__all__ = (...)`, `PI = 3.14`, `X: int = 1`）；H5 引入，进一步从 `body:` 抽离 |
 | `steps:` | flow | 列表 | flow 的有序子步骤；项可为 ref / parallel / each / if |
 | `prompt:` | agent | block scalar `|` | 给 LLM 的自然语言指令 |
 | `fallback:` | agent | bare name | agent 失败时调用的另一节点（**必须是 code/agent 节点名，不能是工具名**） |
@@ -73,10 +74,11 @@ preamble cachetools_keys:
   imports: |
     import collections
     from . import keys
+  constants: |
+    __all__ = ('hashkey', 'methodkey', 'typedkey', 'typedmethodkey')
+    _kwmark = (_HashedTuple,)
   body: |
     """Key functions for memoizing decorators."""
-    __all__ = ('hashkey', 'methodkey', 'typedkey', 'typedmethodkey')
-
     class _HashedTuple(tuple):
         """Cached-hash tuple — hash() called at most once per element."""
         __hashvalue = None
@@ -85,8 +87,6 @@ preamble cachetools_keys:
             if hashvalue is None:
                 self.__hashvalue = hashvalue = hash(self)
             return hashvalue
-
-    _kwmark = (_HashedTuple,)
 
 
 flow cachetools_keys_group:

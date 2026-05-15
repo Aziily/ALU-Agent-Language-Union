@@ -17,7 +17,7 @@ preamble __init__:
     from .tensor_functions import *
     from .tensor_ops import *
     from .testing import MathTest, MathTestVariable
-  body: |
+  constants: |
     version = '0.4'
 
 
@@ -27,8 +27,9 @@ preamble autodiff:
     from dataclasses import dataclass
     from typing import Any, Iterable, List, Tuple
     from typing_extensions import Protocol
-  body: |
+  constants: |
     variable_count = 1
+  body: |
     class Variable(Protocol):
         pass
     @dataclass
@@ -53,11 +54,15 @@ preamble cuda_ops:
     from .tensor import Tensor
     from .tensor_data import MAX_DIMS, Shape, Storage, Strides, TensorData, broadcast_index, index_to_position, shape_broadcast, to_index
     from .tensor_ops import MapProto, TensorOps
-  body: |
+  constants: |
     to_index = cuda.jit(device=True)(to_index)
     index_to_position = cuda.jit(device=True)(index_to_position)
     broadcast_index = cuda.jit(device=True)(broadcast_index)
     THREADS_PER_BLOCK = 32
+    jit_sum_practice = cuda.jit()(_sum_practice)
+    jit_mm_practice = cuda.jit()(_mm_practice)
+    tensor_matrix_multiply = cuda.jit(_tensor_matrix_multiply)
+  body: |
     class CudaOps(TensorOps):
         cuda = True
 
@@ -65,9 +70,6 @@ preamble cuda_ops:
         def map(fn: Callable[[float], float]) -> MapProto:
             """See `tensor_ops.py`"""
             pass
-    jit_sum_practice = cuda.jit()(_sum_practice)
-    jit_mm_practice = cuda.jit()(_mm_practice)
-    tensor_matrix_multiply = cuda.jit(_tensor_matrix_multiply)
 
 
 preamble datasets:
@@ -77,13 +79,14 @@ preamble datasets:
     import random
     from dataclasses import dataclass
     from typing import List, Tuple
+  constants: |
+    datasets = {'Simple': simple, 'Diag': diag, 'Split': split, 'Xor': xor, 'Circle': circle, 'Spiral': spiral}
   body: |
     @dataclass
     class Graph:
         N: int
         X: List[Tuple[float, float]]
         y: List[int]
-    datasets = {'Simple': simple, 'Diag': diag, 'Split': split, 'Xor': xor, 'Circle': circle, 'Spiral': spiral}
 
 
 preamble fast_conv:
@@ -96,11 +99,15 @@ preamble fast_conv:
     from .tensor import Tensor
     from .tensor_data import MAX_DIMS, Index, Shape, Strides, broadcast_index, index_to_position, to_index
     from .tensor_functions import Function
-  body: |
+  constants: |
     to_index = njit(inline='always')(to_index)
     index_to_position = njit(inline='always')(index_to_position)
     broadcast_index = njit(inline='always')(broadcast_index)
     tensor_conv1d = njit(parallel=True)(_tensor_conv1d)
+    conv1d = Conv1dFun.apply
+    tensor_conv2d = njit(parallel=True, fastmath=True)(_tensor_conv2d)
+    conv2d = Conv2dFun.apply
+  body: |
     class Conv1dFun(Function):
 
         @staticmethod
@@ -117,8 +124,6 @@ preamble fast_conv:
                 batch x out_channel x h x w
             """
             pass
-    conv1d = Conv1dFun.apply
-    tensor_conv2d = njit(parallel=True, fastmath=True)(_tensor_conv2d)
     class Conv2dFun(Function):
 
         @staticmethod
@@ -135,7 +140,6 @@ preamble fast_conv:
                 (:class:`Tensor`) : batch x out_channel x h x w
             """
             pass
-    conv2d = Conv2dFun.apply
 
 
 preamble fast_ops:
@@ -147,14 +151,16 @@ preamble fast_ops:
     from numba import njit, prange
     from .tensor_data import MAX_DIMS, broadcast_index, index_to_position, shape_broadcast, to_index
     from .tensor_ops import MapProto, TensorOps
+  constants: |
+    to_index = njit(inline='always')(to_index)
+    index_to_position = njit(inline='always')(index_to_position)
+    broadcast_index = njit(inline='always')(broadcast_index)
+    tensor_matrix_multiply = njit(parallel=True, fastmath=True)(_tensor_matrix_multiply)
   body: |
     if TYPE_CHECKING:
         from typing import Callable, Optional
         from .tensor import Tensor
         from .tensor_data import Index, Shape, Storage, Strides
-    to_index = njit(inline='always')(to_index)
-    index_to_position = njit(inline='always')(index_to_position)
-    broadcast_index = njit(inline='always')(broadcast_index)
     class FastOps(TensorOps):
 
         @staticmethod
@@ -197,7 +203,6 @@ preamble fast_ops:
                 New tensor data
             """
             pass
-    tensor_matrix_multiply = njit(parallel=True, fastmath=True)(_tensor_matrix_multiply)
 
 
 preamble module:
@@ -341,8 +346,9 @@ preamble nn:
     from .fast_ops import FastOps
     from .tensor import Tensor
     from .tensor_functions import Function, rand, tensor
-  body: |
+  constants: |
     max_reduce = FastOps.reduce(operators.max, -1000000000.0)
+  body: |
     class Max(Function):
 
         @staticmethod
@@ -361,9 +367,10 @@ preamble operators:
   imports: |
     import math
     from typing import Callable, Iterable
+  constants: |
+    EPS = 1e-06
   body: |
     '\nCollection of the core mathematical operators used throughout the code base.\n'
-    EPS = 1e-06
 
 
 preamble optim:
@@ -393,8 +400,10 @@ preamble scalar:
     import numpy as np
     from .autodiff import Context, Variable, backpropagate, central_difference
     from .scalar_functions import EQ, LT, Add, Exp, Inv, Log, Mul, Neg, ReLU, ScalarFunction, Sigmoid
-  body: |
+  constants: |
     ScalarLike = Union[float, int, 'Scalar']
+    _var_count = 0
+  body: |
     @dataclass
     class ScalarHistory:
         """
@@ -410,7 +419,6 @@ preamble scalar:
         last_fn: Optional[Type[ScalarFunction]] = None
         ctx: Optional[Context] = None
         inputs: Sequence[Scalar] = ()
-    _var_count = 0
     class Scalar:
         """
         A reimplementation of scalar values for autodifferentiation
@@ -554,6 +562,8 @@ preamble tensor:
     from .autodiff import Context, Variable, backpropagate
     from .tensor_data import TensorData
     from .tensor_functions import EQ, LT, Add, All, Copy, Exp, Inv, IsClose, Log, MatMul, Mul, Neg, Permute, ReLU, Sigmoid, Sum, View, tensor
+  constants: |
+    _tensor_count = 0
   body: |
     '\nImplementation of the core Tensor object for autodifferentiation.\n'
     if TYPE_CHECKING:
@@ -572,7 +582,6 @@ preamble tensor:
         last_fn: Optional[Type[Function]] = None
         ctx: Optional[Context] = None
         inputs: Sequence[Tensor] = ()
-    _tensor_count = 0
     class Tensor:
         """
         Tensor is a generalization of Scalar in that it is a Variable that
@@ -758,11 +767,8 @@ preamble tensor_data:
     from numpy import array, float64
     from typing_extensions import TypeAlias
     from .operators import prod
-  body: |
+  constants: |
     MAX_DIMS = 32
-    class IndexingError(RuntimeError):
-        """Exception raised for indexing errors."""
-        pass
     Storage: TypeAlias = npt.NDArray[np.float64]
     OutIndex: TypeAlias = npt.NDArray[np.int32]
     Index: TypeAlias = npt.NDArray[np.int32]
@@ -771,6 +777,10 @@ preamble tensor_data:
     UserIndex: TypeAlias = Sequence[int]
     UserShape: TypeAlias = Sequence[int]
     UserStrides: TypeAlias = Sequence[int]
+  body: |
+    class IndexingError(RuntimeError):
+        """Exception raised for indexing errors."""
+        pass
     class TensorData:
         _storage: Storage
         _strides: Strides
@@ -884,6 +894,8 @@ preamble tensor_ops:
     from typing_extensions import Protocol
     from . import operators
     from .tensor_data import MAX_DIMS, broadcast_index, index_to_position, shape_broadcast, to_index
+  constants: |
+    SimpleBackend = TensorBackend(SimpleOps)
   body: |
     if TYPE_CHECKING:
         from .tensor import Tensor
@@ -1020,7 +1032,6 @@ preamble tensor_ops:
             """
             pass
         is_cuda = False
-    SimpleBackend = TensorBackend(SimpleOps)
 
 
 preamble testing:
@@ -1028,8 +1039,9 @@ preamble testing:
   imports: |
     from typing import Callable, Generic, Iterable, Tuple, TypeVar
     import minitorch.operators as operators
-  body: |
+  constants: |
     A = TypeVar('A')
+  body: |
     class MathTest(Generic[A]):
 
         @staticmethod

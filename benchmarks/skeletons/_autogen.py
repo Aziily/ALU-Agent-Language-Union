@@ -119,8 +119,31 @@ def _is_import_only_try(node: ast.AST) -> bool:
     return True
 
 
-def _collect_preambles(src_dir: Path) -> dict[str, tuple[str, str, str]]:
-    """Phase 1.AL.5 + H4 — return {file_stem: (rel_path, imports_text, body_text)}.
+def _is_simple_constant_assign(node: ast.AST) -> bool:
+    """True if ``node`` is a module-level value assignment whose target is
+    a simple ``Name`` (H5 Round 3 — hoist into ``constants:``).
+
+    Accepts:
+      * ``ast.Assign`` with all targets ``ast.Name`` (``X = 1`` / ``__all__ = (...)``).
+      * ``ast.AnnAssign`` with target ``ast.Name`` (``X: int = 1``,
+        also ``X: int`` without value — declares a typed module slot).
+
+    Rejects:
+      * Tuple / list / starred / attribute / subscript targets
+        (``a, b = 1, 2``; ``cls.attr = 1``; ``d['k'] = 1``) — those are
+        often state mutation, not pure declarations.
+      * ``ast.AugAssign`` (``X += 1``) — same reasoning.
+    """
+    if isinstance(node, ast.Assign):
+        return all(isinstance(t, ast.Name) for t in node.targets)
+    if isinstance(node, ast.AnnAssign):
+        return isinstance(node.target, ast.Name)
+    return False
+
+
+def _collect_preambles(src_dir: Path) -> dict[str, tuple[str, str, str, str]]:
+    """Phase 1.AL.5 + H4 + H5 — return
+    ``{file_stem: (rel_path, imports_text, constants_text, body_text)}``.
 
     For each .py under ``src_dir`` (excluding tests / build), extract
     the module-level Python that is NOT a stripped function/method, and
@@ -128,20 +151,20 @@ def _collect_preambles(src_dir: Path) -> dict[str, tuple[str, str, str]]:
 
       * ``imports_text``: every ``ast.Import`` / ``ast.ImportFrom`` and
         every ``try: ... except: ...`` block whose entire body is imports.
-      * ``body_text``: the remainder — module docstring, class definitions,
-        constants, type aliases, ``__all__``, conditional non-import
-        blocks.
+      * ``constants_text``: simple-name module-level value assignments —
+        ``X = 1``, ``X: int = 2``, ``__all__ = (...)``. See
+        :func:`_is_simple_constant_assign` for the precise rule.
+      * ``body_text``: the remainder — module docstring, class
+        definitions, complex assignments (tuple-unpack, attribute,
+        subscript), AugAssign, and conditional non-import blocks.
 
-    The split is order-preserving WITHIN each bucket (so multi-line
-    import groups stay in their original sequence), but imports are
-    pulled to the top of the resulting preamble visually via the
-    skeleton emitter.
+    Order is preserved WITHIN each bucket. Imports are visually emitted
+    first by the skeleton emitter, then constants, then body.
 
-    Returns the body text using ``ast.unparse``. Module-level
-    top-level functions are EXCLUDED whether stripped or not — those
-    become ``code <name>`` nodes elsewhere.
+    Module-level top-level functions are EXCLUDED whether stripped or
+    not — those become ``code <name>`` nodes elsewhere.
     """
-    out: dict[str, tuple[str, str, str]] = {}
+    out: dict[str, tuple[str, str, str, str]] = {}
     for src_file in sorted(src_dir.rglob("*.py")):
         if any(p in src_file.parts for p in ("tests", "test", "__pycache__")):
             continue
@@ -155,9 +178,11 @@ def _collect_preambles(src_dir: Path) -> dict[str, tuple[str, str, str]]:
         rel_stem = src_file.relative_to(src_dir).as_posix().replace("/", "_").replace(".py", "")
 
         import_nodes: list[ast.AST] = []
+        constant_nodes: list[ast.AST] = []
         body_nodes: list[ast.AST] = []
         for idx, node in enumerate(tree.body):
-            # Module docstring at body[0] → body (not an import).
+            # Module docstring at body[0] → body (not a constant; semantically
+            # documentation, kept verbatim with the class block).
             if idx == 0 and isinstance(node, ast.Expr) \
                     and isinstance(node.value, ast.Constant) \
                     and isinstance(node.value.value, str):
@@ -167,9 +192,14 @@ def _collect_preambles(src_dir: Path) -> dict[str, tuple[str, str, str]]:
                 import_nodes.append(node)
             elif _is_import_only_try(node):
                 import_nodes.append(node)
+            elif _is_simple_constant_assign(node):
+                constant_nodes.append(node)
             elif isinstance(node, ast.ClassDef):
                 body_nodes.append(node)
             elif isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
+                # Complex assignments (tuple unpack, attr / subscript targets,
+                # AugAssign) stay in body — often state mutation, not pure
+                # declarations.
                 body_nodes.append(node)
             elif isinstance(node, ast.If):
                 # Module-level `if sys.version_info >= ...:` keep verbatim
@@ -179,16 +209,17 @@ def _collect_preambles(src_dir: Path) -> dict[str, tuple[str, str, str]]:
                 body_nodes.append(node)
             # else: skip FunctionDef / AsyncFunctionDef — handled in _collect_stripped
 
-        if not import_nodes and not body_nodes:
+        if not import_nodes and not constant_nodes and not body_nodes:
             continue
         try:
             imports_text = "\n".join(ast.unparse(n) for n in import_nodes)
+            constants_text = "\n".join(ast.unparse(n) for n in constant_nodes)
             body_text = "\n".join(ast.unparse(n) for n in body_nodes)
         except Exception:
             continue
-        if not imports_text.strip() and not body_text.strip():
+        if not (imports_text.strip() or constants_text.strip() or body_text.strip()):
             continue
-        out[rel_stem] = (rel_path, imports_text, body_text)
+        out[rel_stem] = (rel_path, imports_text, constants_text, body_text)
     return out
 
 
@@ -245,15 +276,24 @@ def generate_skeleton(repo: str, src_subdir: str) -> str:
 
     # 1. Preambles first (module-level Python context per source file).
     #    H4 (Round 2): imports are emitted as a separate ``imports:`` block
-    #    above ``body:`` so the LLM sees them as a discrete unit and the
-    #    body is just the non-import module-level Python (classes,
-    #    constants, ``__all__``, module docstring).
-    for stem, (rel_path, imports_text, body_text) in preambles.items():
+    #    above ``body:`` so the LLM sees them as a discrete unit.
+    #    H5 (Round 3): simple-name module-level constants get their own
+    #    ``constants:`` block between imports and body. The body block
+    #    then carries the module docstring + class definitions + complex
+    #    assignments only.
+    for stem, (rel_path, imports_text, constants_text, body_text) in preambles.items():
         out.append(f"preamble {stem}:")
         out.append(f"  source: {rel_path}")
         if imports_text.strip():
             out.append("  imports: |")
             for line in imports_text.splitlines():
+                if line:
+                    out.append(f"    {line}")
+                else:
+                    out.append("")
+        if constants_text.strip():
+            out.append("  constants: |")
+            for line in constants_text.splitlines():
                 if line:
                     out.append(f"    {line}")
                 else:

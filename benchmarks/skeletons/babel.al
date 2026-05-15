@@ -2,10 +2,11 @@ preamble __init__:
   source: babel/__init__.py
   imports: |
     from babel.core import Locale, UnknownLocaleError, default_locale, get_locale_identifier, negotiate_locale, parse_locale
-  body: |
-    '\n    babel\n    ~~~~~\n\n    Integrated collection of utilities that assist in internationalizing and\n    localizing applications.\n\n    This package is basically composed of two major parts:\n\n     * tools to build and work with ``gettext`` message catalogs\n     * a Python interface to the CLDR (Common Locale Data Repository), providing\n       access to various locale display names, localized number and date\n       formatting, etc.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  constants: |
     __version__ = '2.14.0'
     __all__ = ['Locale', 'UnknownLocaleError', 'default_locale', 'get_locale_identifier', 'negotiate_locale', 'parse_locale']
+  body: |
+    '\n    babel\n    ~~~~~\n\n    Integrated collection of utilities that assist in internationalizing and\n    localizing applications.\n\n    This package is basically composed of two major parts:\n\n     * tools to build and work with ``gettext`` message catalogs\n     * a Python interface to the CLDR (Common Locale Data Repository), providing\n       access to various locale display names, localized number and date\n       formatting, etc.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
 
 
 preamble dates:
@@ -21,6 +22,14 @@ preamble dates:
     from babel import localtime
     from babel.core import Locale, default_locale, get_global
     from babel.localedata import LocaleDataDict
+  constants: |
+    NO_INHERITANCE_MARKER = '∅∅∅'
+    UTC = datetime.timezone.utc
+    LOCALTZ = localtime.LOCALTZ
+    LC_TIME = default_locale('LC_TIME')
+    TIMEDELTA_UNITS: tuple[tuple[str, int], ...] = (('year', 3600 * 24 * 365), ('month', 3600 * 24 * 30), ('week', 3600 * 24 * 7), ('day', 3600 * 24), ('hour', 3600), ('minute', 60), ('second', 1))
+    PATTERN_CHARS: dict[str, list[int] | None] = {'G': [1, 2, 3, 4, 5], 'y': None, 'Y': None, 'u': None, 'Q': [1, 2, 3, 4, 5], 'q': [1, 2, 3, 4, 5], 'M': [1, 2, 3, 4, 5], 'L': [1, 2, 3, 4, 5], 'w': [1, 2], 'W': [1], 'd': [1, 2], 'D': [1, 2, 3], 'F': [1], 'g': None, 'E': [1, 2, 3, 4, 5, 6], 'e': [1, 2, 3, 4, 5, 6], 'c': [1, 3, 4, 5, 6], 'a': [1, 2, 3, 4, 5], 'b': [1, 2, 3, 4, 5], 'B': [1, 2, 3, 4, 5], 'h': [1, 2], 'H': [1, 2], 'K': [1, 2], 'k': [1, 2], 'm': [1, 2], 's': [1, 2], 'S': None, 'A': None, 'z': [1, 2, 3, 4], 'Z': [1, 2, 3, 4, 5], 'O': [1, 4], 'v': [1, 4], 'V': [1, 2, 3, 4], 'x': [1, 2, 3, 4, 5], 'X': [1, 2, 3, 4, 5]}
+    PATTERN_CHAR_ORDER = 'GyYuUQqMLlwWdDFgEecabBChHKkjJmsSAzZOvVXx'
   body: |
     '\n    babel.dates\n    ~~~~~~~~~~~\n\n    Locale dependent formatting and parsing of dates and times.\n\n    The default locale for the functions in this module is determined by the\n    following environment variables, in that order:\n\n     * ``LC_TIME``,\n     * ``LC_ALL``, and\n     * ``LANG``\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     try:
@@ -34,11 +43,6 @@ preamble dates:
         _PredefinedTimeFormat: TypeAlias = Literal['full', 'long', 'medium', 'short']
         _Context: TypeAlias = Literal['format', 'stand-alone']
         _DtOrTzinfo: TypeAlias = datetime.datetime | datetime.tzinfo | str | int | datetime.time | None
-    NO_INHERITANCE_MARKER = '∅∅∅'
-    UTC = datetime.timezone.utc
-    LOCALTZ = localtime.LOCALTZ
-    LC_TIME = default_locale('LC_TIME')
-    TIMEDELTA_UNITS: tuple[tuple[str, int], ...] = (('year', 3600 * 24 * 365), ('month', 3600 * 24 * 30), ('week', 3600 * 24 * 7), ('day', 3600 * 24), ('hour', 3600), ('minute', 60), ('second', 1))
     class ParseError(ValueError):
         pass
     class DateTimePattern:
@@ -206,8 +210,6 @@ preamble dates:
                                 current date is assumed
             """
             pass
-    PATTERN_CHARS: dict[str, list[int] | None] = {'G': [1, 2, 3, 4, 5], 'y': None, 'Y': None, 'u': None, 'Q': [1, 2, 3, 4, 5], 'q': [1, 2, 3, 4, 5], 'M': [1, 2, 3, 4, 5], 'L': [1, 2, 3, 4, 5], 'w': [1, 2], 'W': [1], 'd': [1, 2], 'D': [1, 2, 3], 'F': [1], 'g': None, 'E': [1, 2, 3, 4, 5, 6], 'e': [1, 2, 3, 4, 5, 6], 'c': [1, 3, 4, 5, 6], 'a': [1, 2, 3, 4, 5], 'b': [1, 2, 3, 4, 5], 'B': [1, 2, 3, 4, 5], 'h': [1, 2], 'H': [1, 2], 'K': [1, 2], 'k': [1, 2], 'm': [1, 2], 's': [1, 2], 'S': None, 'A': None, 'z': [1, 2, 3, 4], 'Z': [1, 2, 3, 4, 5], 'O': [1, 4], 'v': [1, 4], 'V': [1, 2, 3, 4], 'x': [1, 2, 3, 4, 5], 'X': [1, 2, 3, 4, 5]}
-    PATTERN_CHAR_ORDER = 'GyYuUQqMLlwWdDFgEecabBChHKkjJmsSAzZOvVXx'
 
 
 preamble languages:
@@ -224,11 +226,12 @@ preamble lists:
     from collections.abc import Sequence
     from typing import TYPE_CHECKING
     from babel.core import Locale, default_locale
+  constants: |
+    DEFAULT_LOCALE = default_locale()
   body: |
     '\n    babel.lists\n    ~~~~~~~~~~~\n\n    Locale dependent formatting of lists.\n\n    The default locale for the functions in this module is determined by the\n    following environment variables, in that order:\n\n     * ``LC_ALL``, and\n     * ``LANG``\n\n    :copyright: (c) 2015-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     if TYPE_CHECKING:
         from typing_extensions import Literal
-    DEFAULT_LOCALE = default_locale()
 
 
 preamble localedata:
@@ -245,12 +248,13 @@ preamble localedata:
     from functools import lru_cache
     from itertools import chain
     from typing import Any
-  body: |
-    '\n    babel.localedata\n    ~~~~~~~~~~~~~~~~\n\n    Low-level locale data access.\n\n    :note: The `Locale` class, which uses this module under the hood, provides a\n           more convenient interface for accessing the locale data.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  constants: |
     _cache: dict[str, Any] = {}
     _cache_lock = threading.RLock()
     _dirname = os.path.join(os.path.dirname(__file__), 'locale-data')
     _windows_reserved_name_re = re.compile('^(con|prn|aux|nul|com[0-9]|lpt[0-9])$', re.I)
+  body: |
+    '\n    babel.localedata\n    ~~~~~~~~~~~~~~~~\n\n    Low-level locale data access.\n\n    :note: The `Locale` class, which uses this module under the hood, provides a\n           more convenient interface for accessing the locale data.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     class Alias:
         """Representation of an alias in the locale data.
 
@@ -335,12 +339,13 @@ preamble localtime__fallback:
   imports: |
     import datetime
     import time
-  body: |
-    '\n    babel.localtime._fallback\n    ~~~~~~~~~~~~~~~~~~~~~~~~~\n\n    Emulated fallback local timezone when all else fails.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  constants: |
     STDOFFSET = datetime.timedelta(seconds=-time.timezone)
     DSTOFFSET = datetime.timedelta(seconds=-time.altzone) if time.daylight else STDOFFSET
     DSTDIFF = DSTOFFSET - STDOFFSET
     ZERO = datetime.timedelta(0)
+  body: |
+    '\n    babel.localtime._fallback\n    ~~~~~~~~~~~~~~~~~~~~~~~~~\n\n    Emulated fallback local timezone when all else fails.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     class _FallbackLocalTimezone(datetime.tzinfo):
         pass
 
@@ -387,9 +392,10 @@ preamble messages___init__:
   source: babel/messages/__init__.py
   imports: |
     from babel.messages.catalog import Catalog, Message, TranslationError
+  constants: |
+    __all__ = ['Catalog', 'Message', 'TranslationError']
   body: |
     '\n    babel.messages\n    ~~~~~~~~~~~~~~\n\n    Support for ``gettext`` message catalogs.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
-    __all__ = ['Catalog', 'Message', 'TranslationError']
 
 
 preamble messages_catalog:
@@ -410,13 +416,15 @@ preamble messages_catalog:
     from babel.dates import format_datetime
     from babel.messages.plurals import get_plural
     from babel.util import LOCALTZ, FixedOffsetTimezone, _cmp, distinct
+  constants: |
+    __all__ = ['Message', 'Catalog', 'TranslationError']
+    PYTHON_FORMAT = re.compile('\n    \\%\n        (?:\\(([\\w]*)\\))?\n        (\n            [-#0\\ +]?(?:\\*|[\\d]+)?\n            (?:\\.(?:\\*|[\\d]+))?\n            [hlL]?\n        )\n        ([diouxXeEfFgGcrs%])\n', re.VERBOSE)
+    DEFAULT_HEADER = '# Translations template for PROJECT.\n# Copyright (C) YEAR ORGANIZATION\n# This file is distributed under the same license as the PROJECT project.\n# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.\n#'
   body: |
     '\n    babel.messages.catalog\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    Data structures for message catalogs.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     if TYPE_CHECKING:
         from typing_extensions import TypeAlias
         _MessageID: TypeAlias = str | tuple[str, ...] | list[str]
-    __all__ = ['Message', 'Catalog', 'TranslationError']
-    PYTHON_FORMAT = re.compile('\n    \\%\n        (?:\\(([\\w]*)\\))?\n        (\n            [-#0\\ +]?(?:\\*|[\\d]+)?\n            (?:\\.(?:\\*|[\\d]+))?\n            [hlL]?\n        )\n        ([diouxXeEfFgGcrs%])\n', re.VERBOSE)
     class Message:
         """Representation of a single message in a catalog."""
 
@@ -545,7 +553,6 @@ preamble messages_catalog:
     class TranslationError(Exception):
         """Exception thrown by translation checkers when invalid message
         translations are encountered."""
-    DEFAULT_HEADER = '# Translations template for PROJECT.\n# Copyright (C) YEAR ORGANIZATION\n# This file is distributed under the same license as the PROJECT project.\n# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.\n#'
     class Catalog:
         """Representation of a message catalog."""
 
@@ -859,10 +866,11 @@ preamble messages_checkers:
     from __future__ import annotations
     from collections.abc import Callable
     from babel.messages.catalog import PYTHON_FORMAT, Catalog, Message, TranslationError
-  body: |
-    '\n    babel.messages.checkers\n    ~~~~~~~~~~~~~~~~~~~~~~~\n\n    Various routines that help with validation of translations.\n\n    :since: version 0.9\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  constants: |
     _string_format_compatibilities = [{'i', 'd', 'u'}, {'x', 'X'}, {'f', 'F', 'g', 'G'}]
     checkers: list[Callable[[Catalog | None, Message], object]] = _find_checkers()
+  body: |
+    '\n    babel.messages.checkers\n    ~~~~~~~~~~~~~~~~~~~~~~~\n\n    Various routines that help with validation of translations.\n\n    :since: version 0.9\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
 
 
 preamble messages_extract:
@@ -880,6 +888,13 @@ preamble messages_extract:
     from tokenize import COMMENT, NAME, OP, STRING, generate_tokens
     from typing import TYPE_CHECKING, Any
     from babel.util import parse_encoding, parse_future_flags, pathmatch
+  constants: |
+    GROUP_NAME: Final[str] = 'babel.extractors'
+    DEFAULT_KEYWORDS: dict[str, _Keyword] = {'_': None, 'gettext': None, 'ngettext': (1, 2), 'ugettext': None, 'ungettext': (1, 2), 'dgettext': (2,), 'dngettext': (2, 3), 'N_': None, 'pgettext': ((1, 'c'), 2), 'npgettext': ((1, 'c'), 2, 3)}
+    DEFAULT_MAPPING: list[tuple[str, str]] = [('**.py', 'python')]
+    FSTRING_START = getattr(tokenize, 'FSTRING_START', None)
+    FSTRING_MIDDLE = getattr(tokenize, 'FSTRING_MIDDLE', None)
+    FSTRING_END = getattr(tokenize, 'FSTRING_END', None)
   body: |
     '\n    babel.messages.extract\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    Basic infrastructure for extracting localizable messages from source files.\n\n    This module defines an extensible system for collecting localizable message\n    strings from a variety of sources. A native extractor for Python source\n    files is builtin, extractors for other sources can be added using very\n    simple plugins.\n\n    The main entry points into the extraction functionality are the functions\n    `extract_from_dir` and `extract_from_file`.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     if TYPE_CHECKING:
@@ -904,12 +919,6 @@ preamble messages_extract:
         _ExtractionResult: TypeAlias = tuple[int, str | tuple[str, ...], list[str], str | None]
         _CallableExtractionMethod: TypeAlias = Callable[[_FileObj | IO[bytes], Mapping[str, _Keyword], Collection[str], Mapping[str, Any]], Iterable[_ExtractionResult]]
         _ExtractionMethod: TypeAlias = _CallableExtractionMethod | str
-    GROUP_NAME: Final[str] = 'babel.extractors'
-    DEFAULT_KEYWORDS: dict[str, _Keyword] = {'_': None, 'gettext': None, 'ngettext': (1, 2), 'ugettext': None, 'ungettext': (1, 2), 'dgettext': (2,), 'dngettext': (2, 3), 'N_': None, 'pgettext': ((1, 'c'), 2), 'npgettext': ((1, 'c'), 2, 3)}
-    DEFAULT_MAPPING: list[tuple[str, str]] = [('**.py', 'python')]
-    FSTRING_START = getattr(tokenize, 'FSTRING_START', None)
-    FSTRING_MIDDLE = getattr(tokenize, 'FSTRING_MIDDLE', None)
-    FSTRING_END = getattr(tokenize, 'FSTRING_END', None)
 
 
 preamble messages_frontend:
@@ -937,9 +946,10 @@ preamble messages_frontend:
     from babel.messages.mofile import write_mo
     from babel.messages.pofile import read_po, write_po
     from babel.util import LOCALTZ
+  constants: |
+    log = logging.getLogger('babel')
   body: |
     '\n    babel.messages.frontend\n    ~~~~~~~~~~~~~~~~~~~~~~~\n\n    Frontends for the message extraction functionality.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
-    log = logging.getLogger('babel')
     class BaseError(Exception):
         pass
     class OptionError(BaseError):
@@ -1018,8 +1028,7 @@ preamble messages_jslexer:
     import re
     from collections.abc import Generator
     from typing import NamedTuple
-  body: |
-    '\n    babel.messages.jslexer\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    A simple JavaScript 1.5 lexer which is used for the JavaScript\n    extractor.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  constants: |
     operators: list[str] = sorted(['+', '-', '*', '%', '!=', '==', '<', '>', '<=', '>=', '=', '+=', '-=', '*=', '%=', '<<', '>>', '>>>', '<<=', '>>=', '>>>=', '&', '&=', '|', '|=', '&&', '||', '^', '^=', '(', ')', '[', ']', '{', '}', '!', '--', '++', '~', ',', ';', '.', ':'], key=len, reverse=True)
     escapes: dict[str, str] = {'b': '\x08', 'f': '\x0c', 'n': '\n', 'r': '\r', 't': '\t'}
     name_re = re.compile('[\\w$_][\\w\\d$_]*', re.UNICODE)
@@ -1030,11 +1039,13 @@ preamble messages_jslexer:
     line_join_re = re.compile('\\\\' + line_re.pattern)
     uni_escape_re = re.compile('[a-fA-F0-9]{1,4}')
     hex_escape_re = re.compile('[a-fA-F0-9]{1,2}')
+    _rules: list[tuple[str | None, re.Pattern[str]]] = [(None, re.compile('\\s+', re.UNICODE)), (None, re.compile('<!--.*')), ('linecomment', re.compile('//.*')), ('multilinecomment', re.compile('/\\*.*?\\*/', re.UNICODE | re.DOTALL)), ('dotted_name', dotted_name_re), ('name', name_re), ('number', re.compile('(\n        (?:0|[1-9]\\d*)\n        (\\.\\d+)?\n        ([eE][-+]?\\d+)? |\n        (0x[a-fA-F0-9]+)\n    )', re.VERBOSE)), ('jsx_tag', re.compile('(?:</?[^>\\s]+|/>)', re.I)), ('operator', re.compile('(%s)' % '|'.join(map(re.escape, operators)))), ('template_string', re.compile('`(?:[^`\\\\]*(?:\\\\.[^`\\\\]*)*)`', re.UNICODE)), ('string', re.compile('(\n        \'(?:[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\'  |\n        "(?:[^"\\\\]*(?:\\\\.[^"\\\\]*)*)"\n    )', re.VERBOSE | re.DOTALL))]
+  body: |
+    '\n    babel.messages.jslexer\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    A simple JavaScript 1.5 lexer which is used for the JavaScript\n    extractor.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     class Token(NamedTuple):
         type: str
         value: str
         lineno: int
-    _rules: list[tuple[str | None, re.Pattern[str]]] = [(None, re.compile('\\s+', re.UNICODE)), (None, re.compile('<!--.*')), ('linecomment', re.compile('//.*')), ('multilinecomment', re.compile('/\\*.*?\\*/', re.UNICODE | re.DOTALL)), ('dotted_name', dotted_name_re), ('name', name_re), ('number', re.compile('(\n        (?:0|[1-9]\\d*)\n        (\\.\\d+)?\n        ([eE][-+]?\\d+)? |\n        (0x[a-fA-F0-9]+)\n    )', re.VERBOSE)), ('jsx_tag', re.compile('(?:</?[^>\\s]+|/>)', re.I)), ('operator', re.compile('(%s)' % '|'.join(map(re.escape, operators)))), ('template_string', re.compile('`(?:[^`\\\\]*(?:\\\\.[^`\\\\]*)*)`', re.UNICODE)), ('string', re.compile('(\n        \'(?:[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\'  |\n        "(?:[^"\\\\]*(?:\\\\.[^"\\\\]*)*)"\n    )', re.VERBOSE | re.DOTALL))]
 
 
 preamble messages_mofile:
@@ -1045,12 +1056,13 @@ preamble messages_mofile:
     import struct
     from typing import TYPE_CHECKING
     from babel.messages.catalog import Catalog, Message
+  constants: |
+    LE_MAGIC: int = 2500072158
+    BE_MAGIC: int = 3725722773
   body: |
     '\n    babel.messages.mofile\n    ~~~~~~~~~~~~~~~~~~~~~\n\n    Writing of files in the ``gettext`` MO (machine object) format.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     if TYPE_CHECKING:
         from _typeshed import SupportsRead, SupportsWrite
-    LE_MAGIC: int = 2500072158
-    BE_MAGIC: int = 3725722773
 
 
 preamble messages_plurals:
@@ -1059,11 +1071,12 @@ preamble messages_plurals:
     from __future__ import annotations
     from operator import itemgetter
     from babel.core import Locale, default_locale
-  body: |
-    '\n    babel.messages.plurals\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    Plural form definitions.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  constants: |
     LC_CTYPE: str | None = default_locale('LC_CTYPE')
     PLURALS: dict[str, tuple[int, str]] = {'af': (2, '(n != 1)'), 'ar': (6, '(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=0 && n%100<=2 ? 4 : 5)'), 'be': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'bg': (2, '(n != 1)'), 'bn': (2, '(n != 1)'), 'bo': (1, '0'), 'br': (6, '(n==1 ? 0 : n%10==1 && n%100!=11 && n%100!=71 && n%100!=91 ? 1 : n%10==2 && n%100!=12 && n%100!=72 && n%100!=92 ? 2 : (n%10==3 || n%10==4 || n%10==9) && n%100!=13 && n%100!=14 && n%100!=19 && n%100!=73 && n%100!=74 && n%100!=79 && n%100!=93 && n%100!=94 && n%100!=99 ? 3 : n%1000000==0 ? 4 : 5)'), 'bs': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'ca': (2, '(n != 1)'), 'cs': (3, '((n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2)'), 'cv': (1, '0'), 'cy': (5, '(n==1 ? 1 : n==2 ? 2 : n==3 ? 3 : n==6 ? 4 : 0)'), 'da': (2, '(n != 1)'), 'de': (2, '(n != 1)'), 'dz': (1, '0'), 'el': (2, '(n != 1)'), 'en': (2, '(n != 1)'), 'eo': (2, '(n != 1)'), 'es': (2, '(n != 1)'), 'et': (2, '(n != 1)'), 'eu': (2, '(n != 1)'), 'fa': (1, '0'), 'fi': (2, '(n != 1)'), 'fr': (2, '(n > 1)'), 'fur': (2, '(n > 1)'), 'ga': (5, '(n==1 ? 0 : n==2 ? 1 : n>=3 && n<=6 ? 2 : n>=7 && n<=10 ? 3 : 4)'), 'gl': (2, '(n != 1)'), 'ha': (2, '(n != 1)'), 'he': (2, '(n != 1)'), 'hi': (2, '(n != 1)'), 'hr': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'hu': (1, '0'), 'hy': (1, '0'), 'is': (2, '(n%10==1 && n%100!=11 ? 0 : 1)'), 'it': (2, '(n != 1)'), 'ja': (1, '0'), 'ka': (1, '0'), 'kg': (2, '(n != 1)'), 'km': (1, '0'), 'ko': (1, '0'), 'ku': (2, '(n != 1)'), 'lo': (1, '0'), 'lt': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'lv': (3, '(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2)'), 'mt': (4, '(n==1 ? 0 : n==0 || ( n%100>=1 && n%100<=10) ? 1 : (n%100>10 && n%100<20 ) ? 2 : 3)'), 'nb': (2, '(n != 1)'), 'nl': (2, '(n != 1)'), 'nn': (2, '(n != 1)'), 'no': (2, '(n != 1)'), 'pa': (2, '(n != 1)'), 'pl': (3, '(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'pt': (2, '(n != 1)'), 'pt_BR': (2, '(n > 1)'), 'ro': (3, '(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < 20)) ? 1 : 2)'), 'ru': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'sk': (3, '((n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2)'), 'sl': (4, '(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3)'), 'sr': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'st': (2, '(n != 1)'), 'sv': (2, '(n != 1)'), 'th': (1, '0'), 'tr': (1, '0'), 'uk': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 've': (2, '(n != 1)'), 'vi': (1, '0'), 'xh': (2, '(n != 1)'), 'zh': (1, '0')}
     DEFAULT_PLURAL: tuple[int, str] = (2, '(n != 1)')
+  body: |
+    '\n    babel.messages.plurals\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    Plural form definitions.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     class _PluralTuple(tuple):
         """A tuple with plural information."""
         __slots__ = ()
@@ -1086,6 +1099,8 @@ preamble messages_pofile:
     from babel.core import Locale
     from babel.messages.catalog import Catalog, Message
     from babel.util import _cmp, wraptext
+  constants: |
+    WORD_SEP = re.compile('(\\s+|[^\\s\\w]*\\w+[a-zA-Z]-(?=\\w+[a-zA-Z])|(?<=[\\w\\!\\"\\\'\\&\\.\\,\\?])-{2,}(?=\\w))')
   body: |
     '\n    babel.messages.pofile\n    ~~~~~~~~~~~~~~~~~~~~~\n\n    Reading and writing of files in the ``gettext`` PO (portable object)\n    format.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     if TYPE_CHECKING:
@@ -1164,7 +1179,6 @@ preamble messages_pofile:
             units found in it to the `Catalog` supplied to the constructor.
             """
             pass
-    WORD_SEP = re.compile('(\\s+|[^\\s\\w]*\\w+[a-zA-Z]-(?=\\w+[a-zA-Z])|(?<=[\\w\\!\\"\\\'\\&\\.\\,\\?])-{2,}(?=\\w))')
 
 
 preamble messages_setuptools_frontend:
@@ -1172,6 +1186,8 @@ preamble messages_setuptools_frontend:
   imports: |
     from __future__ import annotations
     from babel.messages import frontend
+  constants: |
+    COMMANDS = {'compile_catalog': compile_catalog, 'extract_messages': extract_messages, 'init_catalog': init_catalog, 'update_catalog': update_catalog}
   body: |
     try:
         from setuptools import Command
@@ -1242,7 +1258,6 @@ preamble messages_setuptools_frontend:
 
         .. versionadded:: 0.9
         """
-    COMMANDS = {'compile_catalog': compile_catalog, 'extract_messages': extract_messages, 'init_catalog': init_catalog, 'update_catalog': update_catalog}
 
 
 preamble numbers:
@@ -1256,11 +1271,18 @@ preamble numbers:
     from typing import TYPE_CHECKING, Any, cast, overload
     from babel.core import Locale, default_locale, get_global
     from babel.localedata import LocaleDataDict
+  constants: |
+    LC_NUMERIC = default_locale('LC_NUMERIC')
+    PREFIX_END = '[^0-9@#.,]'
+    NUMBER_TOKEN = '[0-9@#.,E+]'
+    PREFIX_PATTERN = "(?P<prefix>(?:'[^']*'|%s)*)" % PREFIX_END
+    NUMBER_PATTERN = '(?P<number>%s*)' % NUMBER_TOKEN
+    SUFFIX_PATTERN = '(?P<suffix>.*)'
+    number_re = re.compile(f'{PREFIX_PATTERN}{NUMBER_PATTERN}{SUFFIX_PATTERN}')
   body: |
     '\n    babel.numbers\n    ~~~~~~~~~~~~~\n\n    Locale dependent formatting and parsing of numeric data.\n\n    The default locale for the functions in this module is determined by the\n    following environment variables, in that order:\n\n     * ``LC_NUMERIC``,\n     * ``LC_ALL``, and\n     * ``LANG``\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     if TYPE_CHECKING:
         from typing_extensions import Literal
-    LC_NUMERIC = default_locale('LC_NUMERIC')
     class UnknownCurrencyError(Exception):
         """Exception thrown when a currency is requested for which no data is available.
         """
@@ -1282,12 +1304,6 @@ preamble numbers:
         def __init__(self, message: str, suggestions: list[str] | None=None) -> None:
             super().__init__(message)
             self.suggestions = suggestions
-    PREFIX_END = '[^0-9@#.,]'
-    NUMBER_TOKEN = '[0-9@#.,E+]'
-    PREFIX_PATTERN = "(?P<prefix>(?:'[^']*'|%s)*)" % PREFIX_END
-    NUMBER_PATTERN = '(?P<number>%s*)' % NUMBER_TOKEN
-    SUFFIX_PATTERN = '(?P<suffix>.*)'
-    number_re = re.compile(f'{PREFIX_PATTERN}{NUMBER_PATTERN}{SUFFIX_PATTERN}')
     class NumberPattern:
 
         def __init__(self, pattern: str, prefix: tuple[str, str], suffix: tuple[str, str], grouping: tuple[int, int], int_prec: tuple[int, int], frac_prec: tuple[int, int], exp_prec: tuple[int, int] | None, exp_plus: bool | None, number_pattern: str | None=None) -> None:
@@ -1874,15 +1890,23 @@ preamble util:
     from collections.abc import Generator, Iterable
     from typing import IO, Any, TypeVar
     from babel import dates, localtime
-  body: |
-    '\n    babel.util\n    ~~~~~~~~~~\n\n    Various utility classes and functions.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  constants: |
     missing = object()
     _T = TypeVar('_T')
     PYTHON_MAGIC_COMMENT_re = re.compile(b'[ \\t\\f]* \\# .* coding[=:][ \\t]*([-\\w.]+)', re.VERBOSE)
     PYTHON_FUTURE_IMPORT_re = re.compile('from\\s+__future__\\s+import\\s+\\(*(.+)\\)*')
+    odict = collections.OrderedDict
+    UTC = dates.UTC
+    LOCALTZ = dates.LOCALTZ
+    get_localzone = localtime.get_localzone
+    STDOFFSET = localtime.STDOFFSET
+    DSTOFFSET = localtime.DSTOFFSET
+    DSTDIFF = localtime.DSTDIFF
+    ZERO = localtime.ZERO
+  body: |
+    '\n    babel.util\n    ~~~~~~~~~~\n\n    Various utility classes and functions.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     class TextWrapper(textwrap.TextWrapper):
         wordsep_re = re.compile('(\\s+|(?<=[\\w\\!\\"\\\'\\&\\.\\,\\?])-{2,}(?=\\w))')
-    odict = collections.OrderedDict
     class FixedOffsetTimezone(datetime.tzinfo):
         """Fixed offset in minutes east from UTC."""
 
@@ -1897,13 +1921,6 @@ preamble util:
 
         def __repr__(self) -> str:
             return f'<FixedOffset "{self.zone}" {self._offset}>'
-    UTC = dates.UTC
-    LOCALTZ = dates.LOCALTZ
-    get_localzone = localtime.get_localzone
-    STDOFFSET = localtime.STDOFFSET
-    DSTOFFSET = localtime.DSTOFFSET
-    DSTDIFF = localtime.DSTDIFF
-    ZERO = localtime.ZERO
 
 
 flow babel_lib:

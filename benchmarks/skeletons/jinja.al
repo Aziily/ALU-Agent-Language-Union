@@ -32,16 +32,17 @@ preamble __init__:
     from .utils import pass_environment as pass_environment
     from .utils import pass_eval_context as pass_eval_context
     from .utils import select_autoescape as select_autoescape
+  constants: |
+    __version__ = '3.1.4'
   body: |
     'Jinja is a template engine written in pure Python. It provides a\nnon-XML syntax that supports inline expressions and an optional\nsandboxed environment.\n'
-    __version__ = '3.1.4'
 
 
 preamble _identifier:
   source: jinja2/_identifier.py
   imports: |
     import re
-  body: |
+  constants: |
     pattern = re.compile('[\\w·̀-ͯ·҃-֑҇-ׇֽֿׁׂׅׄؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۤۧۨ-ܑۭܰ-݊ަ-ް߫-߽߳ࠖ-࠙ࠛ-ࠣࠥ-ࠧࠩ-࡙࠭-࡛࣓-ࣣ࣡-ःऺ-़ा-ॏ॑-ॗॢॣঁ-ঃ়া-ৄেৈো-্ৗৢৣ৾ਁ-ਃ਼ਾ-ੂੇੈੋ-੍ੑੰੱੵઁ-ઃ઼ા-ૅે-ૉો-્ૢૣૺ-૿ଁ-ଃ଼ା-ୄେୈୋ-୍ୖୗୢୣஂா-ூெ-ைொ-்ௗఀ-ఄా-ౄె-ైొ-్ౕౖౢౣಁ-ಃ಼ಾ-ೄೆ-ೈೊ-್ೕೖೢೣഀ-ഃ഻഼ാ-ൄെ-ൈൊ-്ൗൢൣංඃ්ා-ුූෘ-ෟෲෳัิ-ฺ็-๎ັິ-ູົຼ່-ໍ༹༘༙༵༷༾༿ཱ-྄྆྇ྍ-ྗྙ-ྼ࿆ါ-ှၖ-ၙၞ-ၠၢ-ၤၧ-ၭၱ-ၴႂ-ႍႏႚ-ႝ፝-፟ᜒ-᜔ᜲ-᜴ᝒᝓᝲᝳ឴-៓៝᠋-᠍ᢅᢆᢩᤠ-ᤫᤰ-᤻ᨗ-ᨛᩕ-ᩞ᩠-᩿᩼᪰-᪽ᬀ-ᬄ᬴-᭄᭫-᭳ᮀ-ᮂᮡ-ᮭ᯦-᯳ᰤ-᰷᳐-᳔᳒-᳨᳭ᳲ-᳴᳷-᳹᷀-᷹᷻-᷿‿⁀⁔⃐-⃥⃜⃡-⃰℘℮⳯-⵿⳱ⷠ-〪ⷿ-゙゚〯꙯ꙴ-꙽ꚞꚟ꛰꛱ꠂ꠆ꠋꠣ-ꠧꢀꢁꢴ-ꣅ꣠-꣱ꣿꤦ-꤭ꥇ-꥓ꦀ-ꦃ꦳-꧀ꧥꨩ-ꨶꩃꩌꩍꩻ-ꩽꪰꪲ-ꪴꪷꪸꪾ꪿꫁ꫫ-ꫯꫵ꫶ꯣ-ꯪ꯬꯭ﬞ︀-️︠-︯︳︴﹍-﹏＿𐇽𐋠𐍶-𐍺𐨁-𐨃𐨅𐨆𐨌-𐨏𐨸-𐨿𐨺𐫦𐫥𐴤-𐽆𐴧-𐽐𑀀-𑀂𑀸-𑁆𑁿-𑂂𑂰-𑂺𑄀-𑄂𑄧-𑄴𑅅𑅆𑅳𑆀-𑆂𑆳-𑇀𑇉-𑇌𑈬-𑈷𑈾𑋟-𑋪𑌀-𑌃𑌻𑌼𑌾-𑍄𑍇𑍈𑍋-𑍍𑍗𑍢𑍣𑍦-𑍬𑍰-𑍴𑐵-𑑆𑑞𑒰-𑓃𑖯-𑖵𑖸-𑗀𑗜𑗝𑘰-𑙀𑚫-𑚷𑜝-𑜫𑠬-𑠺𑨁-𑨊𑨳-𑨹𑨻-𑨾𑩇𑩑-𑩛𑪊-𑪙𑰯-𑰶𑰸-𑰿𑲒-𑲧𑲩-𑲶𑴱-𑴶𑴺𑴼𑴽𑴿-𑵅𑵇𑶊-𑶎𑶐𑶑𑶓-𑶗𑻳-𑻶𖫰-𖫴𖬰-𖬶𖽑-𖽾𖾏-𖾒𛲝𛲞𝅥-𝅩𝅭-𝅲𝅻-𝆂𝆅-𝆋𝆪-𝆭𝉂-𝉄𝨀-𝨶𝨻-𝩬𝩵𝪄𝪛-𝪟𝪡-𝪯𞀀-𞀆𞀈-𞀘𞀛-𞀡𞀣𞀤𞀦-𞣐𞀪-𞣖𞥄-𞥊󠄀-󠇯]+')
 
 
@@ -54,7 +55,7 @@ preamble async_utils:
     from functools import wraps
     from .utils import _PassArg
     from .utils import pass_eval_context
-  body: |
+  constants: |
     V = t.TypeVar('V')
     _common_primitives = {int, float, bool, str, list, dict, tuple, type(None)}
 
@@ -74,6 +75,9 @@ preamble bccache:
     from hashlib import sha1
     from io import BytesIO
     from types import CodeType
+  constants: |
+    bc_version = 5
+    bc_magic = b'j2' + pickle.dumps(bc_version, 2) + pickle.dumps(sys.version_info[0] << 24 | sys.version_info[1], 2)
   body: |
     'The optional bytecode cache system. This is useful if you have very\ncomplex template situations and the compilation of all those templates\nslows down your application too much.\n\nSituations where this is useful are often forking web applications that\nare initialized on the first request.\n'
     if t.TYPE_CHECKING:
@@ -82,8 +86,6 @@ preamble bccache:
 
         class _MemcachedClient(te.Protocol):
             pass
-    bc_version = 5
-    bc_magic = b'j2' + pickle.dumps(bc_version, 2) + pickle.dumps(sys.version_info[0] << 24 | sys.version_info[1], 2)
     class Bucket:
         """Buckets are used to store the bytecode for one template.  It's created
         and initialized by the bytecode cache and passed to the loading functions.
@@ -283,13 +285,14 @@ preamble compiler:
     from .utils import _PassArg
     from .utils import concat
     from .visitor import NodeVisitor
+  constants: |
+    F = t.TypeVar('F', bound=t.Callable[..., t.Any])
+    operators = {'eq': '==', 'ne': '!=', 'gt': '>', 'gteq': '>=', 'lt': '<', 'lteq': '<=', 'in': 'in', 'notin': 'not in'}
   body: |
     'Compiles nodes from the parser into Python code.'
     if t.TYPE_CHECKING:
         import typing_extensions as te
         from .environment import Environment
-    F = t.TypeVar('F', bound=t.Callable[..., t.Any])
-    operators = {'eq': '==', 'ne': '!=', 'gt': '>', 'gteq': '>=', 'lt': '<', 'lteq': '<=', 'in': 'in', 'notin': 'not in'}
     class MacroRef:
 
         def __init__(self, node: t.Union[nodes.Macro, nodes.CallBlock]) -> None:
@@ -619,7 +622,7 @@ preamble compiler:
 
 preamble constants:
   source: jinja2/constants.py
-  body: |
+  constants: |
     LOREM_IPSUM_WORDS = 'a ac accumsan ad adipiscing aenean aliquam aliquet amet ante aptent arcu at\nauctor augue bibendum blandit class commodo condimentum congue consectetuer\nconsequat conubia convallis cras cubilia cum curabitur curae cursus dapibus\ndiam dictum dictumst dignissim dis dolor donec dui duis egestas eget eleifend\nelementum elit enim erat eros est et etiam eu euismod facilisi facilisis fames\nfaucibus felis fermentum feugiat fringilla fusce gravida habitant habitasse hac\nhendrerit hymenaeos iaculis id imperdiet in inceptos integer interdum ipsum\njusto lacinia lacus laoreet lectus leo libero ligula litora lobortis lorem\nluctus maecenas magna magnis malesuada massa mattis mauris metus mi molestie\nmollis montes morbi mus nam nascetur natoque nec neque netus nibh nisi nisl non\nnonummy nostra nulla nullam nunc odio orci ornare parturient pede pellentesque\npenatibus per pharetra phasellus placerat platea porta porttitor posuere\npotenti praesent pretium primis proin pulvinar purus quam quis quisque rhoncus\nridiculus risus rutrum sagittis sapien scelerisque sed sem semper senectus sit\nsociis sociosqu sodales sollicitudin suscipit suspendisse taciti tellus tempor\ntempus tincidunt torquent tortor tristique turpis ullamcorper ultrices\nultricies urna ut varius vehicula vel velit venenatis vestibulum vitae vivamus\nviverra volutpat vulputate'
 
 
@@ -648,9 +651,7 @@ preamble defaults:
     from .utils import generate_lorem_ipsum
     from .utils import Joiner
     from .utils import Namespace
-  body: |
-    if t.TYPE_CHECKING:
-        import typing_extensions as te
+  constants: |
     BLOCK_START_STRING = '{%'
     BLOCK_END_STRING = '%}'
     VARIABLE_START_STRING = '{{'
@@ -665,6 +666,9 @@ preamble defaults:
     KEEP_TRAILING_NEWLINE = False
     DEFAULT_NAMESPACE = {'range': range, 'dict': dict, 'lipsum': generate_lorem_ipsum, 'cycler': Cycler, 'joiner': Joiner, 'namespace': Namespace}
     DEFAULT_POLICIES: t.Dict[str, t.Any] = {'compiler.ascii_str': True, 'urlize.rel': 'noopener', 'urlize.target': None, 'urlize.extra_schemes': None, 'truncate.leeway': 5, 'json.dumps_function': None, 'json.dumps_kwargs': {'sort_keys': True}, 'ext.i18n.trimmed': False}
+  body: |
+    if t.TYPE_CHECKING:
+        import typing_extensions as te
 
 
 preamble environment:
@@ -719,6 +723,8 @@ preamble environment:
     from .utils import internalcode
     from .utils import LRUCache
     from .utils import missing
+  constants: |
+    _env_bound = t.TypeVar('_env_bound', bound='Environment')
   body: |
     'Classes for managing templates and their runtime and compile time\noptions.\n'
     if t.TYPE_CHECKING:
@@ -726,7 +732,6 @@ preamble environment:
         from .bccache import BytecodeCache
         from .ext import Extension
         from .loaders import BaseLoader
-    _env_bound = t.TypeVar('_env_bound', bound='Environment')
     class Environment:
         """The core component of Jinja is the `Environment`.  It contains
         important shared variables like configuration, filters, tests,
@@ -1613,6 +1618,13 @@ preamble ext:
     from .runtime import Undefined
     from .utils import import_string
     from .utils import pass_context
+  constants: |
+    GETTEXT_FUNCTIONS: t.Tuple[str, ...] = ('_', 'gettext', 'ngettext', 'pgettext', 'npgettext')
+    _ws_re = re.compile('\\s*\\n\\s*')
+    i18n = InternationalizationExtension
+    do = ExprStmtExtension
+    loopcontrols = LoopControlExtension
+    debug = DebugExtension
   body: |
     'Extension API for adding custom tags and behavior.'
     if t.TYPE_CHECKING:
@@ -1627,8 +1639,6 @@ preamble ext:
         class _TranslationsContext(_TranslationsBasic):
             pass
         _SupportedTranslations = t.Union[_TranslationsBasic, _TranslationsContext]
-    GETTEXT_FUNCTIONS: t.Tuple[str, ...] = ('_', 'gettext', 'ngettext', 'pgettext', 'npgettext')
-    _ws_re = re.compile('\\s*\\n\\s*')
     class Extension:
         """Extensions can be used to add extra functionality to the Jinja template
         system at the parser level.  Custom extensions are bound to an environment
@@ -1760,10 +1770,6 @@ preamble ext:
             self.comment_tags = comment_tags
             self.offset = 0
             self.last_lineno = 0
-    i18n = InternationalizationExtension
-    do = ExprStmtExtension
-    loopcontrols = LoopControlExtension
-    debug = DebugExtension
 
 
 preamble filters:
@@ -1793,6 +1799,15 @@ preamble filters:
     from .utils import pformat
     from .utils import url_quote
     from .utils import urlize
+  constants: |
+    F = t.TypeVar('F', bound=t.Callable[..., t.Any])
+    K = t.TypeVar('K')
+    V = t.TypeVar('V')
+    _attr_key_re = re.compile('[\\s/>=]', flags=re.ASCII)
+    _word_beginning_split_re = re.compile('([-\\s({\\[<]+)')
+    _uri_scheme_re = re.compile('^([\\w.+-]{2,}:(/){0,2})$')
+    _word_re = re.compile('\\w+')
+    FILTERS = {'abs': abs, 'attr': do_attr, 'batch': do_batch, 'capitalize': do_capitalize, 'center': do_center, 'count': len, 'd': do_default, 'default': do_default, 'dictsort': do_dictsort, 'e': escape, 'escape': escape, 'filesizeformat': do_filesizeformat, 'first': do_first, 'float': do_float, 'forceescape': do_forceescape, 'format': do_format, 'groupby': do_groupby, 'indent': do_indent, 'int': do_int, 'join': do_join, 'last': do_last, 'length': len, 'list': do_list, 'lower': do_lower, 'items': do_items, 'map': do_map, 'min': do_min, 'max': do_max, 'pprint': do_pprint, 'random': do_random, 'reject': do_reject, 'rejectattr': do_rejectattr, 'replace': do_replace, 'reverse': do_reverse, 'round': do_round, 'safe': do_mark_safe, 'select': do_select, 'selectattr': do_selectattr, 'slice': do_slice, 'sort': do_sort, 'string': soft_str, 'striptags': do_striptags, 'sum': do_sum, 'title': do_title, 'trim': do_trim, 'truncate': do_truncate, 'unique': do_unique, 'upper': do_upper, 'urlencode': do_urlencode, 'urlize': do_urlize, 'wordcount': do_wordcount, 'wordwrap': do_wordwrap, 'xmlattr': do_xmlattr, 'tojson': do_tojson}
   body: |
     'Built-in template filters used with the ``|`` operator.'
     if t.TYPE_CHECKING:
@@ -1806,13 +1821,6 @@ preamble filters:
 
             def __html__(self) -> str:
                 pass
-    F = t.TypeVar('F', bound=t.Callable[..., t.Any])
-    K = t.TypeVar('K')
-    V = t.TypeVar('V')
-    _attr_key_re = re.compile('[\\s/>=]', flags=re.ASCII)
-    _word_beginning_split_re = re.compile('([-\\s({\\[<]+)')
-    _uri_scheme_re = re.compile('^([\\w.+-]{2,}:(/){0,2})$')
-    _word_re = re.compile('\\w+')
     class _GroupTuple(t.NamedTuple):
         grouper: t.Any
         list: t.List[t.Any]
@@ -1822,7 +1830,6 @@ preamble filters:
 
         def __str__(self) -> str:
             return tuple.__str__(self)
-    FILTERS = {'abs': abs, 'attr': do_attr, 'batch': do_batch, 'capitalize': do_capitalize, 'center': do_center, 'count': len, 'd': do_default, 'default': do_default, 'dictsort': do_dictsort, 'e': escape, 'escape': escape, 'filesizeformat': do_filesizeformat, 'first': do_first, 'float': do_float, 'forceescape': do_forceescape, 'format': do_format, 'groupby': do_groupby, 'indent': do_indent, 'int': do_int, 'join': do_join, 'last': do_last, 'length': len, 'list': do_list, 'lower': do_lower, 'items': do_items, 'map': do_map, 'min': do_min, 'max': do_max, 'pprint': do_pprint, 'random': do_random, 'reject': do_reject, 'rejectattr': do_rejectattr, 'replace': do_replace, 'reverse': do_reverse, 'round': do_round, 'safe': do_mark_safe, 'select': do_select, 'selectattr': do_selectattr, 'slice': do_slice, 'sort': do_sort, 'string': soft_str, 'striptags': do_striptags, 'sum': do_sum, 'title': do_title, 'trim': do_trim, 'truncate': do_truncate, 'unique': do_unique, 'upper': do_upper, 'urlencode': do_urlencode, 'urlize': do_urlize, 'wordcount': do_wordcount, 'wordwrap': do_wordwrap, 'xmlattr': do_xmlattr, 'tojson': do_tojson}
 
 
 preamble idtracking:
@@ -1831,11 +1838,12 @@ preamble idtracking:
     import typing as t
     from . import nodes
     from .visitor import NodeVisitor
-  body: |
+  constants: |
     VAR_LOAD_PARAMETER = 'param'
     VAR_LOAD_RESOLVE = 'resolve'
     VAR_LOAD_ALIAS = 'alias'
     VAR_LOAD_UNDEFINED = 'undefined'
+  body: |
     class Symbols:
 
         def __init__(self, parent: t.Optional['Symbols']=None, level: t.Optional[int]=None) -> None:
@@ -2181,6 +2189,9 @@ preamble meta:
     from . import nodes
     from .compiler import CodeGenerator
     from .compiler import Frame
+  constants: |
+    _ref_types = (nodes.Extends, nodes.FromImport, nodes.Import, nodes.Include)
+    _RefType = t.Union[nodes.Extends, nodes.FromImport, nodes.Import, nodes.Include]
   body: |
     'Functions that expose information about templates that might be\ninteresting for introspection.\n'
     if t.TYPE_CHECKING:
@@ -2199,8 +2210,6 @@ preamble meta:
         def enter_frame(self, frame: Frame) -> None:
             """Remember all undeclared identifiers."""
             pass
-    _ref_types = (nodes.Extends, nodes.FromImport, nodes.Import, nodes.Include)
-    _RefType = t.Union[nodes.Extends, nodes.FromImport, nodes.Import, nodes.Include]
 
 
 preamble nativetypes:
@@ -2267,16 +2276,17 @@ preamble parser:
     from .exceptions import TemplateSyntaxError
     from .lexer import describe_token
     from .lexer import describe_token_expr
-  body: |
-    'Parse tokens from the lexer into nodes for the compiler.'
-    if t.TYPE_CHECKING:
-        import typing_extensions as te
-        from .environment import Environment
+  constants: |
     _ImportInclude = t.TypeVar('_ImportInclude', nodes.Import, nodes.Include)
     _MacroCall = t.TypeVar('_MacroCall', nodes.Macro, nodes.CallBlock)
     _statement_keywords = frozenset(['for', 'if', 'block', 'extends', 'print', 'macro', 'include', 'from', 'import', 'set', 'with', 'autoescape'])
     _compare_operators = frozenset(['eq', 'ne', 'lt', 'lteq', 'gt', 'gteq'])
     _math_nodes: t.Dict[str, t.Type[nodes.Expr]] = {'add': nodes.Add, 'sub': nodes.Sub, 'mul': nodes.Mul, 'div': nodes.Div, 'floordiv': nodes.FloorDiv, 'mod': nodes.Mod}
+  body: |
+    'Parse tokens from the lexer into nodes for the compiler.'
+    if t.TYPE_CHECKING:
+        import typing_extensions as te
+        from .environment import Environment
     class Parser:
         """This is the central parsing class Jinja uses.  It's passed to
         extensions and can be used to parse expressions or statements.
@@ -2418,10 +2428,13 @@ preamble runtime:
     from .utils import Namespace
     from .utils import object_type_repr
     from .utils import pass_eval_context
-  body: |
-    'The runtime functions and state used by compiled templates.'
+  constants: |
     V = t.TypeVar('V')
     F = t.TypeVar('F', bound=t.Callable[..., t.Any])
+    exported = ['LoopContext', 'TemplateReference', 'Macro', 'Markup', 'TemplateRuntimeError', 'missing', 'escape', 'markup_join', 'str_join', 'identity', 'TemplateNotFound', 'Namespace', 'Undefined', 'internalcode']
+    async_exported = ['AsyncLoopContext', 'auto_aiter', 'auto_await']
+  body: |
+    'The runtime functions and state used by compiled templates.'
     if t.TYPE_CHECKING:
         import logging
         import typing_extensions as te
@@ -2431,8 +2444,6 @@ preamble runtime:
 
             def __call__(self, reciter: t.Iterable[V], loop_render_func: 'LoopRenderFunc', depth: int=0) -> str:
                 ...
-    exported = ['LoopContext', 'TemplateReference', 'Macro', 'Markup', 'TemplateRuntimeError', 'missing', 'escape', 'markup_join', 'str_join', 'identity', 'TemplateNotFound', 'Namespace', 'Undefined', 'internalcode']
-    async_exported = ['AsyncLoopContext', 'auto_aiter', 'auto_await']
     class TemplateReference:
         """The `self` in templates."""
 
@@ -2971,8 +2982,7 @@ preamble sandbox:
     from .exceptions import SecurityError
     from .runtime import Context
     from .runtime import Undefined
-  body: |
-    'A sandbox layer that ensures unsafe operations cannot be performed.\nUseful when the template itself comes from an untrusted source.\n'
+  constants: |
     F = t.TypeVar('F', bound=t.Callable[..., t.Any])
     MAX_RANGE = 100000
     UNSAFE_FUNCTION_ATTRIBUTES: t.Set[str] = set()
@@ -2981,6 +2991,8 @@ preamble sandbox:
     UNSAFE_COROUTINE_ATTRIBUTES = {'cr_frame', 'cr_code'}
     UNSAFE_ASYNC_GENERATOR_ATTRIBUTES = {'ag_code', 'ag_frame'}
     _mutable_spec: t.Tuple[t.Tuple[t.Type[t.Any], t.FrozenSet[str]], ...] = ((abc.MutableSet, frozenset(['add', 'clear', 'difference_update', 'discard', 'pop', 'remove', 'symmetric_difference_update', 'update'])), (abc.MutableMapping, frozenset(['clear', 'pop', 'popitem', 'setdefault', 'update'])), (abc.MutableSequence, frozenset(['append', 'reverse', 'insert', 'sort', 'extend', 'remove'])), (deque, frozenset(['append', 'appendleft', 'clear', 'extend', 'extendleft', 'pop', 'popleft', 'remove', 'rotate'])))
+  body: |
+    'A sandbox layer that ensures unsafe operations cannot be performed.\nUseful when the template itself comes from an untrusted source.\n'
     class SandboxedEnvironment(Environment):
         """The sandboxed environment.  It works like the regular environment but
         tells the compiler to generate sandboxed code.  Additionally subclasses of
@@ -3085,11 +3097,12 @@ preamble tests:
     from numbers import Number
     from .runtime import Undefined
     from .utils import pass_environment
+  constants: |
+    TESTS = {'odd': test_odd, 'even': test_even, 'divisibleby': test_divisibleby, 'defined': test_defined, 'undefined': test_undefined, 'filter': test_filter, 'test': test_test, 'none': test_none, 'boolean': test_boolean, 'false': test_false, 'true': test_true, 'integer': test_integer, 'float': test_float, 'lower': test_lower, 'upper': test_upper, 'string': test_string, 'mapping': test_mapping, 'number': test_number, 'sequence': test_sequence, 'iterable': test_iterable, 'callable': callable, 'sameas': test_sameas, 'escaped': test_escaped, 'in': test_in, '==': operator.eq, 'eq': operator.eq, 'equalto': operator.eq, '!=': operator.ne, 'ne': operator.ne, '>': operator.gt, 'gt': operator.gt, 'greaterthan': operator.gt, 'ge': operator.ge, '>=': operator.ge, '<': operator.lt, 'lt': operator.lt, 'lessthan': operator.lt, '<=': operator.le, 'le': operator.le}
   body: |
     'Built-in template tests used with the ``is`` operator.'
     if t.TYPE_CHECKING:
         from .environment import Environment
-    TESTS = {'odd': test_odd, 'even': test_even, 'divisibleby': test_divisibleby, 'defined': test_defined, 'undefined': test_undefined, 'filter': test_filter, 'test': test_test, 'none': test_none, 'boolean': test_boolean, 'false': test_false, 'true': test_true, 'integer': test_integer, 'float': test_float, 'lower': test_lower, 'upper': test_upper, 'string': test_string, 'mapping': test_mapping, 'number': test_number, 'sequence': test_sequence, 'iterable': test_iterable, 'callable': callable, 'sameas': test_sameas, 'escaped': test_escaped, 'in': test_in, '==': operator.eq, 'eq': operator.eq, 'equalto': operator.eq, '!=': operator.ne, 'ne': operator.ne, '>': operator.gt, 'gt': operator.gt, 'greaterthan': operator.gt, 'ge': operator.ge, '>=': operator.ge, '<': operator.lt, 'lt': operator.lt, 'lessthan': operator.lt, '<=': operator.le, 'le': operator.le}
 
 
 preamble utils:
@@ -3108,19 +3121,20 @@ preamble utils:
     from types import CodeType
     from urllib.parse import quote_from_bytes
     import markupsafe
-  body: |
-    if t.TYPE_CHECKING:
-        import typing_extensions as te
+  constants: |
     F = t.TypeVar('F', bound=t.Callable[..., t.Any])
     missing: t.Any = type('MissingType', (), {'__repr__': lambda x: 'missing'})()
     internal_code: t.MutableSet[CodeType] = set()
     concat = ''.join
+    _http_re = re.compile('\n    ^\n    (\n        (https?://|www\\.)  # scheme or www\n        (([\\w%-]+\\.)+)?  # subdomain\n        (\n            [a-z]{2,63}  # basic tld\n        |\n            xn--[\\w%]{2,59}  # idna tld\n        )\n    |\n        ([\\w%-]{2,63}\\.)+  # basic domain\n        (com|net|int|edu|gov|org|info|mil)  # basic tld\n    |\n        (https?://)  # scheme\n        (\n            (([\\d]{1,3})(\\.[\\d]{1,3}){3})  # IPv4\n        |\n            (\\[([\\da-f]{0,4}:){2}([\\da-f]{0,4}:?){1,6}])  # IPv6\n        )\n    )\n    (?::[\\d]{1,5})?  # port\n    (?:[/?#]\\S*)?  # path, query, and fragment\n    $\n    ', re.IGNORECASE | re.VERBOSE)
+    _email_re = re.compile('^\\S+@\\w[\\w.-]*\\.\\w+$')
+  body: |
+    if t.TYPE_CHECKING:
+        import typing_extensions as te
     class _PassArg(enum.Enum):
         context = enum.auto()
         eval_context = enum.auto()
         environment = enum.auto()
-    _http_re = re.compile('\n    ^\n    (\n        (https?://|www\\.)  # scheme or www\n        (([\\w%-]+\\.)+)?  # subdomain\n        (\n            [a-z]{2,63}  # basic tld\n        |\n            xn--[\\w%]{2,59}  # idna tld\n        )\n    |\n        ([\\w%-]{2,63}\\.)+  # basic domain\n        (com|net|int|edu|gov|org|info|mil)  # basic tld\n    |\n        (https?://)  # scheme\n        (\n            (([\\d]{1,3})(\\.[\\d]{1,3}){3})  # IPv4\n        |\n            (\\[([\\da-f]{0,4}:){2}([\\da-f]{0,4}:?){1,6}])  # IPv6\n        )\n    )\n    (?::[\\d]{1,5})?  # port\n    (?:[/?#]\\S*)?  # path, query, and fragment\n    $\n    ', re.IGNORECASE | re.VERBOSE)
-    _email_re = re.compile('^\\S+@\\w[\\w.-]*\\.\\w+$')
     @abc.MutableMapping.register
     class LRUCache:
         """A simple LRU Cache implementation."""

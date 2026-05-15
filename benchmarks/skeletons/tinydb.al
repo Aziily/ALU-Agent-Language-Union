@@ -5,9 +5,10 @@ preamble __init__:
     from .storages import Storage, JSONStorage
     from .database import TinyDB
     from .version import __version__
+  constants: |
+    __all__ = ('TinyDB', 'Storage', 'JSONStorage', 'Query', 'where')
   body: |
     "\nTinyDB is a tiny, document oriented database optimized for your happiness :)\n\nTinyDB stores different types of Python data types using a configurable\nstorage mechanism. It comes with a syntax for querying data and storing\ndata in multiple tables.\n\n.. codeauthor:: Markus Siemens <markus@m-siemens.de>\n\nUsage example:\n\n>>> from tinydb import TinyDB, where\n>>> from tinydb.storages import MemoryStorage\n>>> db = TinyDB(storage=MemoryStorage)\n>>> db.insert({'data': 5})  # Insert into '_default' table\n>>> db.search(where('data') == 5)\n[{'data': 5, '_id': 1}]\n>>> # Now let's create a new table\n>>> tbl = db.table('our_table')\n>>> for i in range(10):\n...     tbl.insert({'data': i})\n...\n>>> len(tbl.search(where('data') < 5))\n5\n"
-    __all__ = ('TinyDB', 'Storage', 'JSONStorage', 'Query', 'where')
 
 
 preamble database:
@@ -18,9 +19,10 @@ preamble database:
     from .storages import Storage
     from .table import Table, Document
     from .utils import with_typehint
+  constants: |
+    TableBase: Type[Table] = with_typehint(Table)
   body: |
     '\nThis module contains the main component of TinyDB: the database.\n'
-    TableBase: Type[Table] = with_typehint(Table)
     class TinyDB(TableBase):
         """
         The main class of TinyDB.
@@ -297,10 +299,11 @@ preamble mypy_plugin:
     from mypy.nodes import NameExpr
     from mypy.options import Options
     from mypy.plugin import Plugin, DynamicClassDefContext
-  body: |
+  constants: |
     T = TypeVar('T')
     CB = Optional[Callable[[T], None]]
     DynamicClassDef = DynamicClassDefContext
+  body: |
     class TinyDBPlugin(Plugin):
 
         def __init__(self, options: Options):
@@ -321,13 +324,14 @@ preamble queries:
     import sys
     from typing import Mapping, Tuple, Callable, Any, Union, List, Optional
     from .utils import freeze
+  constants: |
+    __all__ = ('Query', 'QueryLike', 'where')
   body: |
     "\nContains the querying interface.\n\nStarting with :class:`~tinydb.queries.Query` you can construct complex\nqueries:\n\n>>> ((where('f1') == 5) & (where('f2') != 2)) | where('s').matches(r'^\\w+$')\n(('f1' == 5) and ('f2' != 2)) or ('s' ~= ^\\w+$ )\n\nQueries are executed by using the ``__call__``:\n\n>>> q = where('val') == 5\n>>> q({'val': 5})\nTrue\n>>> q({'val': 1})\nFalse\n"
     if sys.version_info >= (3, 8):
         from typing import Protocol
     else:
         from typing_extensions import Protocol
-    __all__ = ('Query', 'QueryLike', 'where')
     class QueryLike(Protocol):
         """
         A typing protocol that acts like a query.
@@ -671,9 +675,10 @@ preamble storages:
     import warnings
     from abc import ABC, abstractmethod
     from typing import Dict, Any, Optional
+  constants: |
+    __all__ = ('Storage', 'JSONStorage', 'MemoryStorage')
   body: |
     '\nContains the :class:`base class <tinydb.storages.Storage>` for storages and\nimplementations.\n'
-    __all__ = ('Storage', 'JSONStorage', 'MemoryStorage')
     class Storage(ABC):
         """
         The abstract base class for all Storages.
@@ -756,9 +761,10 @@ preamble table:
     from .queries import QueryLike
     from .storages import Storage
     from .utils import LRUCache
+  constants: |
+    __all__ = ('Document', 'Table')
   body: |
     '\nThis module implements tables, the central place for accessing and manipulating\ndata in TinyDB.\n'
-    __all__ = ('Document', 'Table')
     class Document(dict):
         """
         A document stored in the database.
@@ -1019,13 +1025,14 @@ preamble utils:
   imports: |
     from collections import OrderedDict, abc
     from typing import List, Iterator, TypeVar, Generic, Union, Optional, Type, TYPE_CHECKING
-  body: |
-    '\nUtility functions.\n'
+  constants: |
     K = TypeVar('K')
     V = TypeVar('V')
     D = TypeVar('D')
     T = TypeVar('T')
     __all__ = ('LRUCache', 'freeze', 'with_typehint')
+  body: |
+    '\nUtility functions.\n'
     class LRUCache(abc.MutableMapping, Generic[K, V]):
         """
         A least-recently used (LRU) cache with a fixed cache size.
@@ -1084,7 +1091,7 @@ preamble utils:
 
 preamble version:
   source: tinydb/version.py
-  body: |
+  constants: |
     __version__ = '4.8.0'
 
 

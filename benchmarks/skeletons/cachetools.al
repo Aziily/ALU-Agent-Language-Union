@@ -8,10 +8,12 @@ preamble __init__:
     import random
     import time
     from . import keys
-  body: |
-    'Extensible memoizing collections and decorators.'
+  constants: |
     __all__ = ('Cache', 'FIFOCache', 'LFUCache', 'LRUCache', 'MRUCache', 'RRCache', 'TLRUCache', 'TTLCache', 'cached', 'cachedmethod')
     __version__ = '5.5.0'
+    _CacheInfo = collections.namedtuple('CacheInfo', ['hits', 'misses', 'maxsize', 'currsize'])
+  body: |
+    'Extensible memoizing collections and decorators.'
     class _DefaultSize:
         __slots__ = ()
 
@@ -583,7 +585,6 @@ preamble __init__:
             value = self.__items[key]
             self.__items.move_to_end(key)
             return value
-    _CacheInfo = collections.namedtuple('CacheInfo', ['hits', 'misses', 'maxsize', 'currsize'])
 
 
 preamble func:
@@ -599,9 +600,10 @@ preamble func:
     from . import FIFOCache, LFUCache, LRUCache, MRUCache, RRCache, TTLCache
     from . import cached
     from . import keys
+  constants: |
+    __all__ = ('fifo_cache', 'lfu_cache', 'lru_cache', 'mru_cache', 'rr_cache', 'ttl_cache')
   body: |
     '`functools.lru_cache` compatible memoizing function decorators.'
-    __all__ = ('fifo_cache', 'lfu_cache', 'lru_cache', 'mru_cache', 'rr_cache', 'ttl_cache')
     class _UnboundTTLCache(TTLCache):
 
         def __init__(self, ttl, timer):
@@ -610,9 +612,11 @@ preamble func:
 
 preamble keys:
   source: cachetools/keys.py
+  constants: |
+    __all__ = ('hashkey', 'methodkey', 'typedkey', 'typedmethodkey')
+    _kwmark = (_HashedTuple,)
   body: |
     'Key functions for memoizing decorators.'
-    __all__ = ('hashkey', 'methodkey', 'typedkey', 'typedmethodkey')
     class _HashedTuple(tuple):
         """A tuple that ensures that hash() will be called no more than once
         per element, since cache decorators will hash the key multiple
@@ -636,7 +640,6 @@ preamble keys:
 
         def __getstate__(self):
             return {}
-    _kwmark = (_HashedTuple,)
 
 
 flow cachetools_lib:

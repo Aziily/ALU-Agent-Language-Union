@@ -10,7 +10,7 @@ preamble __init__:
     from marshmallow.schema import Schema, SchemaOpts
     from marshmallow.utils import EXCLUDE, INCLUDE, RAISE, missing, pprint
     from . import fields
-  body: |
+  constants: |
     __all__ = ['EXCLUDE', 'INCLUDE', 'RAISE', 'Schema', 'SchemaOpts', 'fields', 'validates', 'validates_schema', 'pre_dump', 'post_dump', 'pre_load', 'post_load', 'pprint', 'ValidationError', 'missing']
 
 
@@ -36,12 +36,13 @@ preamble class_registry:
     from __future__ import annotations
     import typing
     from marshmallow.exceptions import RegistryError
+  constants: |
+    _registry = {}
   body: |
     'A registry of :class:`Schema <marshmallow.Schema>` classes. This allows for string\nlookup of schemas, which may be used with\nclass:`fields.Nested <marshmallow.fields.Nested>`.\n\n.. warning::\n\n    This module is treated as private API.\n    Users should not need to use this module directly.\n'
     if typing.TYPE_CHECKING:
         from marshmallow import Schema
         SchemaType = typing.Type[Schema]
-    _registry = {}
 
 
 preamble decorators:
@@ -50,14 +51,15 @@ preamble decorators:
     from __future__ import annotations
     import functools
     from typing import Any, Callable, cast
-  body: |
-    'Decorators for registering schema pre-processing and post-processing methods.\nThese should be imported from the top-level `marshmallow` module.\n\nMethods decorated with\n`pre_load <marshmallow.decorators.pre_load>`, `post_load <marshmallow.decorators.post_load>`,\n`pre_dump <marshmallow.decorators.pre_dump>`, `post_dump <marshmallow.decorators.post_dump>`,\nand `validates_schema <marshmallow.decorators.validates_schema>` receive\n``many`` as a keyword argument. In addition, `pre_load <marshmallow.decorators.pre_load>`,\n`post_load <marshmallow.decorators.post_load>`,\nand `validates_schema <marshmallow.decorators.validates_schema>` receive\n``partial``. If you don\'t need these arguments, add ``**kwargs`` to your method\nsignature.\n\n\nExample: ::\n\n    from marshmallow import (\n        Schema,\n        pre_load,\n        pre_dump,\n        post_load,\n        validates_schema,\n        validates,\n        fields,\n        ValidationError,\n    )\n\n\n    class UserSchema(Schema):\n        email = fields.Str(required=True)\n        age = fields.Integer(required=True)\n\n        @post_load\n        def lowerstrip_email(self, item, many, **kwargs):\n            item["email"] = item["email"].lower().strip()\n            return item\n\n        @pre_load(pass_many=True)\n        def remove_envelope(self, data, many, **kwargs):\n            namespace = "results" if many else "result"\n            return data[namespace]\n\n        @post_dump(pass_many=True)\n        def add_envelope(self, data, many, **kwargs):\n            namespace = "results" if many else "result"\n            return {namespace: data}\n\n        @validates_schema\n        def validate_email(self, data, **kwargs):\n            if len(data["email"]) < 3:\n                raise ValidationError("Email must be more than 3 characters", "email")\n\n        @validates("age")\n        def validate_age(self, data, **kwargs):\n            if data < 14:\n                raise ValidationError("Too young!")\n\n.. note::\n    These decorators only work with instance methods. Class and static\n    methods are not supported.\n\n.. warning::\n    The invocation order of decorated methods of the same type is not guaranteed.\n    If you need to guarantee order of different processing steps, you should put\n    them in the same processing method.\n'
+  constants: |
     PRE_DUMP = 'pre_dump'
     POST_DUMP = 'post_dump'
     PRE_LOAD = 'pre_load'
     POST_LOAD = 'post_load'
     VALIDATES = 'validates'
     VALIDATES_SCHEMA = 'validates_schema'
+  body: |
+    'Decorators for registering schema pre-processing and post-processing methods.\nThese should be imported from the top-level `marshmallow` module.\n\nMethods decorated with\n`pre_load <marshmallow.decorators.pre_load>`, `post_load <marshmallow.decorators.post_load>`,\n`pre_dump <marshmallow.decorators.pre_dump>`, `post_dump <marshmallow.decorators.post_dump>`,\nand `validates_schema <marshmallow.decorators.validates_schema>` receive\n``many`` as a keyword argument. In addition, `pre_load <marshmallow.decorators.pre_load>`,\n`post_load <marshmallow.decorators.post_load>`,\nand `validates_schema <marshmallow.decorators.validates_schema>` receive\n``partial``. If you don\'t need these arguments, add ``**kwargs`` to your method\nsignature.\n\n\nExample: ::\n\n    from marshmallow import (\n        Schema,\n        pre_load,\n        pre_dump,\n        post_load,\n        validates_schema,\n        validates,\n        fields,\n        ValidationError,\n    )\n\n\n    class UserSchema(Schema):\n        email = fields.Str(required=True)\n        age = fields.Integer(required=True)\n\n        @post_load\n        def lowerstrip_email(self, item, many, **kwargs):\n            item["email"] = item["email"].lower().strip()\n            return item\n\n        @pre_load(pass_many=True)\n        def remove_envelope(self, data, many, **kwargs):\n            namespace = "results" if many else "result"\n            return data[namespace]\n\n        @post_dump(pass_many=True)\n        def add_envelope(self, data, many, **kwargs):\n            namespace = "results" if many else "result"\n            return {namespace: data}\n\n        @validates_schema\n        def validate_email(self, data, **kwargs):\n            if len(data["email"]) < 3:\n                raise ValidationError("Email must be more than 3 characters", "email")\n\n        @validates("age")\n        def validate_age(self, data, **kwargs):\n            if data < 14:\n                raise ValidationError("Too young!")\n\n.. note::\n    These decorators only work with instance methods. Class and static\n    methods are not supported.\n\n.. warning::\n    The invocation order of decorated methods of the same type is not guaranteed.\n    If you need to guarantee order of different processing steps, you should put\n    them in the same processing method.\n'
     class MarshmallowHook:
         __marshmallow_hook__: dict[tuple[str, bool] | str, Any] | None = None
 
@@ -79,9 +81,10 @@ preamble exceptions:
   imports: |
     from __future__ import annotations
     import typing
+  constants: |
+    SCHEMA = '_schema'
   body: |
     'Exception classes for marshmallow-related errors.'
-    SCHEMA = '_schema'
     class MarshmallowError(Exception):
         """Base class for all marshmallow-related errors."""
     class ValidationError(MarshmallowError):
@@ -137,10 +140,15 @@ preamble fields:
     from marshmallow.utils import missing as missing_
     from marshmallow.validate import And, Length
     from marshmallow.warnings import RemovedInMarshmallow4Warning
-  body: |
-    'Field classes for various types of data.'
+  constants: |
     __all__ = ['Field', 'Raw', 'Nested', 'Mapping', 'Dict', 'List', 'Tuple', 'String', 'UUID', 'Number', 'Integer', 'Decimal', 'Boolean', 'Float', 'DateTime', 'NaiveDateTime', 'AwareDateTime', 'Time', 'Date', 'TimeDelta', 'Url', 'URL', 'Email', 'IP', 'IPv4', 'IPv6', 'IPInterface', 'IPv4Interface', 'IPv6Interface', 'Enum', 'Method', 'Function', 'Str', 'Bool', 'Int', 'Constant', 'Pluck']
     _T = typing.TypeVar('_T')
+    URL = Url
+    Str = String
+    Bool = Boolean
+    Int = Integer
+  body: |
+    'Field classes for various types of data.'
     class Field(FieldABC):
         """Basic field from which other fields should extend. It applies no
         formatting by default, and should only be used in cases where
@@ -1050,10 +1058,6 @@ preamble fields:
         def __init__(self):
             super().__init__()
             self._field_cache = {}
-    URL = Url
-    Str = String
-    Bool = Boolean
-    Int = Integer
 
 
 preamble orderedset:
@@ -1130,9 +1134,11 @@ preamble schema:
     from marshmallow.orderedset import OrderedSet
     from marshmallow.utils import EXCLUDE, INCLUDE, RAISE, get_value, is_collection, is_instance_or_subclass, missing, set_value, validate_unknown_parameter_value
     from marshmallow.warnings import RemovedInMarshmallow4Warning
+  constants: |
+    _T = typing.TypeVar('_T')
+    BaseSchema = Schema
   body: |
     'The :class:`Schema` class, including its metaclass and options (class Meta).'
-    _T = typing.TypeVar('_T')
     class SchemaMeta(ABCMeta):
         """Metaclass for the Schema class. Binds the declared fields to
         a ``_declared_fields`` attribute, which is a dictionary mapping attribute
@@ -1594,18 +1600,18 @@ preamble schema:
             specified in ``class Meta``.
             """
             pass
-    BaseSchema = Schema
 
 
 preamble types:
   source: marshmallow/types.py
   imports: |
     import typing
-  body: |
-    'Type aliases.\n\n.. warning::\n\n    This module is provisional. Types may be modified, added, and removed between minor releases.\n'
+  constants: |
     StrSequenceOrSet = typing.Union[typing.Sequence[str], typing.AbstractSet[str]]
     Tag = typing.Union[str, typing.Tuple[str, bool]]
     Validator = typing.Callable[[typing.Any], typing.Any]
+  body: |
+    'Type aliases.\n\n.. warning::\n\n    This module is provisional. Types may be modified, added, and removed between minor releases.\n'
 
 
 preamble utils:
@@ -1626,12 +1632,17 @@ preamble utils:
     from marshmallow.base import FieldABC
     from marshmallow.exceptions import FieldInstanceResolutionError
     from marshmallow.warnings import RemovedInMarshmallow4Warning
-  body: |
-    'Utility methods for marshmallow.'
+  constants: |
     EXCLUDE = 'exclude'
     INCLUDE = 'include'
     RAISE = 'raise'
     _UNKNOWN_VALUES = {EXCLUDE, INCLUDE, RAISE}
+    missing = _Missing()
+    _iso8601_datetime_re = re.compile('(?P<year>\\d{4})-(?P<month>\\d{1,2})-(?P<day>\\d{1,2})[T ](?P<hour>\\d{1,2}):(?P<minute>\\d{1,2})(?::(?P<second>\\d{1,2})(?:\\.(?P<microsecond>\\d{1,6})\\d{0,6})?)?(?P<tzinfo>Z|[+-]\\d{2}(?::?\\d{2})?)?$')
+    _iso8601_date_re = re.compile('(?P<year>\\d{4})-(?P<month>\\d{1,2})-(?P<day>\\d{1,2})$')
+    _iso8601_time_re = re.compile('(?P<hour>\\d{1,2}):(?P<minute>\\d{1,2})(?::(?P<second>\\d{1,2})(?:\\.(?P<microsecond>\\d{1,6})\\d{0,6})?)?')
+  body: |
+    'Utility methods for marshmallow.'
     class _Missing:
 
         def __bool__(self):
@@ -1645,10 +1656,6 @@ preamble utils:
 
         def __repr__(self):
             return '<marshmallow.missing>'
-    missing = _Missing()
-    _iso8601_datetime_re = re.compile('(?P<year>\\d{4})-(?P<month>\\d{1,2})-(?P<day>\\d{1,2})[T ](?P<hour>\\d{1,2}):(?P<minute>\\d{1,2})(?::(?P<second>\\d{1,2})(?:\\.(?P<microsecond>\\d{1,6})\\d{0,6})?)?(?P<tzinfo>Z|[+-]\\d{2}(?::?\\d{2})?)?$')
-    _iso8601_date_re = re.compile('(?P<year>\\d{4})-(?P<month>\\d{1,2})-(?P<day>\\d{1,2})$')
-    _iso8601_time_re = re.compile('(?P<hour>\\d{1,2}):(?P<minute>\\d{1,2})(?::(?P<second>\\d{1,2})(?:\\.(?P<microsecond>\\d{1,6})\\d{0,6})?)?')
 
 
 preamble validate:
@@ -1662,9 +1669,10 @@ preamble validate:
     from operator import attrgetter
     from marshmallow import types
     from marshmallow.exceptions import ValidationError
+  constants: |
+    _T = typing.TypeVar('_T')
   body: |
     'Validation classes for various types of data.'
-    _T = typing.TypeVar('_T')
     class Validator(ABC):
         """Abstract base class for validators.
 

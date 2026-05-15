@@ -36,8 +36,82 @@ def test_preamble_is_in_DECLARATORS():
 
 def test_allowed_fields_for_preamble():
     """preamble accepts `source` (optional), `imports` (optional, H4),
-    and `body` (required)."""
-    assert ALLOWED_FIELDS_BY_KIND["preamble"] == {"source", "imports", "body"}
+    `constants` (optional, H5), and `body` (required)."""
+    assert ALLOWED_FIELDS_BY_KIND["preamble"] == {
+        "source", "imports", "constants", "body"
+    }
+
+
+def test_parse_preamble_with_constants_field():
+    """H5 (Round 3): preamble can have a structured ``constants:`` block
+    scalar holding module-level simple-name value assignments
+    (``__all__ = (...)``, ``PI = 3.14``, ``X: int = 1``)."""
+    src = (
+        "preamble cachetools_keys:\n"
+        "  source: cachetools/keys.py\n"
+        "  imports: |\n"
+        "    import collections\n"
+        "  constants: |\n"
+        "    __all__ = ('hashkey',)\n"
+        "    DEFAULT_SIZE = 128\n"
+        "  body: |\n"
+        "    class _HashedTuple(tuple):\n"
+        "        pass\n"
+    )
+    prog = parse(src)
+    d = prog.defs[0]
+    constants_field = next(f for f in d.fields if f.name == "constants")
+    assert isinstance(constants_field.value, BlockScalar)
+    assert "__all__ = ('hashkey',)" in constants_field.value.text
+    assert "DEFAULT_SIZE = 128" in constants_field.value.text
+    body_field = next(f for f in d.fields if f.name == "body")
+    # Body should NOT contain the constants (they're hoisted)
+    assert "__all__" not in body_field.value.text
+    assert "class _HashedTuple" in body_field.value.text
+
+
+def test_roundtrip_preamble_with_constants():
+    """Roundtrip: a preamble with imports + constants + body parses →
+    serializes → parses to the same shape."""
+    src = (
+        "preamble x:\n"
+        "  source: pkg/x.py\n"
+        "  imports: |\n"
+        "    import os\n"
+        "  constants: |\n"
+        "    PI = 3.14\n"
+        "    __all__ = ('a',)\n"
+        "  body: |\n"
+        "    class Foo:\n"
+        "        pass\n"
+    )
+    p1 = parse(src)
+    p2 = parse(serialize(p1))
+    fields2 = {f.name for f in p2.defs[0].fields}
+    assert fields2 == {"source", "imports", "constants", "body"}
+    constants2 = next(f for f in p2.defs[0].fields if f.name == "constants").value
+    assert "PI = 3.14" in constants2.text and "__all__" in constants2.text
+
+
+def test_serializer_emits_constants_between_imports_and_body():
+    """Canonical field order inside a preamble:
+    source → imports → constants → body."""
+    src = (
+        "preamble x:\n"
+        "  body: |\n"
+        "    class Foo:\n"
+        "        pass\n"
+        "  constants: |\n"
+        "    PI = 3.14\n"
+        "  imports: |\n"
+        "    import math\n"
+        "  source: pkg/x.py\n"
+    )
+    out = serialize(parse(src))
+    assert (
+        out.index("source:") < out.index("imports:")
+        < out.index("constants:") < out.index("body:")
+    )
 
 
 def test_parse_preamble_with_imports_field():

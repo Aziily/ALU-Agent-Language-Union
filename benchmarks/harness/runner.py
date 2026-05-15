@@ -97,6 +97,14 @@ class PipelineRunResult:
     """Each item is {iter, test_passing, test_passing_with_xfail, test_total,
        tokens, implementer_ok, inject_injected, inject_skipped, duration_sec,
        json_report_ok, error}. Used by WebUI + decision report."""
+    # Phase 1.AL-LOOP round 0.2: track BEST iter alongside final, so
+    # mid-run regression (LLM over-edits in iter 2 from a working iter 1)
+    # doesn't lose signal. final_iter_idx still reflects what commit0
+    # would record (last iter); best_iter_idx + best_iter_passing_with_xfail
+    # give the strongest signal seen.
+    best_iter_idx: int = -1  # which iter had the best pass count (-1 = no iter had test_total>0)
+    best_iter_passing_with_xfail: int = 0
+    best_iter_pass_pct: float = 0.0  # 100 * best_iter_passing_with_xfail / test_total of that iter
 
 
 @dataclass
@@ -117,6 +125,11 @@ class RunSummary:
     baseline_per_test_pct: float = 0.0
     al_per_test_pct: float = 0.0
     per_test_tax_pp: float = 0.0  # baseline - al on per-test metric
+    # Phase 1.AL-LOOP 0.2: same metric but using each cell's BEST iter
+    # instead of its final iter — recovers signal lost to mid-run regression.
+    baseline_best_iter_pct: float = 0.0
+    al_best_iter_pct: float = 0.0
+    best_iter_tax_pp: float = 0.0
     pass_at_1_baseline: float = 0.0
     pass_at_1_al: float = 0.0
     pass_at_k_baseline: float = 0.0
@@ -257,6 +270,32 @@ def _truncate_tail(text: str, max_chars: int = MAX_FEEDBACK_TEST_OUTPUT_CHARS) -
     return f"...(truncated {len(text) - max_chars} chars from head)...\n" + text[-max_chars:]
 
 
+def _compute_best_iter(iter_outcomes: list[dict]) -> tuple[int, int, float]:
+    """Return ``(best_iter_idx, best_passing_with_xfail, best_pass_pct)``.
+
+    "Best" is the iter with the highest ``passing_with_xfail`` count
+    among iters that actually collected at least 1 test. Ties: earliest
+    iter wins (most efficient).
+
+    Returns ``(-1, 0, 0.0)`` if no iter had ``test_total > 0``.
+    """
+    best_idx = -1
+    best_count = -1
+    best_pct = 0.0
+    for o in iter_outcomes:
+        tot = o.get("test_total", 0)
+        if tot <= 0:
+            continue
+        passed = o.get("test_passing_with_xfail", 0)
+        if passed > best_count:
+            best_count = passed
+            best_idx = o.get("iter", -1)
+            best_pct = 100.0 * passed / tot
+    if best_idx < 0:
+        return -1, 0, 0.0
+    return best_idx, best_count, best_pct
+
+
 def _iter_outcome_dict(
     iter_idx: int,
     test: TestResult | None,
@@ -367,6 +406,7 @@ def _run_baseline_cell(
                   prompt=last_prompt, completion=last_completion_text)
 
     # Build PipelineRunResult from the FINAL iter (or all-error fallback).
+    best_iter_idx, best_passing_x, best_pct = _compute_best_iter(iter_outcomes)
     if final_test is None:
         # All iters failed at the LLM call before any test ran.
         return PipelineRunResult(
@@ -376,6 +416,9 @@ def _run_baseline_cell(
             n_iterations=len(iter_outcomes),
             iter_outcomes=iter_outcomes,
             final_iter_idx=-1,
+            best_iter_idx=best_iter_idx,
+            best_iter_passing_with_xfail=best_passing_x,
+            best_iter_pass_pct=best_pct,
         )
     return PipelineRunResult(
         project=project_name, k_iter=k, pipeline="baseline",
@@ -393,6 +436,9 @@ def _run_baseline_cell(
         n_iterations=len(iter_outcomes),
         iter_outcomes=iter_outcomes,
         final_iter_idx=final_iter_idx,
+        best_iter_idx=best_iter_idx,
+        best_iter_passing_with_xfail=best_passing_x,
+        best_iter_pass_pct=best_pct,
     )
 
 
@@ -474,6 +520,7 @@ def _run_al_cell(
         _save_raw(out_dir / "raw", project_name, k, "al",
                   prompt=last_prompt, completion=last_completion_text)
 
+    best_iter_idx, best_passing_x, best_pct = _compute_best_iter(iter_outcomes)
     if final_test is None:
         return PipelineRunResult(
             project=project_name, k_iter=k, pipeline="al",
@@ -482,6 +529,9 @@ def _run_al_cell(
             n_iterations=len(iter_outcomes),
             iter_outcomes=iter_outcomes,
             final_iter_idx=-1,
+            best_iter_idx=best_iter_idx,
+            best_iter_passing_with_xfail=best_passing_x,
+            best_iter_pass_pct=best_pct,
         )
     return PipelineRunResult(
         project=project_name, k_iter=k, pipeline="al",
@@ -496,6 +546,9 @@ def _run_al_cell(
         inject_injected=len(final_inject.injected),
         inject_skipped=len(final_inject.skipped),
         error=final_impl_error if not final_impl_ok else "",
+        best_iter_idx=best_iter_idx,
+        best_iter_passing_with_xfail=best_passing_x,
+        best_iter_pass_pct=best_pct,
         n_iterations=len(iter_outcomes),
         iter_outcomes=iter_outcomes,
         final_iter_idx=final_iter_idx,
@@ -672,6 +725,33 @@ def _compute_summary_metrics(summary: RunSummary) -> None:
         summary.baseline_per_test_pct - summary.al_per_test_pct
     )
 
+    # Round 0.2: best-iter aggregate.
+    # For each cell, find its best iter (max test_passing_with_xfail);
+    # sum those numerators over sum of that iter's test_total. This
+    # ignores cells where no iter had collected any tests.
+    def _best_iter_pct(pipeline: str) -> float:
+        total = 0
+        passed = 0
+        for r in summary.results:
+            if r.pipeline != pipeline or r.k_iter < 0:
+                continue
+            best_idx = r.best_iter_idx
+            if best_idx < 0:
+                continue
+            # Find that iter's outcome and use its test_total
+            for o in r.iter_outcomes:
+                if o.get("iter") == best_idx and o.get("test_total", 0) > 0:
+                    total += o["test_total"]
+                    passed += r.best_iter_passing_with_xfail
+                    break
+        return (100.0 * passed / total) if total else 0.0
+
+    summary.baseline_best_iter_pct = _best_iter_pct("baseline")
+    summary.al_best_iter_pct = _best_iter_pct("al")
+    summary.best_iter_tax_pp = (
+        summary.baseline_best_iter_pct - summary.al_best_iter_pct
+    )
+
     # Iter convergence histogram: for each pipeline, how many cells passed
     # on which iter idx (or -1 = never).
     def _iter_hist(pipeline: str) -> dict:
@@ -730,10 +810,14 @@ def _format_summary_md(s: RunSummary) -> str:
         f"## Headline numbers\n\n"
         f"| 指标 | Baseline | agent-lang | Δ |\n"
         f"|---|---|---|---|\n"
-        f"| **per-test pass% (commit0-aligned)** | "
+        f"| **per-test pass% (final iter — commit0-aligned)** | "
         f"**{s.baseline_per_test_pct:.1f}%** | "
         f"**{s.al_per_test_pct:.1f}%** | "
         f"{-s.per_test_tax_pp:+.1f} pp |\n"
+        f"| per-test pass% (best iter — strongest signal) | "
+        f"{s.baseline_best_iter_pct:.1f}% | "
+        f"{s.al_best_iter_pct:.1f}% | "
+        f"{-s.best_iter_tax_pp:+.1f} pp |\n"
         f"| binary all-pass% (per-cell, n={s.k_repeats * s.n_projects}) | "
         f"{s.baseline_pass_pct:.1f}% | {s.al_pass_pct:.1f}% | "
         f"{-s.tax_pp:+.1f} pp |\n"

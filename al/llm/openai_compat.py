@@ -22,12 +22,19 @@ runner does it via :attr:`CompletionResult.total_tokens`).
 from __future__ import annotations
 
 import json
+import sys
+import time
 from typing import Any
 
 import httpx
 
 from al.llm.base import CompletionResult
 from al.llm.env import LLMConfig, load_api_config
+
+
+# HTTP status codes worth retrying. 408/429/5xx are server-side transient.
+# 401/403/404/422 are caller-side and never retried.
+_TRANSIENT_HTTP_STATUSES = {408, 425, 429, 500, 502, 503, 504, 522, 524}
 
 
 class OpenAICompatClient:
@@ -45,6 +52,8 @@ class OpenAICompatClient:
         *,
         timeout: float = 120.0,
         transport: httpx.BaseTransport | None = None,
+        max_retries: int = 3,
+        retry_backoff_sec: float = 5.0,
     ) -> None:
         """Build a client.
 
@@ -54,9 +63,16 @@ class OpenAICompatClient:
                 process environment.
             timeout: Per-request HTTP timeout (seconds).
             transport: Override httpx transport for testing.
+            max_retries: How many extra attempts on transient errors
+                (HTTP 408 / 429 / 5xx, or network timeouts). Total
+                attempts = max_retries + 1. Set to 0 to disable retry.
+            retry_backoff_sec: Initial sleep between attempts. Doubles
+                per attempt (5s, 10s, 20s) for max_retries=3.
         """
         self.config = config or load_api_config()
         self._timeout = timeout
+        self._max_retries = max_retries
+        self._retry_backoff = retry_backoff_sec
         self._client = httpx.Client(
             base_url=self.config.base_url,
             timeout=timeout,
@@ -81,8 +97,13 @@ class OpenAICompatClient:
     ) -> CompletionResult:
         """POST to ``/chat/completions`` and parse the response.
 
+        Retries up to ``self._max_retries`` times on transient errors
+        (HTTP 408 / 425 / 429 / 5xx, network timeout, connection
+        error). Non-transient failures (auth, bad request, JSON parse)
+        raise immediately.
+
         Raises:
-            RuntimeError: if API key missing or server returns non-2xx.
+            RuntimeError: if API key missing, or after all retries fail.
         """
         self.config.assert_has_key()
 
@@ -93,15 +114,55 @@ class OpenAICompatClient:
             temperature=temperature,
             stop=stop,
         )
-        resp = self._client.post("/chat/completions", json=payload)
-        if resp.status_code >= 300:
+
+        attempts = self._max_retries + 1
+        last_err: Exception | None = None
+        for attempt in range(1, attempts + 1):
+            try:
+                resp = self._client.post("/chat/completions", json=payload)
+            except (httpx.TimeoutException, httpx.NetworkError) as e:
+                last_err = e
+                if attempt < attempts:
+                    wait = self._retry_backoff * (2 ** (attempt - 1))
+                    print(
+                        f"  [openai-compat] {type(e).__name__} on attempt "
+                        f"{attempt}/{attempts}, retrying in {wait:.0f}s",
+                        file=sys.stderr, flush=True,
+                    )
+                    time.sleep(wait)
+                    continue
+                raise RuntimeError(
+                    f"{self.config.base_url}/chat/completions: "
+                    f"network failure after {attempts} attempts: {e!r}"
+                ) from e
+
+            if resp.status_code < 300:
+                data = resp.json()
+                return self._parse_response(data)
+
+            transient = resp.status_code in _TRANSIENT_HTTP_STATUSES
+            if transient and attempt < attempts:
+                wait = self._retry_backoff * (2 ** (attempt - 1))
+                print(
+                    f"  [openai-compat] HTTP {resp.status_code} on attempt "
+                    f"{attempt}/{attempts}, retrying in {wait:.0f}s",
+                    file=sys.stderr, flush=True,
+                )
+                time.sleep(wait)
+                continue
+
+            # Either non-transient (auth, bad request, etc.) or last attempt.
             raise RuntimeError(
                 f"{self.config.base_url}/chat/completions returned "
-                f"{resp.status_code}: {resp.text[:500]}"
+                f"{resp.status_code} after {attempt} attempt(s): "
+                f"{resp.text[:500]}"
             )
 
-        data = resp.json()
-        return self._parse_response(data)
+        # Defensive: the loop returns or raises before this point.
+        assert last_err is not None  # pragma: no cover
+        raise RuntimeError(  # pragma: no cover
+            f"{self.config.base_url}/chat/completions: exhausted retries: {last_err!r}"
+        )
 
     def _build_request(
         self,

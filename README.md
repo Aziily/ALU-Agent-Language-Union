@@ -53,20 +53,43 @@
 ```bash
 # Install
 pip install -e .[test]
+pip install pytest-json-report pytest-cov       # used by harness
 
 # Tests
-pytest tests/ -q                                # 263 ✅
+pytest tests/ -q                                # 262 ✅
 
 # Re-generate a skeleton from a stripped commit0 repo
 python -m benchmarks.skeletons._autogen cachetools src/cachetools
 
-# Benchmark (needs .env + Docker, see Dockerfile.benchmark for env vars)
+# Benchmark — HOST mode (Round 0.4, fast, OpenAI-compatible HTTP):
+./benchmark.sh --host --k-repeats 1 --project-names cachetools   # smoke
+./benchmark.sh --host --n-projects 16 --k-repeats 3              # full
+
+# Benchmark — Docker mode (Anthropic-format via claude -p):
 ./benchmark.sh --n-projects 16 --k-repeats 3
 
 # WebUI to inspect results
 pip install flask>=3
 python -m benchmarks.webui                      # http://127.0.0.1:8765
 ```
+
+### Local proxy status (2026-05-15)
+
+- `http://127.0.0.1:9000` — **WORKING** OpenAI-compatible proxy. Key
+  `<redacted-proxy-token>` + model `gpt-5.4`. This is what `--host` mode
+  uses. Configure via `.env`:
+  ```
+  LLM_API_KEY=<redacted-proxy-token>
+  LLM_BASE_URL=http://127.0.0.1:9000/v1
+  LLM_MODEL=gpt-5.4
+  ```
+- `http://127.0.0.1:8787` — **BROKEN** Anthropic-format proxy. Diagnosed
+  via `/private/tmp/opencc.log`: the proxy correctly translates
+  Anthropic→OpenAI format but uses a hardcoded upstream key
+  `<redacted-sk-key>` that :9000 rejects (401). To
+  fix: edit the proxy's config in `~/Downloads/proxy/opencc/` to
+  use `<redacted-proxy-token>` then restart. Until fixed, use `--host`
+  mode (not the Docker `--use-claude-code` path).
 
 ## Why `preamble`?
 

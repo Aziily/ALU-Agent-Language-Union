@@ -48,10 +48,16 @@ def _default_ok_body():
     }
 
 
-def _client(transport, *, api_key="sk-test"):
+def _client(transport, *, api_key="sk-test", max_retries=0, retry_backoff_sec=0.0):
+    """Build a test client. Default: no retry (so tests fail fast on
+    transient-looking responses). Tests that exercise retry behavior
+    explicitly pass max_retries=N + retry_backoff_sec=0.0."""
     cfg = LLMConfig(api_key=api_key, base_url="https://yunwu.example/v1",
                     model="gpt-5.4-nano")
-    return OpenAICompatClient(cfg, transport=transport, timeout=5.0)
+    return OpenAICompatClient(
+        cfg, transport=transport, timeout=5.0,
+        max_retries=max_retries, retry_backoff_sec=retry_backoff_sec,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -211,3 +217,94 @@ def test_context_manager_closes_client():
         assert r.text  # responded
     # After exit, internal client closed — can still get config but no requests
     # (we don't have a clean way to assert closed; just verify no crash on exit)
+
+
+# ---------------------------------------------------------------------------
+# Retry behavior (Round 0.1 — transient errors are retried)
+# ---------------------------------------------------------------------------
+
+
+def _flaky_transport(*, attempts_until_ok, transient_status=503,
+                     ok_body=None, capture=None):
+    """Build a transport whose first ``attempts_until_ok`` requests return
+    ``transient_status``, then a 200 with ``ok_body``."""
+    if ok_body is None:
+        ok_body = _default_ok_body()
+    counter = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        counter["n"] += 1
+        if capture is not None:
+            capture.setdefault("attempts", []).append(counter["n"])
+        if counter["n"] <= attempts_until_ok:
+            return httpx.Response(transient_status, json={"error": "transient"})
+        return httpx.Response(200, json=ok_body)
+
+    return httpx.MockTransport(handler), counter
+
+
+def test_retries_on_5xx_and_eventually_succeeds():
+    """503 on attempt 1, 200 on attempt 2 → returns success after 1 retry."""
+    transport, counter = _flaky_transport(attempts_until_ok=1)
+    c = _client(transport, max_retries=3, retry_backoff_sec=0.0)
+    r = c.complete("p")
+    assert r.text  # got the success body
+    assert counter["n"] == 2  # one retry consumed
+    c.close()
+
+
+def test_retries_on_503_until_exhausted_raises_runtime():
+    """All 4 attempts return 503 → raise RuntimeError on the last."""
+    transport, counter = _flaky_transport(attempts_until_ok=999)
+    c = _client(transport, max_retries=3, retry_backoff_sec=0.0)
+    with pytest.raises(RuntimeError, match="503"):
+        c.complete("p")
+    assert counter["n"] == 4  # 1 initial + 3 retries
+    c.close()
+
+
+def test_no_retry_on_non_transient_4xx():
+    """401 is non-transient — raise immediately, no retry attempt."""
+    transport, counter = _flaky_transport(
+        attempts_until_ok=999, transient_status=401,
+    )
+    c = _client(transport, max_retries=3, retry_backoff_sec=0.0)
+    with pytest.raises(RuntimeError, match="401"):
+        c.complete("p")
+    assert counter["n"] == 1  # no retry
+    c.close()
+
+
+def test_retries_on_429_rate_limit():
+    """429 (Too Many Requests) is in the transient set."""
+    transport, counter = _flaky_transport(attempts_until_ok=2, transient_status=429)
+    c = _client(transport, max_retries=3, retry_backoff_sec=0.0)
+    r = c.complete("p")
+    assert r.text
+    assert counter["n"] == 3
+
+
+def test_retries_on_network_timeout():
+    """httpx.TimeoutException is transient — retry."""
+    calls = {"n": 0}
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        calls["n"] += 1
+        if calls["n"] <= 1:
+            raise httpx.ReadTimeout("timed out", request=req)
+        return httpx.Response(200, json=_default_ok_body())
+
+    transport = httpx.MockTransport(handler)
+    c = _client(transport, max_retries=3, retry_backoff_sec=0.0)
+    r = c.complete("p")
+    assert r.text
+    assert calls["n"] == 2
+
+
+def test_max_retries_zero_disables_retry():
+    """max_retries=0 → first 5xx raises immediately."""
+    transport, counter = _flaky_transport(attempts_until_ok=99)
+    c = _client(transport, max_retries=0)
+    with pytest.raises(RuntimeError, match="503"):
+        c.complete("p")
+    assert counter["n"] == 1

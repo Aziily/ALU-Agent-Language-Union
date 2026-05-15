@@ -1,0 +1,37 @@
+{
+  "$schema": "Phase 1.AL-LOOP autonomous design-iteration state",
+  "started_at": null,
+  "round": 0,
+  "phase": "preflight",
+  "baseline_commit": null,
+  "baseline_metrics": {
+    "preview": null,
+    "validation": null
+  },
+  "staged_commits": [],
+  "hypothesis_queue": [
+    "H2_preserve_working_code_prompt",
+    "H3_best_iter_already_done",
+    "H7_tox_ini_aware_pytest",
+    "H4_imports_keyword",
+    "H5_constant_keyword",
+    "H6_class_keyword",
+    "H11_show_test_imports",
+    "H9_show_previous_al_in_feedback",
+    "H8_topological_sort_skeleton",
+    "H10_max_iterations_5"
+  ],
+  "rejected_hypotheses": [],
+  "consecutive_rejects": 0,
+  "tokens_consumed_total": 0,
+  "metrics_history": [],
+  "halt": false,
+  "halt_reason": null,
+  "stopping_rules": {
+    "max_consecutive_rejects": 3,
+    "target_al_wins_on_at_least_n_repos": 3,
+    "max_rounds": 15,
+    "max_tokens_total": 50000000,
+    "max_hours_wall_clock": 8
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "timestamp": "20260515-103426",
+  "n_projects": 1,
+  "k_repeats": 1,
+  "results": [
+    {
+      "project": "cachetools",
+      "k_iter": 0,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 198,
+      "test_passing_with_xfail": 198,
+      "test_failing": 17,
+      "duration_sec": 0.19855475425720215,
+      "llm_total_tokens": 36087,
+      "implementer_ok": true,
+      "inject_injected": 2,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": -1,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_passing": 179,
+          "test_passing_with_xfail": 179,
+          "test_total": 215,
+          "test_failing": 36,
+          "duration_sec": 0.22104096412658691,
+          "tokens": 9519,
+          "implementer_ok": true,
+          "inject_injected": 2,
+          "inject_skipped": 0,
+          "json_report_ok": true,
+          "error": ""
+        },
+        {
+          "iter": 1,
+          "test_passing": 203,
+          "test_passing_with_xfail": 203,
+          "test_total": 215,
+          "test_failing": 12,
+          "duration_sec": 0.18522191047668457,
+          "tokens": 13373,
+          "implementer_ok": true,
+          "inject_injected": 2,
+          "inject_skipped": 0,
+          "json_report_ok": true,
+          "error": ""
+        },
+        {
+          "iter": 2,
+          "test_passing": 198,
+          "test_passing_with_xfail": 198,
+          "test_total": 215,
+          "test_failing": 17,
+          "duration_sec": 0.19855475425720215,
+          "tokens": 13195,
+          "implementer_ok": true,
+          "inject_injected": 2,
+          "inject_skipped": 0,
+          "json_report_ok": true,
+          "error": ""
+        }
+      ]
+    },
+    {
+      "project": "cachetools",
+      "k_iter": 0,
+      "pipeline": "al",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 205,
+      "test_passing_with_xfail": 205,
+      "test_failing": 10,
+      "duration_sec": 0.18913483619689941,
+      "llm_total_tokens": 69657,
+      "implementer_ok": true,
+      "inject_injected": 10,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": -1,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_passing": 179,
+          "test_passing_with_xfail": 179,
+          "test_total": 215,
+          "test_failing": 36,
+          "duration_sec": 0.21758079528808594,
+          "tokens": 17278,
+          "implementer_ok": true,
+          "inject_injected": 10,
+          "inject_skipped": 0,
+          "json_report_ok": true,
+          "error": ""
+        },
+        {
+          "iter": 1,
+          "test_passing": 173,
+          "test_passing_with_xfail": 173,
+          "test_total": 215,
+          "test_failing": 42,
+          "duration_sec": 0.31118273735046387,
+          "tokens": 25899,
+          "implementer_ok": true,
+          "inject_injected": 10,
+          "inject_skipped": 0,
+          "json_report_ok": true,
+          "error": ""
+        },
+        {
+          "iter": 2,
+          "test_passing": 205,
+          "test_passing_with_xfail": 205,
+          "test_total": 215,
+          "test_failing": 10,
+          "duration_sec": 0.18913483619689941,
+          "tokens": 26480,
+          "implementer_ok": true,
+          "inject_injected": 10,
+          "inject_skipped": 0,
+          "json_report_ok": true,
+          "error": ""
+        }
+      ]
+    }
+  ],
+  "tax_pp": 0.0,
+  "baseline_pass_pct": 0.0,
+  "al_pass_pct": 0.0,
+  "baseline_per_test_pct": 92.09302325581395,
+  "al_per_test_pct": 95.34883720930233,
+  "per_test_tax_pp": -3.255813953488385,
+  "pass_at_1_baseline": 0.0,
+  "pass_at_1_al": 0.0,
+  "pass_at_k_baseline": 0.0,
+  "pass_at_k_al": 0.0,
+  "total_llm_tokens": 105744,
+  "iter_convergence_baseline": {
+    "never_passed": 1
+  },
+  "iter_convergence_al": {
+    "never_passed": 1
+  }
+}

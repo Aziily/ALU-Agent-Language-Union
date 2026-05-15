@@ -56,6 +56,9 @@ def main(argv: list[str] | None = None) -> int:
                              "Intended for the Docker container scenario.")
     parser.add_argument("--n-projects", type=int, default=len(V1_SUBSET))
     parser.add_argument("--k-repeats", type=int, default=5)
+    parser.add_argument("--project-names", type=str, default=None,
+                        help="comma-separated subset of V1_SUBSET to run (e.g. "
+                             "'cachetools,wcwidth'). Overrides --n-projects.")
     parser.add_argument("--out-dir", type=Path, default=None)
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--setup-only", action="store_true",
@@ -130,12 +133,17 @@ def main(argv: list[str] | None = None) -> int:
         run_tests_fn = _stub_run_tests
         print("running MOCK: no LLM cost, fake test results", file=sys.stderr)
 
+    project_names = None
+    if args.project_names:
+        project_names = [n.strip() for n in args.project_names.split(",") if n.strip()]
+
     out_dir = run_pipeline(
         llm=llm,
         run_tests_fn=run_tests_fn,
         n_projects=args.n_projects,
         k_repeats=args.k_repeats,
         out_dir=args.out_dir,
+        project_names=project_names,
     )
     print(f"\nReport written: {out_dir}", file=sys.stderr)
     summary = (out_dir / "summary.md").read_text()

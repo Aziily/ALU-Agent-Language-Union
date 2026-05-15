@@ -1,0 +1,131 @@
+{
+  "project": "cachetools",
+  "baseline": [
+    {
+      "project": "cachetools",
+      "k_iter": 0,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 0,
+      "test_passing": 0,
+      "test_passing_with_xfail": 0,
+      "test_failing": 0,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 31528,
+      "implementer_ok": true,
+      "inject_injected": 2,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": -1,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_passing": 0,
+          "test_passing_with_xfail": 0,
+          "test_total": 0,
+          "test_failing": 0,
+          "duration_sec": 0.0,
+          "tokens": 9539,
+          "implementer_ok": true,
+          "inject_injected": 2,
+          "inject_skipped": 0,
+          "json_report_ok": false,
+          "error": ""
+        },
+        {
+          "iter": 1,
+          "test_passing": 0,
+          "test_passing_with_xfail": 0,
+          "test_total": 0,
+          "test_failing": 0,
+          "duration_sec": 0.0,
+          "tokens": 11118,
+          "implementer_ok": true,
+          "inject_injected": 2,
+          "inject_skipped": 0,
+          "json_report_ok": false,
+          "error": ""
+        },
+        {
+          "iter": 2,
+          "test_passing": 0,
+          "test_passing_with_xfail": 0,
+          "test_total": 0,
+          "test_failing": 0,
+          "duration_sec": 0.0,
+          "tokens": 10871,
+          "implementer_ok": true,
+          "inject_injected": 2,
+          "inject_skipped": 0,
+          "json_report_ok": false,
+          "error": ""
+        }
+      ]
+    }
+  ],
+  "al": [
+    {
+      "project": "cachetools",
+      "k_iter": 0,
+      "pipeline": "al",
+      "test_passed": false,
+      "test_total": 0,
+      "test_passing": 0,
+      "test_passing_with_xfail": 0,
+      "test_failing": 0,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 63903,
+      "implementer_ok": true,
+      "inject_injected": 10,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": -1,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_passing": 0,
+          "test_passing_with_xfail": 0,
+          "test_total": 0,
+          "test_failing": 0,
+          "duration_sec": 0.0,
+          "tokens": 17464,
+          "implementer_ok": true,
+          "inject_injected": 10,
+          "inject_skipped": 0,
+          "json_report_ok": false,
+          "error": ""
+        },
+        {
+          "iter": 1,
+          "test_passing": 0,
+          "test_passing_with_xfail": 0,
+          "test_total": 0,
+          "test_failing": 0,
+          "duration_sec": 0.0,
+          "tokens": 23360,
+          "implementer_ok": true,
+          "inject_injected": 10,
+          "inject_skipped": 0,
+          "json_report_ok": false,
+          "error": ""
+        },
+        {
+          "iter": 2,
+          "test_passing": 0,
+          "test_passing_with_xfail": 0,
+          "test_total": 0,
+          "test_failing": 0,
+          "duration_sec": 0.0,
+          "tokens": 23079,
+          "implementer_ok": true,
+          "inject_injected": 10,
+          "inject_skipped": 0,
+          "json_report_ok": false,
+          "error": ""
+        }
+      ]
+    }
+  ]
+}

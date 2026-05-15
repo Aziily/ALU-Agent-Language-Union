@@ -1,3 +1,1105 @@
+preamble __init__:
+  source: minitorch/__init__.py
+  body: |
+    import minitorch.scalar_functions as scalar_functions
+    from .autodiff import *
+    from .cuda_ops import *
+    from .datasets import datasets
+    from .fast_conv import *
+    from .fast_ops import *
+    from .module import *
+    from .nn import *
+    from .optim import *
+    from .scalar import Scalar, ScalarHistory, derivative_check
+    from .scalar_functions import ScalarFunction
+    from .tensor import *
+    from .tensor_data import *
+    from .tensor_functions import *
+    from .tensor_ops import *
+    from .testing import MathTest, MathTestVariable
+    version = '0.4'
+
+
+preamble autodiff:
+  source: minitorch/autodiff.py
+  body: |
+    from dataclasses import dataclass
+    from typing import Any, Iterable, List, Tuple
+    from typing_extensions import Protocol
+    variable_count = 1
+    class Variable(Protocol):
+        pass
+    @dataclass
+    class Context:
+        """
+        Context class is used by `Function` to store information during the forward pass.
+        """
+        no_grad: bool = False
+        saved_values: Tuple[Any, ...] = ()
+
+        def save_for_backward(self, *values: Any) -> None:
+            """Store the given `values` if they need to be used during backpropagation."""
+            pass
+
+
+preamble cuda_ops:
+  source: minitorch/cuda_ops.py
+  body: |
+    from typing import Callable, Optional
+    import numba
+    from numba import cuda
+    from .tensor import Tensor
+    from .tensor_data import MAX_DIMS, Shape, Storage, Strides, TensorData, broadcast_index, index_to_position, shape_broadcast, to_index
+    from .tensor_ops import MapProto, TensorOps
+    to_index = cuda.jit(device=True)(to_index)
+    index_to_position = cuda.jit(device=True)(index_to_position)
+    broadcast_index = cuda.jit(device=True)(broadcast_index)
+    THREADS_PER_BLOCK = 32
+    class CudaOps(TensorOps):
+        cuda = True
+
+        @staticmethod
+        def map(fn: Callable[[float], float]) -> MapProto:
+            """See `tensor_ops.py`"""
+            pass
+    jit_sum_practice = cuda.jit()(_sum_practice)
+    jit_mm_practice = cuda.jit()(_mm_practice)
+    tensor_matrix_multiply = cuda.jit(_tensor_matrix_multiply)
+
+
+preamble datasets:
+  source: minitorch/datasets.py
+  body: |
+    import math
+    import random
+    from dataclasses import dataclass
+    from typing import List, Tuple
+    @dataclass
+    class Graph:
+        N: int
+        X: List[Tuple[float, float]]
+        y: List[int]
+    datasets = {'Simple': simple, 'Diag': diag, 'Split': split, 'Xor': xor, 'Circle': circle, 'Spiral': spiral}
+
+
+preamble fast_conv:
+  source: minitorch/fast_conv.py
+  body: |
+    from typing import Tuple
+    import numpy as np
+    from numba import njit, prange
+    from .autodiff import Context
+    from .tensor import Tensor
+    from .tensor_data import MAX_DIMS, Index, Shape, Strides, broadcast_index, index_to_position, to_index
+    from .tensor_functions import Function
+    to_index = njit(inline='always')(to_index)
+    index_to_position = njit(inline='always')(index_to_position)
+    broadcast_index = njit(inline='always')(broadcast_index)
+    tensor_conv1d = njit(parallel=True)(_tensor_conv1d)
+    class Conv1dFun(Function):
+
+        @staticmethod
+        def forward(ctx: Context, input: Tensor, weight: Tensor) -> Tensor:
+            """
+            Compute a 1D Convolution
+
+            Args:
+                ctx : Context
+                input : batch x in_channel x h x w
+                weight : out_channel x in_channel x kh x kw
+
+            Returns:
+                batch x out_channel x h x w
+            """
+            pass
+    conv1d = Conv1dFun.apply
+    tensor_conv2d = njit(parallel=True, fastmath=True)(_tensor_conv2d)
+    class Conv2dFun(Function):
+
+        @staticmethod
+        def forward(ctx: Context, input: Tensor, weight: Tensor) -> Tensor:
+            """
+            Compute a 2D Convolution
+
+            Args:
+                ctx : Context
+                input : batch x in_channel x h x w
+                weight  : out_channel x in_channel x kh x kw
+
+            Returns:
+                (:class:`Tensor`) : batch x out_channel x h x w
+            """
+            pass
+    conv2d = Conv2dFun.apply
+
+
+preamble fast_ops:
+  source: minitorch/fast_ops.py
+  body: |
+    from __future__ import annotations
+    from typing import TYPE_CHECKING
+    import numpy as np
+    from numba import njit, prange
+    from .tensor_data import MAX_DIMS, broadcast_index, index_to_position, shape_broadcast, to_index
+    from .tensor_ops import MapProto, TensorOps
+    if TYPE_CHECKING:
+        from typing import Callable, Optional
+        from .tensor import Tensor
+        from .tensor_data import Index, Shape, Storage, Strides
+    to_index = njit(inline='always')(to_index)
+    index_to_position = njit(inline='always')(index_to_position)
+    broadcast_index = njit(inline='always')(broadcast_index)
+    class FastOps(TensorOps):
+
+        @staticmethod
+        def map(fn: Callable[[float], float]) -> MapProto:
+            """See `tensor_ops.py`"""
+            pass
+
+        @staticmethod
+        def zip(fn: Callable[[float, float], float]) -> Callable[[Tensor, Tensor], Tensor]:
+            """See `tensor_ops.py`"""
+            pass
+
+        @staticmethod
+        def reduce(fn: Callable[[float, float], float], start: float=0.0) -> Callable[[Tensor, int], Tensor]:
+            """See `tensor_ops.py`"""
+            pass
+
+        @staticmethod
+        def matrix_multiply(a: Tensor, b: Tensor) -> Tensor:
+            """
+            Batched tensor matrix multiply ::
+
+                for n:
+                  for i:
+                    for j:
+                      for k:
+                        out[n, i, j] += a[n, i, k] * b[n, k, j]
+
+            Where n indicates an optional broadcasted batched dimension.
+
+            Should work for tensor shapes of 3 dims ::
+
+                assert a.shape[-1] == b.shape[-2]
+
+            Args:
+                a : tensor data a
+                b : tensor data b
+
+            Returns:
+                New tensor data
+            """
+            pass
+    tensor_matrix_multiply = njit(parallel=True, fastmath=True)(_tensor_matrix_multiply)
+
+
+preamble module:
+  source: minitorch/module.py
+  body: |
+    from __future__ import annotations
+    from typing import Any, Dict, Optional, Sequence, Tuple
+    class Module:
+        """
+        Modules form a tree that store parameters and other
+        submodules. They make up the basis of neural network stacks.
+
+        Attributes:
+            _modules : Storage of the child modules
+            _parameters : Storage of the module's parameters
+            training : Whether the module is in training mode or evaluation mode
+
+        """
+        _modules: Dict[str, Module]
+        _parameters: Dict[str, Parameter]
+        training: bool
+
+        def __init__(self) -> None:
+            self._modules = {}
+            self._parameters = {}
+            self.training = True
+
+        def modules(self) -> Sequence[Module]:
+            """Return the direct child modules of this module."""
+            pass
+
+        def train(self) -> None:
+            """Set the mode of this module and all descendent modules to `train`."""
+            pass
+
+        def eval(self) -> None:
+            """Set the mode of this module and all descendent modules to `eval`."""
+            pass
+
+        def named_parameters(self) -> Sequence[Tuple[str, Parameter]]:
+            """
+            Collect all the parameters of this module and its descendents.
+
+
+            Returns:
+                The name and `Parameter` of each ancestor parameter.
+            """
+            pass
+
+        def parameters(self) -> Sequence[Parameter]:
+            """Enumerate over all the parameters of this module and its descendents."""
+            pass
+
+        def add_parameter(self, k: str, v: Any) -> Parameter:
+            """
+            Manually add a parameter. Useful helper for scalar parameters.
+
+            Args:
+                k: Local name of the parameter.
+                v: Value for the parameter.
+
+            Returns:
+                Newly created parameter.
+            """
+            pass
+
+        def __setattr__(self, key: str, val: Parameter) -> None:
+            if isinstance(val, Parameter):
+                self.__dict__['_parameters'][key] = val
+            elif isinstance(val, Module):
+                self.__dict__['_modules'][key] = val
+            else:
+                super().__setattr__(key, val)
+
+        def __getattr__(self, key: str) -> Any:
+            if key in self.__dict__['_parameters']:
+                return self.__dict__['_parameters'][key]
+            if key in self.__dict__['_modules']:
+                return self.__dict__['_modules'][key]
+            return None
+
+        def __call__(self, *args: Any, **kwargs: Any) -> Any:
+            return self.forward(*args, **kwargs)
+
+        def __repr__(self) -> str:
+
+            def _addindent(s_: str, numSpaces: int) -> str:
+                s2 = s_.split('\n')
+                if len(s2) == 1:
+                    return s_
+                first = s2.pop(0)
+                s2 = [numSpaces * ' ' + line for line in s2]
+                s = '\n'.join(s2)
+                s = first + '\n' + s
+                return s
+            child_lines = []
+            for key, module in self._modules.items():
+                mod_str = repr(module)
+                mod_str = _addindent(mod_str, 2)
+                child_lines.append('(' + key + '): ' + mod_str)
+            lines = child_lines
+            main_str = self.__class__.__name__ + '('
+            if lines:
+                main_str += '\n  ' + '\n  '.join(lines) + '\n'
+            main_str += ')'
+            return main_str
+    class Parameter:
+        """
+        A Parameter is a special container stored in a `Module`.
+
+        It is designed to hold a `Variable`, but we allow it to hold
+        any value for testing.
+        """
+
+        def __init__(self, x: Any, name: Optional[str]=None) -> None:
+            self.value = x
+            self.name = name
+            if hasattr(x, 'requires_grad_'):
+                self.value.requires_grad_(True)
+                if self.name:
+                    self.value.name = self.name
+
+        def update(self, x: Any) -> None:
+            """Update the parameter value."""
+            pass
+
+        def __repr__(self) -> str:
+            return repr(self.value)
+
+        def __str__(self) -> str:
+            return str(self.value)
+
+
+preamble nn:
+  source: minitorch/nn.py
+  body: |
+    from typing import Tuple
+    from . import operators
+    from .autodiff import Context
+    from .fast_ops import FastOps
+    from .tensor import Tensor
+    from .tensor_functions import Function, rand, tensor
+    max_reduce = FastOps.reduce(operators.max, -1000000000.0)
+    class Max(Function):
+
+        @staticmethod
+        def forward(ctx: Context, input: Tensor, dim: Tensor) -> Tensor:
+            """Forward of max should be max reduction"""
+            pass
+
+        @staticmethod
+        def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
+            """Backward of max should be argmax (see above)"""
+            pass
+
+
+preamble operators:
+  source: minitorch/operators.py
+  body: |
+    '\nCollection of the core mathematical operators used throughout the code base.\n'
+    import math
+    from typing import Callable, Iterable
+    EPS = 1e-06
+
+
+preamble optim:
+  source: minitorch/optim.py
+  body: |
+    from typing import Sequence
+    from .module import Parameter
+    from .scalar import Scalar
+    class Optimizer:
+
+        def __init__(self, parameters: Sequence[Parameter]):
+            self.parameters = parameters
+    class SGD(Optimizer):
+
+        def __init__(self, parameters: Sequence[Parameter], lr: float=1.0):
+            super().__init__(parameters)
+            self.lr = lr
+
+
+preamble scalar:
+  source: minitorch/scalar.py
+  body: |
+    from __future__ import annotations
+    from dataclasses import dataclass
+    from typing import Any, Iterable, Optional, Sequence, Tuple, Type, Union
+    import numpy as np
+    from .autodiff import Context, Variable, backpropagate, central_difference
+    from .scalar_functions import EQ, LT, Add, Exp, Inv, Log, Mul, Neg, ReLU, ScalarFunction, Sigmoid
+    ScalarLike = Union[float, int, 'Scalar']
+    @dataclass
+    class ScalarHistory:
+        """
+        `ScalarHistory` stores the history of `Function` operations that was
+        used to construct the current Variable.
+
+        Attributes:
+            last_fn : The last Function that was called.
+            ctx : The context for that Function.
+            inputs : The inputs that were given when `last_fn.forward` was called.
+
+        """
+        last_fn: Optional[Type[ScalarFunction]] = None
+        ctx: Optional[Context] = None
+        inputs: Sequence[Scalar] = ()
+    _var_count = 0
+    class Scalar:
+        """
+        A reimplementation of scalar values for autodifferentiation
+        tracking. Scalar Variables behave as close as possible to standard
+        Python numbers while also tracking the operations that led to the
+        number's creation. They can only be manipulated by
+        `ScalarFunction`.
+        """
+        history: Optional[ScalarHistory]
+        derivative: Optional[float]
+        data: float
+        unique_id: int
+        name: str
+
+        def __init__(self, v: float, back: ScalarHistory=ScalarHistory(), name: Optional[str]=None):
+            global _var_count
+            _var_count += 1
+            self.unique_id = _var_count
+            self.data = float(v)
+            self.history = back
+            self.derivative = None
+            if name is not None:
+                self.name = name
+            else:
+                self.name = str(self.unique_id)
+
+        def __repr__(self) -> str:
+            return 'Scalar(%f)' % self.data
+
+        def __mul__(self, b: ScalarLike) -> Scalar:
+            return Mul.apply(self, b)
+
+        def __truediv__(self, b: ScalarLike) -> Scalar:
+            return Mul.apply(self, Inv.apply(b))
+
+        def __rtruediv__(self, b: ScalarLike) -> Scalar:
+            return Mul.apply(b, Inv.apply(self))
+
+        def __add__(self, b: ScalarLike) -> Scalar:
+            raise NotImplementedError('Need to implement for Task 1.2')
+
+        def __bool__(self) -> bool:
+            return bool(self.data)
+
+        def __lt__(self, b: ScalarLike) -> Scalar:
+            raise NotImplementedError('Need to implement for Task 1.2')
+
+        def __gt__(self, b: ScalarLike) -> Scalar:
+            raise NotImplementedError('Need to implement for Task 1.2')
+
+        def __eq__(self, b: ScalarLike) -> Scalar:
+            raise NotImplementedError('Need to implement for Task 1.2')
+
+        def __sub__(self, b: ScalarLike) -> Scalar:
+            raise NotImplementedError('Need to implement for Task 1.2')
+
+        def __neg__(self) -> Scalar:
+            raise NotImplementedError('Need to implement for Task 1.2')
+
+        def __radd__(self, b: ScalarLike) -> Scalar:
+            return self + b
+
+        def __rmul__(self, b: ScalarLike) -> Scalar:
+            return self * b
+
+        def accumulate_derivative(self, x: Any) -> None:
+            """
+            Add `val` to the the derivative accumulated on this variable.
+            Should only be called during autodifferentiation on leaf variables.
+
+            Args:
+                x: value to be accumulated
+            """
+            pass
+
+        def is_leaf(self) -> bool:
+            """True if this variable created by the user (no `last_fn`)"""
+            pass
+
+        def backward(self, d_output: Optional[float]=None) -> None:
+            """
+            Calls autodiff to fill in the derivatives for the history of this object.
+
+            Args:
+                d_output (number, opt): starting derivative to backpropagate through the model
+                                       (typically left out, and assumed to be 1.0).
+            """
+            pass
+
+
+preamble scalar_functions:
+  source: minitorch/scalar_functions.py
+  body: |
+    from __future__ import annotations
+    from typing import TYPE_CHECKING
+    import minitorch
+    from . import operators
+    from .autodiff import Context
+    if TYPE_CHECKING:
+        from typing import Tuple
+        from .scalar import Scalar, ScalarLike
+    class ScalarFunction:
+        """
+        A wrapper for a mathematical function that processes and produces
+        Scalar variables.
+
+        This is a static class and is never instantiated. We use `class`
+        here to group together the `forward` and `backward` code.
+        """
+    class Add(ScalarFunction):
+        """Addition function $f(x, y) = x + y$"""
+    class Log(ScalarFunction):
+        """Log function $f(x) = log(x)$"""
+    class Mul(ScalarFunction):
+        """Multiplication function"""
+    class Inv(ScalarFunction):
+        """Inverse function"""
+    class Neg(ScalarFunction):
+        """Negation function"""
+    class Sigmoid(ScalarFunction):
+        """Sigmoid function"""
+    class ReLU(ScalarFunction):
+        """ReLU function"""
+    class Exp(ScalarFunction):
+        """Exp function"""
+    class LT(ScalarFunction):
+        """Less-than function $f(x) =$ 1.0 if x is less than y else 0.0"""
+    class EQ(ScalarFunction):
+        """Equal function $f(x) =$ 1.0 if x is equal to y else 0.0"""
+
+
+preamble tensor:
+  source: minitorch/tensor.py
+  body: |
+    '\nImplementation of the core Tensor object for autodifferentiation.\n'
+    from __future__ import annotations
+    from dataclasses import dataclass
+    from typing import TYPE_CHECKING
+    import numpy as np
+    from . import operators
+    from .autodiff import Context, Variable, backpropagate
+    from .tensor_data import TensorData
+    from .tensor_functions import EQ, LT, Add, All, Copy, Exp, Inv, IsClose, Log, MatMul, Mul, Neg, Permute, ReLU, Sigmoid, Sum, View, tensor
+    if TYPE_CHECKING:
+        from typing import Any, Iterable, List, Optional, Sequence, Tuple, Type, Union
+        import numpy.typing as npt
+        from .tensor_data import Shape, Storage, Strides, UserIndex, UserShape, UserStrides
+        from .tensor_functions import Function
+        from .tensor_ops import TensorBackend
+        TensorLike = Union[float, int, 'Tensor']
+    @dataclass
+    class History:
+        """
+        `History` stores the history of `Function` operations that was
+        used to construct the current Variable.
+        """
+        last_fn: Optional[Type[Function]] = None
+        ctx: Optional[Context] = None
+        inputs: Sequence[Tensor] = ()
+    _tensor_count = 0
+    class Tensor:
+        """
+        Tensor is a generalization of Scalar in that it is a Variable that
+        handles multidimensional arrays.
+        """
+        backend: TensorBackend
+        history: Optional[History]
+        grad: Optional[Tensor]
+        _tensor: TensorData
+        unique_id: int
+        name: str
+
+        def __init__(self, v: TensorData, back: Optional[History]=None, name: Optional[str]=None, backend: Optional[TensorBackend]=None):
+            global _tensor_count
+            _tensor_count += 1
+            self.unique_id = _tensor_count
+            assert isinstance(v, TensorData)
+            assert backend is not None
+            self._tensor = v
+            self.history = back
+            self.backend = backend
+            self.grad = None
+            if name is not None:
+                self.name = name
+            else:
+                self.name = str(self.unique_id)
+            self.f = backend
+
+        def to_numpy(self) -> npt.NDArray[np.float64]:
+            """
+            Returns:
+                 Converted to numpy array
+            """
+            pass
+
+        @property
+        def shape(self) -> UserShape:
+            """
+            Returns:
+                 shape of the tensor
+            """
+            pass
+
+        @property
+        def size(self) -> int:
+            """
+            Returns:
+                 int : size of the tensor
+            """
+            pass
+
+        @property
+        def dims(self) -> int:
+            """
+            Returns:
+                 int : dimensionality of the tensor
+            """
+            pass
+
+        def _ensure_tensor(self, b: TensorLike) -> Tensor:
+            """Turns a python number into a tensor with the same backend."""
+            pass
+
+        def __add__(self, b: TensorLike) -> Tensor:
+            return Add.apply(self, self._ensure_tensor(b))
+
+        def __sub__(self, b: TensorLike) -> Tensor:
+            return Add.apply(self, -self._ensure_tensor(b))
+
+        def __mul__(self, b: TensorLike) -> Tensor:
+            return Mul.apply(self, self._ensure_tensor(b))
+
+        def __truediv__(self, b: TensorLike) -> Tensor:
+            return Mul.apply(self, Inv.apply(self._ensure_tensor(b)))
+
+        def __rtruediv__(self, b: TensorLike) -> Tensor:
+            return Mul.apply(self._ensure_tensor(b), Inv.apply(self))
+
+        def __matmul__(self, b: Tensor) -> Tensor:
+            """Not used until Module 3"""
+            return MatMul.apply(self, b)
+
+        def __lt__(self, b: TensorLike) -> Tensor:
+            return LT.apply(self, self._ensure_tensor(b))
+
+        def __eq__(self, b: TensorLike) -> Tensor:
+            return EQ.apply(self, self._ensure_tensor(b))
+
+        def __gt__(self, b: TensorLike) -> Tensor:
+            return LT.apply(self._ensure_tensor(b), self)
+
+        def __neg__(self) -> Tensor:
+            return Neg.apply(self)
+
+        def __radd__(self, b: TensorLike) -> Tensor:
+            return self + b
+
+        def __rmul__(self, b: TensorLike) -> Tensor:
+            return self * b
+
+        def sum(self, dim: Optional[int]=None) -> Tensor:
+            """Compute the sum over dimension `dim`"""
+            pass
+
+        def mean(self, dim: Optional[int]=None) -> Tensor:
+            """Compute the mean over dimension `dim`"""
+            pass
+
+        def permute(self, *order: int) -> Tensor:
+            """Permute tensor dimensions to *order"""
+            pass
+
+        def view(self, *shape: int) -> Tensor:
+            """Change the shape of the tensor to a new shape with the same size"""
+            pass
+
+        def contiguous(self) -> Tensor:
+            """Return a contiguous tensor with the same data"""
+            pass
+
+        def __repr__(self) -> str:
+            return self._tensor.to_string()
+
+        def __getitem__(self, key: Union[int, UserIndex]) -> float:
+            key2 = (key,) if isinstance(key, int) else key
+            return self._tensor.get(key2)
+
+        def __setitem__(self, key: Union[int, UserIndex], val: float) -> None:
+            key2 = (key,) if isinstance(key, int) else key
+            self._tensor.set(key2, val)
+
+        @staticmethod
+        def make(storage: Union[Storage, List[float]], shape: UserShape, strides: Optional[UserStrides]=None, backend: Optional[TensorBackend]=None) -> Tensor:
+            """Create a new tensor from data"""
+            pass
+
+        def expand(self, other: Tensor) -> Tensor:
+            """
+            Method used to allow for backprop over broadcasting.
+            This method is called when the output of `backward`
+            is a different size than the input of `forward`.
+
+
+            Parameters:
+                other : backward tensor (must broadcast with self)
+
+            Returns:
+                Expanded version of `other` with the right derivatives
+
+            """
+            pass
+
+        def accumulate_derivative(self, x: Any) -> None:
+            """
+            Add `val` to the the derivative accumulated on this variable.
+            Should only be called during autodifferentiation on leaf variables.
+
+            Args:
+                x : value to be accumulated
+            """
+            pass
+
+        def is_leaf(self) -> bool:
+            """True if this variable created by the user (no `last_fn`)"""
+            pass
+
+        def zero_grad_(self) -> None:
+            """
+            Reset the derivative on this variable.
+            """
+            pass
+
+
+preamble tensor_data:
+  source: minitorch/tensor_data.py
+  body: |
+    from __future__ import annotations
+    import random
+    from typing import Iterable, Optional, Sequence, Tuple, Union
+    import numba
+    import numpy as np
+    import numpy.typing as npt
+    from numpy import array, float64
+    from typing_extensions import TypeAlias
+    from .operators import prod
+    MAX_DIMS = 32
+    class IndexingError(RuntimeError):
+        """Exception raised for indexing errors."""
+        pass
+    Storage: TypeAlias = npt.NDArray[np.float64]
+    OutIndex: TypeAlias = npt.NDArray[np.int32]
+    Index: TypeAlias = npt.NDArray[np.int32]
+    Shape: TypeAlias = npt.NDArray[np.int32]
+    Strides: TypeAlias = npt.NDArray[np.int32]
+    UserIndex: TypeAlias = Sequence[int]
+    UserShape: TypeAlias = Sequence[int]
+    UserStrides: TypeAlias = Sequence[int]
+    class TensorData:
+        _storage: Storage
+        _strides: Strides
+        _shape: Shape
+        strides: UserStrides
+        shape: UserShape
+        dims: int
+
+        def __init__(self, storage: Union[Sequence[float], Storage], shape: UserShape, strides: Optional[UserStrides]=None):
+            if isinstance(storage, np.ndarray):
+                self._storage = storage
+            else:
+                self._storage = array(storage, dtype=float64)
+            if strides is None:
+                strides = strides_from_shape(shape)
+            assert isinstance(strides, tuple), 'Strides must be tuple'
+            assert isinstance(shape, tuple), 'Shape must be tuple'
+            if len(strides) != len(shape):
+                raise IndexingError(f'Len of strides {strides} must match {shape}.')
+            self._strides = array(strides)
+            self._shape = array(shape)
+            self.strides = strides
+            self.dims = len(strides)
+            self.size = int(prod(shape))
+            self.shape = shape
+            assert len(self._storage) == self.size
+
+        def is_contiguous(self) -> bool:
+            """
+            Check that the layout is contiguous, i.e. outer dimensions have bigger strides than inner dimensions.
+
+            Returns:
+                bool : True if contiguous
+            """
+            pass
+
+        def permute(self, *order: int) -> TensorData:
+            """
+            Permute the dimensions of the tensor.
+
+            Args:
+                *order: a permutation of the dimensions
+
+            Returns:
+                New `TensorData` with the same storage and a new dimension order.
+            """
+            pass
+
+
+preamble tensor_functions:
+  source: minitorch/tensor_functions.py
+  body: |
+    '\nImplementation of the autodifferentiation Functions for Tensor.\n'
+    from __future__ import annotations
+    import random
+    from typing import TYPE_CHECKING
+    import numpy as np
+    import minitorch
+    from . import operators
+    from .autodiff import Context
+    from .tensor_ops import SimpleBackend, TensorBackend
+    if TYPE_CHECKING:
+        from typing import Any, List, Tuple
+        from .tensor import Tensor
+        from .tensor_data import UserIndex, UserShape
+    class Function:
+        pass
+    class Neg(Function):
+        pass
+    class Inv(Function):
+        pass
+    class Add(Function):
+        pass
+    class Mul(Function):
+        pass
+    class Sigmoid(Function):
+        pass
+    class ReLU(Function):
+        pass
+    class Log(Function):
+        pass
+    class Exp(Function):
+        pass
+    class Sum(Function):
+        pass
+    class All(Function):
+        pass
+    class LT(Function):
+        pass
+    class EQ(Function):
+        pass
+    class IsClose(Function):
+        pass
+    class Permute(Function):
+        pass
+    class View(Function):
+        pass
+    class Copy(Function):
+        pass
+    class MatMul(Function):
+        pass
+
+
+preamble tensor_ops:
+  source: minitorch/tensor_ops.py
+  body: |
+    from __future__ import annotations
+    from typing import TYPE_CHECKING, Callable, Optional, Type
+    import numpy as np
+    from typing_extensions import Protocol
+    from . import operators
+    from .tensor_data import MAX_DIMS, broadcast_index, index_to_position, shape_broadcast, to_index
+    if TYPE_CHECKING:
+        from .tensor import Tensor
+        from .tensor_data import Index, Shape, Storage, Strides
+    class MapProto(Protocol):
+
+        def __call__(self, x: Tensor, out: Optional[Tensor]=..., /) -> Tensor:
+            ...
+    class TensorOps:
+        cuda = False
+    class TensorBackend:
+
+        def __init__(self, ops: Type[TensorOps]):
+            """
+            Dynamically construct a tensor backend based on a `tensor_ops` object
+            that implements map, zip, and reduce higher-order functions.
+
+            Args:
+                ops : tensor operations object see `tensor_ops.py`
+
+
+            Returns :
+                A collection of tensor functions
+
+            """
+            self.neg_map = ops.map(operators.neg)
+            self.sigmoid_map = ops.map(operators.sigmoid)
+            self.relu_map = ops.map(operators.relu)
+            self.log_map = ops.map(operators.log)
+            self.exp_map = ops.map(operators.exp)
+            self.id_map = ops.map(operators.id)
+            self.id_cmap = ops.cmap(operators.id)
+            self.inv_map = ops.map(operators.inv)
+            self.add_zip = ops.zip(operators.add)
+            self.mul_zip = ops.zip(operators.mul)
+            self.lt_zip = ops.zip(operators.lt)
+            self.eq_zip = ops.zip(operators.eq)
+            self.is_close_zip = ops.zip(operators.is_close)
+            self.relu_back_zip = ops.zip(operators.relu_back)
+            self.log_back_zip = ops.zip(operators.log_back)
+            self.inv_back_zip = ops.zip(operators.inv_back)
+            self.add_reduce = ops.reduce(operators.add, 0.0)
+            self.mul_reduce = ops.reduce(operators.mul, 1.0)
+            self.matrix_multiply = ops.matrix_multiply
+            self.cuda = ops.cuda
+    class SimpleOps(TensorOps):
+
+        @staticmethod
+        def map(fn: Callable[[float], float]) -> MapProto:
+            """
+            Higher-order tensor map function ::
+
+              fn_map = map(fn)
+              fn_map(a, out)
+              out
+
+            Simple version::
+
+                for i:
+                    for j:
+                        out[i, j] = fn(a[i, j])
+
+            Broadcasted version (`a` might be smaller than `out`) ::
+
+                for i:
+                    for j:
+                        out[i, j] = fn(a[i, 0])
+
+            Args:
+                fn: function from float-to-float to apply.
+                a (:class:`TensorData`): tensor to map over
+                out (:class:`TensorData`): optional, tensor data to fill in,
+                       should broadcast with `a`
+
+            Returns:
+                new tensor data
+            """
+            pass
+
+        @staticmethod
+        def zip(fn: Callable[[float, float], float]) -> Callable[['Tensor', 'Tensor'], 'Tensor']:
+            """
+            Higher-order tensor zip function ::
+
+              fn_zip = zip(fn)
+              out = fn_zip(a, b)
+
+            Simple version ::
+
+                for i:
+                    for j:
+                        out[i, j] = fn(a[i, j], b[i, j])
+
+            Broadcasted version (`a` and `b` might be smaller than `out`) ::
+
+                for i:
+                    for j:
+                        out[i, j] = fn(a[i, 0], b[0, j])
+
+
+            Args:
+                fn: function from two floats-to-float to apply
+                a (:class:`TensorData`): tensor to zip over
+                b (:class:`TensorData`): tensor to zip over
+
+            Returns:
+                :class:`TensorData` : new tensor data
+            """
+            pass
+
+        @staticmethod
+        def reduce(fn: Callable[[float, float], float], start: float=0.0) -> Callable[['Tensor', int], 'Tensor']:
+            """
+            Higher-order tensor reduce function. ::
+
+              fn_reduce = reduce(fn)
+              out = fn_reduce(a, dim)
+
+            Simple version ::
+
+                for j:
+                    out[1, j] = start
+                    for i:
+                        out[1, j] = fn(out[1, j], a[i, j])
+
+
+            Args:
+                fn: function from two floats-to-float to apply
+                a (:class:`TensorData`): tensor to reduce over
+                dim (int): int of dim to reduce
+
+            Returns:
+                :class:`TensorData` : new tensor
+            """
+            pass
+        is_cuda = False
+    SimpleBackend = TensorBackend(SimpleOps)
+
+
+preamble testing:
+  source: minitorch/testing.py
+  body: |
+    from typing import Callable, Generic, Iterable, Tuple, TypeVar
+    import minitorch.operators as operators
+    A = TypeVar('A')
+    class MathTest(Generic[A]):
+
+        @staticmethod
+        def neg(a: A) -> A:
+            """Negate the argument"""
+            pass
+
+        @staticmethod
+        def addConstant(a: A) -> A:
+            """Add contant to the argument"""
+            pass
+
+        @staticmethod
+        def square(a: A) -> A:
+            """Manual square"""
+            pass
+
+        @staticmethod
+        def cube(a: A) -> A:
+            """Manual cube"""
+            pass
+
+        @staticmethod
+        def subConstant(a: A) -> A:
+            """Subtract a constant from the argument"""
+            pass
+
+        @staticmethod
+        def multConstant(a: A) -> A:
+            """Multiply a constant to the argument"""
+            pass
+
+        @staticmethod
+        def div(a: A) -> A:
+            """Divide by a constant"""
+            pass
+
+        @staticmethod
+        def inv(a: A) -> A:
+            """Invert after adding"""
+            pass
+
+        @staticmethod
+        def sig(a: A) -> A:
+            """Apply sigmoid"""
+            pass
+
+        @staticmethod
+        def log(a: A) -> A:
+            """Apply log to a large value"""
+            pass
+
+        @staticmethod
+        def relu(a: A) -> A:
+            """Apply relu"""
+            pass
+
+        @staticmethod
+        def exp(a: A) -> A:
+            """Apply exp to a smaller value"""
+            pass
+
+        @staticmethod
+        def add2(a: A, b: A) -> A:
+            """Add two arguments"""
+            pass
+
+        @staticmethod
+        def mul2(a: A, b: A) -> A:
+            """Mul two arguments"""
+            pass
+
+        @staticmethod
+        def div2(a: A, b: A) -> A:
+            """Divide two arguments"""
+            pass
+
+        @classmethod
+        def _tests(cls) -> Tuple[Tuple[str, Callable[[A], A]], Tuple[str, Callable[[A, A], A]], Tuple[str, Callable[[Iterable[A]], A]]]:
+            """
+            Returns a list of all the math tests.
+            """
+            pass
+    class MathTestVariable(MathTest):
+        pass
+
+
 flow minitorch_lib:
   steps:
     - autodiff_group

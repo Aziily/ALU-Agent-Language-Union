@@ -41,7 +41,8 @@
 | `intent:` | 全部 | inline | **必填**。一行 plain-English 描述这个节点干啥 |
 | `input:` | flow / code / agent | inline 或嵌套 | 输入形状（自由 English 或类型） |
 | `output:` | flow / code / agent | inline 或嵌套 | 输出形状 |
-| `body:` | code | block scalar `|` | 字面 Python 源 |
+| `body:` | code, **preamble** | block scalar `|` | 字面 Python 源 |
+| `source:` | **preamble** | inline | 该 preamble 对应的源 `.py` 文件相对路径（hint） |
 | `steps:` | flow | 列表 | flow 的有序子步骤；项可为 ref / parallel / each / if |
 | `prompt:` | agent | block scalar `|` | 给 LLM 的自然语言指令 |
 | `fallback:` | agent | bare name | agent 失败时调用的另一节点（**必须是 code/agent 节点名，不能是工具名**） |
@@ -51,6 +52,65 @@
 | `extensions:` | set | 列表 | MCP 服务器引用，约定 `mcp_<name>` 前缀 |
 | `memory:` | set | block scalar `|` | YAML 格式的结构化记忆 |
 | `schedule:` | flow | inline | 顶层 flow 的调度声明（v1 仅记录） |
+
+### `preamble` —— module-level Python 上下文（Phase 1.AL.2 新增）
+
+`preamble` 是第 5 个 declarator，专门承载**函数体以外**的 Python：imports / class
+定义 / module-level constants / type aliases / module docstring / `__all__`。
+之前 agent-lang 只能表达"函数体级别"的代码 → LLM 看不到这些上下文 → 在 cachetools
+里写 `hashkey` 时不知道 `_HashedTuple` 和 `_kwmark` 已经存在，硬是凭空发明 → 测试
+fail。`preamble` 就是修这个的。
+
+**关键语义**：preamble 块**只是给 LLM 看的上下文**，benchmark inject 阶段会 skip
+它（因为 module-level 的代码已经在原始 stripped repo 里了）。所以 preamble 不会
+"覆盖"或"注入"任何代码；它纯粹是 prompt-context。
+
+**典型用法**（cachetools/keys.py）：
+```al
+preamble cachetools_keys:
+  source: cachetools/keys.py
+  body: |
+    """Key functions for memoizing decorators."""
+    __all__ = ('hashkey', 'methodkey', 'typedkey', 'typedmethodkey')
+
+    class _HashedTuple(tuple):
+        """Cached-hash tuple — hash() called at most once per element."""
+        __hashvalue = None
+        def __hash__(self, hash=tuple.__hash__):
+            hashvalue = self.__hashvalue
+            if hashvalue is None:
+                self.__hashvalue = hashvalue = hash(self)
+            return hashvalue
+
+    _kwmark = (_HashedTuple,)
+
+
+flow cachetools_keys_group:
+  steps:
+    - hashkey
+    - typedkey
+
+code hashkey:
+  body: |
+    def hashkey(*args, **kwargs):
+        """Return a cache key for the specified hashable arguments."""
+        if kwargs:
+            return _HashedTuple(args + sum(sorted(kwargs.items()), _kwmark))
+        return _HashedTuple(args)
+```
+
+LLM 写 `hashkey` body 时能直接引用 `_HashedTuple` / `_kwmark`，因为它们在
+preamble 里可见。
+
+**何时该写 preamble**：源文件除了"被 strip 成 `pass` 的函数"以外还含有
+以下任何一项时，就该写：
+- 任何 `import` / `from ... import ...`
+- 任何 module-level `class Foo:`
+- 任何 module-level 常量 / 配置 / 类型别名（`PREVENT_EXTRA = 0`, `Schemable = Union[...]`）
+- module docstring 或 `__all__`
+
+**何时不需要 preamble**：源文件几乎全是函数，没有 module-level scaffolding。
+此时所有 imports 在每个函数 body 内部局部 `import`，跳过 preamble 也行。
 
 ### 三种字段值形态
 

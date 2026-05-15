@@ -1,3 +1,1890 @@
+preamble __init__:
+  source: babel/__init__.py
+  body: |
+    '\n    babel\n    ~~~~~\n\n    Integrated collection of utilities that assist in internationalizing and\n    localizing applications.\n\n    This package is basically composed of two major parts:\n\n     * tools to build and work with ``gettext`` message catalogs\n     * a Python interface to the CLDR (Common Locale Data Repository), providing\n       access to various locale display names, localized number and date\n       formatting, etc.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    from babel.core import Locale, UnknownLocaleError, default_locale, get_locale_identifier, negotiate_locale, parse_locale
+    __version__ = '2.14.0'
+    __all__ = ['Locale', 'UnknownLocaleError', 'default_locale', 'get_locale_identifier', 'negotiate_locale', 'parse_locale']
+
+
+preamble dates:
+  source: babel/dates.py
+  body: |
+    '\n    babel.dates\n    ~~~~~~~~~~~\n\n    Locale dependent formatting and parsing of dates and times.\n\n    The default locale for the functions in this module is determined by the\n    following environment variables, in that order:\n\n     * ``LC_TIME``,\n     * ``LC_ALL``, and\n     * ``LANG``\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    from __future__ import annotations
+    import re
+    import warnings
+    from functools import lru_cache
+    from typing import TYPE_CHECKING, SupportsInt
+    try:
+        import pytz
+    except ModuleNotFoundError:
+        pytz = None
+        import zoneinfo
+    import datetime
+    from collections.abc import Iterable
+    from babel import localtime
+    from babel.core import Locale, default_locale, get_global
+    from babel.localedata import LocaleDataDict
+    if TYPE_CHECKING:
+        from typing_extensions import Literal, TypeAlias
+        _Instant: TypeAlias = datetime.date | datetime.time | float | None
+        _PredefinedTimeFormat: TypeAlias = Literal['full', 'long', 'medium', 'short']
+        _Context: TypeAlias = Literal['format', 'stand-alone']
+        _DtOrTzinfo: TypeAlias = datetime.datetime | datetime.tzinfo | str | int | datetime.time | None
+    NO_INHERITANCE_MARKER = '∅∅∅'
+    UTC = datetime.timezone.utc
+    LOCALTZ = localtime.LOCALTZ
+    LC_TIME = default_locale('LC_TIME')
+    TIMEDELTA_UNITS: tuple[tuple[str, int], ...] = (('year', 3600 * 24 * 365), ('month', 3600 * 24 * 30), ('week', 3600 * 24 * 7), ('day', 3600 * 24), ('hour', 3600), ('minute', 60), ('second', 1))
+    class ParseError(ValueError):
+        pass
+    class DateTimePattern:
+
+        def __init__(self, pattern: str, format: DateTimeFormat):
+            self.pattern = pattern
+            self.format = format
+
+        def __repr__(self) -> str:
+            return f'<{type(self).__name__} {self.pattern!r}>'
+
+        def __str__(self) -> str:
+            pat = self.pattern
+            return pat
+
+        def __mod__(self, other: DateTimeFormat) -> str:
+            if not isinstance(other, DateTimeFormat):
+                return NotImplemented
+            return self.format % other
+    class DateTimeFormat:
+
+        def __init__(self, value: datetime.date | datetime.time, locale: Locale | str, reference_date: datetime.date | None=None) -> None:
+            assert isinstance(value, (datetime.date, datetime.datetime, datetime.time))
+            if isinstance(value, (datetime.datetime, datetime.time)) and value.tzinfo is None:
+                value = value.replace(tzinfo=UTC)
+            self.value = value
+            self.locale = Locale.parse(locale)
+            self.reference_date = reference_date
+
+        def __getitem__(self, name: str) -> str:
+            char = name[0]
+            num = len(name)
+            if char == 'G':
+                return self.format_era(char, num)
+            elif char in ('y', 'Y', 'u'):
+                return self.format_year(char, num)
+            elif char in ('Q', 'q'):
+                return self.format_quarter(char, num)
+            elif char in ('M', 'L'):
+                return self.format_month(char, num)
+            elif char in ('w', 'W'):
+                return self.format_week(char, num)
+            elif char == 'd':
+                return self.format(self.value.day, num)
+            elif char == 'D':
+                return self.format_day_of_year(num)
+            elif char == 'F':
+                return self.format_day_of_week_in_month()
+            elif char in ('E', 'e', 'c'):
+                return self.format_weekday(char, num)
+            elif char in ('a', 'b', 'B'):
+                return self.format_period(char, num)
+            elif char == 'h':
+                if self.value.hour % 12 == 0:
+                    return self.format(12, num)
+                else:
+                    return self.format(self.value.hour % 12, num)
+            elif char == 'H':
+                return self.format(self.value.hour, num)
+            elif char == 'K':
+                return self.format(self.value.hour % 12, num)
+            elif char == 'k':
+                if self.value.hour == 0:
+                    return self.format(24, num)
+                else:
+                    return self.format(self.value.hour, num)
+            elif char == 'm':
+                return self.format(self.value.minute, num)
+            elif char == 's':
+                return self.format(self.value.second, num)
+            elif char == 'S':
+                return self.format_frac_seconds(num)
+            elif char == 'A':
+                return self.format_milliseconds_in_day(num)
+            elif char in ('z', 'Z', 'v', 'V', 'x', 'X', 'O'):
+                return self.format_timezone(char, num)
+            else:
+                raise KeyError(f'Unsupported date/time field {char!r}')
+
+        def format_weekday(self, char: str='E', num: int=4) -> str:
+            """
+            Return weekday from parsed datetime according to format pattern.
+
+            >>> from datetime import date
+            >>> format = DateTimeFormat(date(2016, 2, 28), Locale.parse('en_US'))
+            >>> format.format_weekday()
+            u'Sunday'
+
+            'E': Day of week - Use one through three letters for the abbreviated day name, four for the full (wide) name,
+                 five for the narrow name, or six for the short name.
+            >>> format.format_weekday('E',2)
+            u'Sun'
+
+            'e': Local day of week. Same as E except adds a numeric value that will depend on the local starting day of the
+                 week, using one or two letters. For this example, Monday is the first day of the week.
+            >>> format.format_weekday('e',2)
+            '01'
+
+            'c': Stand-Alone local day of week - Use one letter for the local numeric value (same as 'e'), three for the
+                 abbreviated day name, four for the full (wide) name, five for the narrow name, or six for the short name.
+            >>> format.format_weekday('c',1)
+            '1'
+
+            :param char: pattern format character ('e','E','c')
+            :param num: count of format character
+
+            """
+            pass
+
+        def format_period(self, char: str, num: int) -> str:
+            """
+            Return period from parsed datetime according to format pattern.
+
+            >>> from datetime import datetime, time
+            >>> format = DateTimeFormat(time(13, 42), 'fi_FI')
+            >>> format.format_period('a', 1)
+            u'ip.'
+            >>> format.format_period('b', 1)
+            u'iltap.'
+            >>> format.format_period('b', 4)
+            u'iltapäivä'
+            >>> format.format_period('B', 4)
+            u'iltapäivällä'
+            >>> format.format_period('B', 5)
+            u'ip.'
+
+            >>> format = DateTimeFormat(datetime(2022, 4, 28, 6, 27), 'zh_Hant')
+            >>> format.format_period('a', 1)
+            u'上午'
+            >>> format.format_period('b', 1)
+            u'清晨'
+            >>> format.format_period('B', 1)
+            u'清晨'
+
+            :param char: pattern format character ('a', 'b', 'B')
+            :param num: count of format character
+
+            """
+            pass
+
+        def format_frac_seconds(self, num: int) -> str:
+            """ Return fractional seconds.
+
+            Rounds the time's microseconds to the precision given by the number         of digits passed in.
+            """
+            pass
+
+        def get_week_number(self, day_of_period: int, day_of_week: int | None=None) -> int:
+            """Return the number of the week of a day within a period. This may be
+            the week number in a year or the week number in a month.
+
+            Usually this will return a value equal to or greater than 1, but if the
+            first week of the period is so short that it actually counts as the last
+            week of the previous period, this function will return 0.
+
+            >>> date = datetime.date(2006, 1, 8)
+            >>> DateTimeFormat(date, 'de_DE').get_week_number(6)
+            1
+            >>> DateTimeFormat(date, 'en_US').get_week_number(6)
+            2
+
+            :param day_of_period: the number of the day in the period (usually
+                                  either the day of month or the day of year)
+            :param day_of_week: the week day; if omitted, the week day of the
+                                current date is assumed
+            """
+            pass
+    PATTERN_CHARS: dict[str, list[int] | None] = {'G': [1, 2, 3, 4, 5], 'y': None, 'Y': None, 'u': None, 'Q': [1, 2, 3, 4, 5], 'q': [1, 2, 3, 4, 5], 'M': [1, 2, 3, 4, 5], 'L': [1, 2, 3, 4, 5], 'w': [1, 2], 'W': [1], 'd': [1, 2], 'D': [1, 2, 3], 'F': [1], 'g': None, 'E': [1, 2, 3, 4, 5, 6], 'e': [1, 2, 3, 4, 5, 6], 'c': [1, 3, 4, 5, 6], 'a': [1, 2, 3, 4, 5], 'b': [1, 2, 3, 4, 5], 'B': [1, 2, 3, 4, 5], 'h': [1, 2], 'H': [1, 2], 'K': [1, 2], 'k': [1, 2], 'm': [1, 2], 's': [1, 2], 'S': None, 'A': None, 'z': [1, 2, 3, 4], 'Z': [1, 2, 3, 4, 5], 'O': [1, 4], 'v': [1, 4], 'V': [1, 2, 3, 4], 'x': [1, 2, 3, 4, 5], 'X': [1, 2, 3, 4, 5]}
+    PATTERN_CHAR_ORDER = 'GyYuUQqMLlwWdDFgEecabBChHKkjJmsSAzZOvVXx'
+
+
+preamble languages:
+  source: babel/languages.py
+  body: |
+    from __future__ import annotations
+    from babel.core import get_global
+
+
+preamble lists:
+  source: babel/lists.py
+  body: |
+    '\n    babel.lists\n    ~~~~~~~~~~~\n\n    Locale dependent formatting of lists.\n\n    The default locale for the functions in this module is determined by the\n    following environment variables, in that order:\n\n     * ``LC_ALL``, and\n     * ``LANG``\n\n    :copyright: (c) 2015-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    from __future__ import annotations
+    from collections.abc import Sequence
+    from typing import TYPE_CHECKING
+    from babel.core import Locale, default_locale
+    if TYPE_CHECKING:
+        from typing_extensions import Literal
+    DEFAULT_LOCALE = default_locale()
+
+
+preamble localedata:
+  source: babel/localedata.py
+  body: |
+    '\n    babel.localedata\n    ~~~~~~~~~~~~~~~~\n\n    Low-level locale data access.\n\n    :note: The `Locale` class, which uses this module under the hood, provides a\n           more convenient interface for accessing the locale data.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    from __future__ import annotations
+    import os
+    import pickle
+    import re
+    import sys
+    import threading
+    from collections import abc
+    from collections.abc import Iterator, Mapping, MutableMapping
+    from functools import lru_cache
+    from itertools import chain
+    from typing import Any
+    _cache: dict[str, Any] = {}
+    _cache_lock = threading.RLock()
+    _dirname = os.path.join(os.path.dirname(__file__), 'locale-data')
+    _windows_reserved_name_re = re.compile('^(con|prn|aux|nul|com[0-9]|lpt[0-9])$', re.I)
+    class Alias:
+        """Representation of an alias in the locale data.
+
+        An alias is a value that refers to some other part of the locale data,
+        as specified by the `keys`.
+        """
+
+        def __init__(self, keys: tuple[str, ...]) -> None:
+            self.keys = tuple(keys)
+
+        def __repr__(self) -> str:
+            return f'<{type(self).__name__} {self.keys!r}>'
+
+        def resolve(self, data: Mapping[str | int | None, Any]) -> Mapping[str | int | None, Any]:
+            """Resolve the alias based on the given data.
+
+            This is done recursively, so if one alias resolves to a second alias,
+            that second alias will also be resolved.
+
+            :param data: the locale data
+            :type data: `dict`
+            """
+            pass
+    class LocaleDataDict(abc.MutableMapping):
+        """Dictionary wrapper that automatically resolves aliases to the actual
+        values.
+        """
+
+        def __init__(self, data: MutableMapping[str | int | None, Any], base: Mapping[str | int | None, Any] | None=None):
+            self._data = data
+            if base is None:
+                base = data
+            self.base = base
+
+        def __len__(self) -> int:
+            return len(self._data)
+
+        def __iter__(self) -> Iterator[str | int | None]:
+            return iter(self._data)
+
+        def __getitem__(self, key: str | int | None) -> Any:
+            orig = val = self._data[key]
+            if isinstance(val, Alias):
+                val = val.resolve(self.base)
+            if isinstance(val, tuple):
+                alias, others = val
+                val = alias.resolve(self.base).copy()
+                merge(val, others)
+            if isinstance(val, dict):
+                val = LocaleDataDict(val, base=self.base)
+            if val is not orig:
+                self._data[key] = val
+            return val
+
+        def __setitem__(self, key: str | int | None, value: Any) -> None:
+            self._data[key] = value
+
+        def __delitem__(self, key: str | int | None) -> None:
+            del self._data[key]
+
+
+preamble localtime___init__:
+  source: babel/localtime/__init__.py
+  body: |
+    '\n    babel.localtime\n    ~~~~~~~~~~~~~~~\n\n    Babel specific fork of tzlocal to determine the local timezone\n    of the system.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    import datetime
+    import sys
+    if sys.platform == 'win32':
+        from babel.localtime._win32 import _get_localzone
+    else:
+        from babel.localtime._unix import _get_localzone
+    from babel.localtime._fallback import DSTDIFF, DSTOFFSET, STDOFFSET, ZERO, _FallbackLocalTimezone
+    try:
+        LOCALTZ = get_localzone()
+    except LookupError:
+        LOCALTZ = _FallbackLocalTimezone()
+
+
+preamble localtime__fallback:
+  source: babel/localtime/_fallback.py
+  body: |
+    '\n    babel.localtime._fallback\n    ~~~~~~~~~~~~~~~~~~~~~~~~~\n\n    Emulated fallback local timezone when all else fails.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    import datetime
+    import time
+    STDOFFSET = datetime.timedelta(seconds=-time.timezone)
+    DSTOFFSET = datetime.timedelta(seconds=-time.altzone) if time.daylight else STDOFFSET
+    DSTDIFF = DSTOFFSET - STDOFFSET
+    ZERO = datetime.timedelta(0)
+    class _FallbackLocalTimezone(datetime.tzinfo):
+        pass
+
+
+preamble localtime__helpers:
+  source: babel/localtime/_helpers.py
+  body: |
+    try:
+        import pytz
+    except ModuleNotFoundError:
+        pytz = None
+        import zoneinfo
+
+
+preamble localtime__unix:
+  source: babel/localtime/_unix.py
+  body: |
+    import datetime
+    import os
+    import re
+    from babel.localtime._helpers import _get_tzinfo, _get_tzinfo_from_file, _get_tzinfo_or_raise
+
+
+preamble localtime__win32:
+  source: babel/localtime/_win32.py
+  body: |
+    from __future__ import annotations
+    try:
+        import winreg
+    except ImportError:
+        winreg = None
+    import datetime
+    from typing import Any, Dict, cast
+    from babel.core import get_global
+    from babel.localtime._helpers import _get_tzinfo_or_raise
+    try:
+        tz_names: dict[str, str] = cast(Dict[str, str], get_global('windows_zone_mapping'))
+    except RuntimeError:
+        tz_names = {}
+
+
+preamble messages___init__:
+  source: babel/messages/__init__.py
+  body: |
+    '\n    babel.messages\n    ~~~~~~~~~~~~~~\n\n    Support for ``gettext`` message catalogs.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    from babel.messages.catalog import Catalog, Message, TranslationError
+    __all__ = ['Catalog', 'Message', 'TranslationError']
+
+
+preamble messages_catalog:
+  source: babel/messages/catalog.py
+  body: |
+    '\n    babel.messages.catalog\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    Data structures for message catalogs.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    from __future__ import annotations
+    import datetime
+    import re
+    from collections import OrderedDict
+    from collections.abc import Iterable, Iterator
+    from copy import copy
+    from difflib import SequenceMatcher
+    from email import message_from_string
+    from heapq import nlargest
+    from typing import TYPE_CHECKING
+    from babel import __version__ as VERSION
+    from babel.core import Locale, UnknownLocaleError
+    from babel.dates import format_datetime
+    from babel.messages.plurals import get_plural
+    from babel.util import LOCALTZ, FixedOffsetTimezone, _cmp, distinct
+    if TYPE_CHECKING:
+        from typing_extensions import TypeAlias
+        _MessageID: TypeAlias = str | tuple[str, ...] | list[str]
+    __all__ = ['Message', 'Catalog', 'TranslationError']
+    PYTHON_FORMAT = re.compile('\n    \\%\n        (?:\\(([\\w]*)\\))?\n        (\n            [-#0\\ +]?(?:\\*|[\\d]+)?\n            (?:\\.(?:\\*|[\\d]+))?\n            [hlL]?\n        )\n        ([diouxXeEfFgGcrs%])\n', re.VERBOSE)
+    class Message:
+        """Representation of a single message in a catalog."""
+
+        def __init__(self, id: _MessageID, string: _MessageID | None='', locations: Iterable[tuple[str, int]]=(), flags: Iterable[str]=(), auto_comments: Iterable[str]=(), user_comments: Iterable[str]=(), previous_id: _MessageID=(), lineno: int | None=None, context: str | None=None) -> None:
+            """Create the message object.
+
+            :param id: the message ID, or a ``(singular, plural)`` tuple for
+                       pluralizable messages
+            :param string: the translated message string, or a
+                           ``(singular, plural)`` tuple for pluralizable messages
+            :param locations: a sequence of ``(filename, lineno)`` tuples
+            :param flags: a set or sequence of flags
+            :param auto_comments: a sequence of automatic comments for the message
+            :param user_comments: a sequence of user comments for the message
+            :param previous_id: the previous message ID, or a ``(singular, plural)``
+                                tuple for pluralizable messages
+            :param lineno: the line number on which the msgid line was found in the
+                           PO file, if any
+            :param context: the message context
+            """
+            self.id = id
+            if not string and self.pluralizable:
+                string = ('', '')
+            self.string = string
+            self.locations = list(distinct(locations))
+            self.flags = set(flags)
+            if id and self.python_format:
+                self.flags.add('python-format')
+            else:
+                self.flags.discard('python-format')
+            self.auto_comments = list(distinct(auto_comments))
+            self.user_comments = list(distinct(user_comments))
+            if isinstance(previous_id, str):
+                self.previous_id = [previous_id]
+            else:
+                self.previous_id = list(previous_id)
+            self.lineno = lineno
+            self.context = context
+
+        def __repr__(self) -> str:
+            return f'<{type(self).__name__} {self.id!r} (flags: {list(self.flags)!r})>'
+
+        def __cmp__(self, other: object) -> int:
+            """Compare Messages, taking into account plural ids"""
+
+            def values_to_compare(obj):
+                if isinstance(obj, Message) and obj.pluralizable:
+                    return (obj.id[0], obj.context or '')
+                return (obj.id, obj.context or '')
+            return _cmp(values_to_compare(self), values_to_compare(other))
+
+        def __gt__(self, other: object) -> bool:
+            return self.__cmp__(other) > 0
+
+        def __lt__(self, other: object) -> bool:
+            return self.__cmp__(other) < 0
+
+        def __ge__(self, other: object) -> bool:
+            return self.__cmp__(other) >= 0
+
+        def __le__(self, other: object) -> bool:
+            return self.__cmp__(other) <= 0
+
+        def __eq__(self, other: object) -> bool:
+            return self.__cmp__(other) == 0
+
+        def __ne__(self, other: object) -> bool:
+            return self.__cmp__(other) != 0
+
+        def is_identical(self, other: Message) -> bool:
+            """Checks whether messages are identical, taking into account all
+            properties.
+            """
+            pass
+
+        def check(self, catalog: Catalog | None=None) -> list[TranslationError]:
+            """Run various validation checks on the message.  Some validations
+            are only performed if the catalog is provided.  This method returns
+            a sequence of `TranslationError` objects.
+
+            :rtype: ``iterator``
+            :param catalog: A catalog instance that is passed to the checkers
+            :see: `Catalog.check` for a way to perform checks for all messages
+                  in a catalog.
+            """
+            pass
+
+        @property
+        def fuzzy(self) -> bool:
+            """Whether the translation is fuzzy.
+
+            >>> Message('foo').fuzzy
+            False
+            >>> msg = Message('foo', 'foo', flags=['fuzzy'])
+            >>> msg.fuzzy
+            True
+            >>> msg
+            <Message 'foo' (flags: ['fuzzy'])>
+
+            :type:  `bool`"""
+            pass
+
+        @property
+        def pluralizable(self) -> bool:
+            """Whether the message is plurizable.
+
+            >>> Message('foo').pluralizable
+            False
+            >>> Message(('foo', 'bar')).pluralizable
+            True
+
+            :type:  `bool`"""
+            pass
+
+        @property
+        def python_format(self) -> bool:
+            """Whether the message contains Python-style parameters.
+
+            >>> Message('foo %(name)s bar').python_format
+            True
+            >>> Message(('foo %(name)s', 'foo %(name)s')).python_format
+            True
+
+            :type:  `bool`"""
+            pass
+    class TranslationError(Exception):
+        """Exception thrown by translation checkers when invalid message
+        translations are encountered."""
+    DEFAULT_HEADER = '# Translations template for PROJECT.\n# Copyright (C) YEAR ORGANIZATION\n# This file is distributed under the same license as the PROJECT project.\n# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.\n#'
+    class Catalog:
+        """Representation of a message catalog."""
+
+        def __init__(self, locale: str | Locale | None=None, domain: str | None=None, header_comment: str | None=DEFAULT_HEADER, project: str | None=None, version: str | None=None, copyright_holder: str | None=None, msgid_bugs_address: str | None=None, creation_date: datetime.datetime | str | None=None, revision_date: datetime.datetime | datetime.time | float | str | None=None, last_translator: str | None=None, language_team: str | None=None, charset: str | None=None, fuzzy: bool=True) -> None:
+            """Initialize the catalog object.
+
+            :param locale: the locale identifier or `Locale` object, or `None`
+                           if the catalog is not bound to a locale (which basically
+                           means it's a template)
+            :param domain: the message domain
+            :param header_comment: the header comment as string, or `None` for the
+                                   default header
+            :param project: the project's name
+            :param version: the project's version
+            :param copyright_holder: the copyright holder of the catalog
+            :param msgid_bugs_address: the email address or URL to submit bug
+                                       reports to
+            :param creation_date: the date the catalog was created
+            :param revision_date: the date the catalog was revised
+            :param last_translator: the name and email of the last translator
+            :param language_team: the name and email of the language team
+            :param charset: the encoding to use in the output (defaults to utf-8)
+            :param fuzzy: the fuzzy bit on the catalog header
+            """
+            self.domain = domain
+            self.locale = locale
+            self._header_comment = header_comment
+            self._messages: OrderedDict[str | tuple[str, str], Message] = OrderedDict()
+            self.project = project or 'PROJECT'
+            self.version = version or 'VERSION'
+            self.copyright_holder = copyright_holder or 'ORGANIZATION'
+            self.msgid_bugs_address = msgid_bugs_address or 'EMAIL@ADDRESS'
+            self.last_translator = last_translator or 'FULL NAME <EMAIL@ADDRESS>'
+            'Name and email address of the last translator.'
+            self.language_team = language_team or 'LANGUAGE <LL@li.org>'
+            'Name and email address of the language team.'
+            self.charset = charset or 'utf-8'
+            if creation_date is None:
+                creation_date = datetime.datetime.now(LOCALTZ)
+            elif isinstance(creation_date, datetime.datetime) and (not creation_date.tzinfo):
+                creation_date = creation_date.replace(tzinfo=LOCALTZ)
+            self.creation_date = creation_date
+            if revision_date is None:
+                revision_date = 'YEAR-MO-DA HO:MI+ZONE'
+            elif isinstance(revision_date, datetime.datetime) and (not revision_date.tzinfo):
+                revision_date = revision_date.replace(tzinfo=LOCALTZ)
+            self.revision_date = revision_date
+            self.fuzzy = fuzzy
+            self.obsolete: OrderedDict[str | tuple[str, str], Message] = OrderedDict()
+            self._num_plurals = None
+            self._plural_expr = None
+        locale = property(_get_locale, _set_locale)
+        locale_identifier = property(_get_locale_identifier)
+        header_comment = property(_get_header_comment, _set_header_comment, doc="    The header comment for the catalog.\n\n    >>> catalog = Catalog(project='Foobar', version='1.0',\n    ...                   copyright_holder='Foo Company')\n    >>> print(catalog.header_comment) #doctest: +ELLIPSIS\n    # Translations template for Foobar.\n    # Copyright (C) ... Foo Company\n    # This file is distributed under the same license as the Foobar project.\n    # FIRST AUTHOR <EMAIL@ADDRESS>, ....\n    #\n\n    The header can also be set from a string. Any known upper-case variables\n    will be replaced when the header is retrieved again:\n\n    >>> catalog = Catalog(project='Foobar', version='1.0',\n    ...                   copyright_holder='Foo Company')\n    >>> catalog.header_comment = '''\\\n    ... # The POT for my really cool PROJECT project.\n    ... # Copyright (C) 1990-2003 ORGANIZATION\n    ... # This file is distributed under the same license as the PROJECT\n    ... # project.\n    ... #'''\n    >>> print(catalog.header_comment)\n    # The POT for my really cool Foobar project.\n    # Copyright (C) 1990-2003 Foo Company\n    # This file is distributed under the same license as the Foobar\n    # project.\n    #\n\n    :type: `unicode`\n    ")
+        mime_headers = property(_get_mime_headers, _set_mime_headers, doc='    The MIME headers of the catalog, used for the special ``msgid ""`` entry.\n\n    The behavior of this property changes slightly depending on whether a locale\n    is set or not, the latter indicating that the catalog is actually a template\n    for actual translations.\n\n    Here\'s an example of the output for such a catalog template:\n\n    >>> from babel.dates import UTC\n    >>> from datetime import datetime\n    >>> created = datetime(1990, 4, 1, 15, 30, tzinfo=UTC)\n    >>> catalog = Catalog(project=\'Foobar\', version=\'1.0\',\n    ...                   creation_date=created)\n    >>> for name, value in catalog.mime_headers:\n    ...     print(\'%s: %s\' % (name, value))\n    Project-Id-Version: Foobar 1.0\n    Report-Msgid-Bugs-To: EMAIL@ADDRESS\n    POT-Creation-Date: 1990-04-01 15:30+0000\n    PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n    Last-Translator: FULL NAME <EMAIL@ADDRESS>\n    Language-Team: LANGUAGE <LL@li.org>\n    MIME-Version: 1.0\n    Content-Type: text/plain; charset=utf-8\n    Content-Transfer-Encoding: 8bit\n    Generated-By: Babel ...\n\n    And here\'s an example of the output when the locale is set:\n\n    >>> revised = datetime(1990, 8, 3, 12, 0, tzinfo=UTC)\n    >>> catalog = Catalog(locale=\'de_DE\', project=\'Foobar\', version=\'1.0\',\n    ...                   creation_date=created, revision_date=revised,\n    ...                   last_translator=\'John Doe <jd@example.com>\',\n    ...                   language_team=\'de_DE <de@example.com>\')\n    >>> for name, value in catalog.mime_headers:\n    ...     print(\'%s: %s\' % (name, value))\n    Project-Id-Version: Foobar 1.0\n    Report-Msgid-Bugs-To: EMAIL@ADDRESS\n    POT-Creation-Date: 1990-04-01 15:30+0000\n    PO-Revision-Date: 1990-08-03 12:00+0000\n    Last-Translator: John Doe <jd@example.com>\n    Language: de_DE\n    Language-Team: de_DE <de@example.com>\n    Plural-Forms: nplurals=2; plural=(n != 1);\n    MIME-Version: 1.0\n    Content-Type: text/plain; charset=utf-8\n    Content-Transfer-Encoding: 8bit\n    Generated-By: Babel ...\n\n    :type: `list`\n    ')
+
+        @property
+        def num_plurals(self) -> int:
+            """The number of plurals used by the catalog or locale.
+
+            >>> Catalog(locale='en').num_plurals
+            2
+            >>> Catalog(locale='ga').num_plurals
+            5
+
+            :type: `int`"""
+            pass
+
+        @property
+        def plural_expr(self) -> str:
+            """The plural expression used by the catalog or locale.
+
+            >>> Catalog(locale='en').plural_expr
+            '(n != 1)'
+            >>> Catalog(locale='ga').plural_expr
+            '(n==1 ? 0 : n==2 ? 1 : n>=3 && n<=6 ? 2 : n>=7 && n<=10 ? 3 : 4)'
+            >>> Catalog(locale='ding').plural_expr  # unknown locale
+            '(n != 1)'
+
+            :type: `str`"""
+            pass
+
+        @property
+        def plural_forms(self) -> str:
+            """Return the plural forms declaration for the locale.
+
+            >>> Catalog(locale='en').plural_forms
+            'nplurals=2; plural=(n != 1);'
+            >>> Catalog(locale='pt_BR').plural_forms
+            'nplurals=2; plural=(n > 1);'
+
+            :type: `str`"""
+            pass
+
+        def __contains__(self, id: _MessageID) -> bool:
+            """Return whether the catalog has a message with the specified ID."""
+            return self._key_for(id) in self._messages
+
+        def __len__(self) -> int:
+            """The number of messages in the catalog.
+
+            This does not include the special ``msgid ""`` entry."""
+            return len(self._messages)
+
+        def __iter__(self) -> Iterator[Message]:
+            """Iterates through all the entries in the catalog, in the order they
+            were added, yielding a `Message` object for every entry.
+
+            :rtype: ``iterator``"""
+            buf = []
+            for name, value in self.mime_headers:
+                buf.append(f'{name}: {value}')
+            flags = set()
+            if self.fuzzy:
+                flags |= {'fuzzy'}
+            yield Message('', '\n'.join(buf), flags=flags)
+            for key in self._messages:
+                yield self._messages[key]
+
+        def __repr__(self) -> str:
+            locale = ''
+            if self.locale:
+                locale = f' {self.locale}'
+            return f'<{type(self).__name__} {self.domain!r}{locale}>'
+
+        def __delitem__(self, id: _MessageID) -> None:
+            """Delete the message with the specified ID."""
+            self.delete(id)
+
+        def __getitem__(self, id: _MessageID) -> Message:
+            """Return the message with the specified ID.
+
+            :param id: the message ID
+            """
+            return self.get(id)
+
+        def __setitem__(self, id: _MessageID, message: Message) -> None:
+            """Add or update the message with the specified ID.
+
+            >>> catalog = Catalog()
+            >>> catalog[u'foo'] = Message(u'foo')
+            >>> catalog[u'foo']
+            <Message u'foo' (flags: [])>
+
+            If a message with that ID is already in the catalog, it is updated
+            to include the locations and flags of the new message.
+
+            >>> catalog = Catalog()
+            >>> catalog[u'foo'] = Message(u'foo', locations=[('main.py', 1)])
+            >>> catalog[u'foo'].locations
+            [('main.py', 1)]
+            >>> catalog[u'foo'] = Message(u'foo', locations=[('utils.py', 5)])
+            >>> catalog[u'foo'].locations
+            [('main.py', 1), ('utils.py', 5)]
+
+            :param id: the message ID
+            :param message: the `Message` object
+            """
+            assert isinstance(message, Message), 'expected a Message object'
+            key = self._key_for(id, message.context)
+            current = self._messages.get(key)
+            if current:
+                if message.pluralizable and (not current.pluralizable):
+                    current.id = message.id
+                    current.string = message.string
+                current.locations = list(distinct(current.locations + message.locations))
+                current.auto_comments = list(distinct(current.auto_comments + message.auto_comments))
+                current.user_comments = list(distinct(current.user_comments + message.user_comments))
+                current.flags |= message.flags
+                message = current
+            elif id == '':
+                self.mime_headers = message_from_string(message.string).items()
+                self.header_comment = '\n'.join([f'# {c}'.rstrip() for c in message.user_comments])
+                self.fuzzy = message.fuzzy
+            else:
+                if isinstance(id, (list, tuple)):
+                    assert isinstance(message.string, (list, tuple)), f'Expected sequence but got {type(message.string)}'
+                self._messages[key] = message
+
+        def add(self, id: _MessageID, string: _MessageID | None=None, locations: Iterable[tuple[str, int]]=(), flags: Iterable[str]=(), auto_comments: Iterable[str]=(), user_comments: Iterable[str]=(), previous_id: _MessageID=(), lineno: int | None=None, context: str | None=None) -> Message:
+            """Add or update the message with the specified ID.
+
+            >>> catalog = Catalog()
+            >>> catalog.add(u'foo')
+            <Message ...>
+            >>> catalog[u'foo']
+            <Message u'foo' (flags: [])>
+
+            This method simply constructs a `Message` object with the given
+            arguments and invokes `__setitem__` with that object.
+
+            :param id: the message ID, or a ``(singular, plural)`` tuple for
+                       pluralizable messages
+            :param string: the translated message string, or a
+                           ``(singular, plural)`` tuple for pluralizable messages
+            :param locations: a sequence of ``(filename, lineno)`` tuples
+            :param flags: a set or sequence of flags
+            :param auto_comments: a sequence of automatic comments
+            :param user_comments: a sequence of user comments
+            :param previous_id: the previous message ID, or a ``(singular, plural)``
+                                tuple for pluralizable messages
+            :param lineno: the line number on which the msgid line was found in the
+                           PO file, if any
+            :param context: the message context
+            """
+            pass
+
+        def check(self) -> Iterable[tuple[Message, list[TranslationError]]]:
+            """Run various validation checks on the translations in the catalog.
+
+            For every message which fails validation, this method yield a
+            ``(message, errors)`` tuple, where ``message`` is the `Message` object
+            and ``errors`` is a sequence of `TranslationError` objects.
+
+            :rtype: ``generator`` of ``(message, errors)``
+            """
+            pass
+
+        def get(self, id: _MessageID, context: str | None=None) -> Message | None:
+            """Return the message with the specified ID and context.
+
+            :param id: the message ID
+            :param context: the message context, or ``None`` for no context
+            """
+            pass
+
+        def delete(self, id: _MessageID, context: str | None=None) -> None:
+            """Delete the message with the specified ID and context.
+
+            :param id: the message ID
+            :param context: the message context, or ``None`` for no context
+            """
+            pass
+
+        def update(self, template: Catalog, no_fuzzy_matching: bool=False, update_header_comment: bool=False, keep_user_comments: bool=True, update_creation_date: bool=True) -> None:
+            """Update the catalog based on the given template catalog.
+
+            >>> from babel.messages import Catalog
+            >>> template = Catalog()
+            >>> template.add('green', locations=[('main.py', 99)])
+            <Message ...>
+            >>> template.add('blue', locations=[('main.py', 100)])
+            <Message ...>
+            >>> template.add(('salad', 'salads'), locations=[('util.py', 42)])
+            <Message ...>
+            >>> catalog = Catalog(locale='de_DE')
+            >>> catalog.add('blue', u'blau', locations=[('main.py', 98)])
+            <Message ...>
+            >>> catalog.add('head', u'Kopf', locations=[('util.py', 33)])
+            <Message ...>
+            >>> catalog.add(('salad', 'salads'), (u'Salat', u'Salate'),
+            ...             locations=[('util.py', 38)])
+            <Message ...>
+
+            >>> catalog.update(template)
+            >>> len(catalog)
+            3
+
+            >>> msg1 = catalog['green']
+            >>> msg1.string
+            >>> msg1.locations
+            [('main.py', 99)]
+
+            >>> msg2 = catalog['blue']
+            >>> msg2.string
+            u'blau'
+            >>> msg2.locations
+            [('main.py', 100)]
+
+            >>> msg3 = catalog['salad']
+            >>> msg3.string
+            (u'Salat', u'Salate')
+            >>> msg3.locations
+            [('util.py', 42)]
+
+            Messages that are in the catalog but not in the template are removed
+            from the main collection, but can still be accessed via the `obsolete`
+            member:
+
+            >>> 'head' in catalog
+            False
+            >>> list(catalog.obsolete.values())
+            [<Message 'head' (flags: [])>]
+
+            :param template: the reference catalog, usually read from a POT file
+            :param no_fuzzy_matching: whether to use fuzzy matching of message IDs
+            """
+            pass
+
+        def _to_fuzzy_match_key(self, key: tuple[str, str] | str) -> str:
+            """Converts a message key to a string suitable for fuzzy matching."""
+            pass
+
+        def _key_for(self, id: _MessageID, context: str | None=None) -> tuple[str, str] | str:
+            """The key for a message is just the singular ID even for pluralizable
+            messages, but is a ``(msgid, msgctxt)`` tuple for context-specific
+            messages.
+            """
+            pass
+
+        def is_identical(self, other: Catalog) -> bool:
+            """Checks if catalogs are identical, taking into account messages and
+            headers.
+            """
+            pass
+
+
+preamble messages_checkers:
+  source: babel/messages/checkers.py
+  body: |
+    '\n    babel.messages.checkers\n    ~~~~~~~~~~~~~~~~~~~~~~~\n\n    Various routines that help with validation of translations.\n\n    :since: version 0.9\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    from __future__ import annotations
+    from collections.abc import Callable
+    from babel.messages.catalog import PYTHON_FORMAT, Catalog, Message, TranslationError
+    _string_format_compatibilities = [{'i', 'd', 'u'}, {'x', 'X'}, {'f', 'F', 'g', 'G'}]
+    checkers: list[Callable[[Catalog | None, Message], object]] = _find_checkers()
+
+
+preamble messages_extract:
+  source: babel/messages/extract.py
+  body: |
+    '\n    babel.messages.extract\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    Basic infrastructure for extracting localizable messages from source files.\n\n    This module defines an extensible system for collecting localizable message\n    strings from a variety of sources. A native extractor for Python source\n    files is builtin, extractors for other sources can be added using very\n    simple plugins.\n\n    The main entry points into the extraction functionality are the functions\n    `extract_from_dir` and `extract_from_file`.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    from __future__ import annotations
+    import ast
+    import io
+    import os
+    import sys
+    import tokenize
+    from collections.abc import Callable, Collection, Generator, Iterable, Mapping, MutableSequence
+    from os.path import relpath
+    from textwrap import dedent
+    from tokenize import COMMENT, NAME, OP, STRING, generate_tokens
+    from typing import TYPE_CHECKING, Any
+    from babel.util import parse_encoding, parse_future_flags, pathmatch
+    if TYPE_CHECKING:
+        from typing import IO, Protocol
+        from _typeshed import SupportsItems, SupportsRead, SupportsReadline
+        from typing_extensions import Final, TypeAlias, TypedDict
+
+        class _PyOptions(TypedDict, total=False):
+            encoding: str
+
+        class _JSOptions(TypedDict, total=False):
+            encoding: str
+            jsx: bool
+            template_string: bool
+            parse_template_string: bool
+
+        class _FileObj(SupportsRead[bytes], SupportsReadline[bytes], Protocol):
+            pass
+        _SimpleKeyword: TypeAlias = tuple[int | tuple[int, int] | tuple[int, str], ...] | None
+        _Keyword: TypeAlias = dict[int | None, _SimpleKeyword] | _SimpleKeyword
+        _FileExtractionResult: TypeAlias = tuple[str, int, str | tuple[str, ...], list[str], str | None]
+        _ExtractionResult: TypeAlias = tuple[int, str | tuple[str, ...], list[str], str | None]
+        _CallableExtractionMethod: TypeAlias = Callable[[_FileObj | IO[bytes], Mapping[str, _Keyword], Collection[str], Mapping[str, Any]], Iterable[_ExtractionResult]]
+        _ExtractionMethod: TypeAlias = _CallableExtractionMethod | str
+    GROUP_NAME: Final[str] = 'babel.extractors'
+    DEFAULT_KEYWORDS: dict[str, _Keyword] = {'_': None, 'gettext': None, 'ngettext': (1, 2), 'ugettext': None, 'ungettext': (1, 2), 'dgettext': (2,), 'dngettext': (2, 3), 'N_': None, 'pgettext': ((1, 'c'), 2), 'npgettext': ((1, 'c'), 2, 3)}
+    DEFAULT_MAPPING: list[tuple[str, str]] = [('**.py', 'python')]
+    FSTRING_START = getattr(tokenize, 'FSTRING_START', None)
+    FSTRING_MIDDLE = getattr(tokenize, 'FSTRING_MIDDLE', None)
+    FSTRING_END = getattr(tokenize, 'FSTRING_END', None)
+
+
+preamble messages_frontend:
+  source: babel/messages/frontend.py
+  body: |
+    '\n    babel.messages.frontend\n    ~~~~~~~~~~~~~~~~~~~~~~~\n\n    Frontends for the message extraction functionality.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    from __future__ import annotations
+    import datetime
+    import fnmatch
+    import logging
+    import optparse
+    import os
+    import re
+    import shutil
+    import sys
+    import tempfile
+    from collections import OrderedDict
+    from configparser import RawConfigParser
+    from io import StringIO
+    from typing import Iterable
+    from babel import Locale, localedata
+    from babel import __version__ as VERSION
+    from babel.core import UnknownLocaleError
+    from babel.messages.catalog import DEFAULT_HEADER, Catalog
+    from babel.messages.extract import DEFAULT_KEYWORDS, DEFAULT_MAPPING, check_and_call_extract_file, extract_from_dir
+    from babel.messages.mofile import write_mo
+    from babel.messages.pofile import read_po, write_po
+    from babel.util import LOCALTZ
+    log = logging.getLogger('babel')
+    class BaseError(Exception):
+        pass
+    class OptionError(BaseError):
+        pass
+    class SetupError(BaseError):
+        pass
+    class CommandMixin:
+        as_args = None
+        multiple_value_options = ()
+        boolean_options = ()
+        option_aliases = {}
+        option_choices = {}
+        log = log
+
+        def __init__(self, dist=None):
+            self.distribution = dist
+            self.initialize_options()
+            self._dry_run = None
+            self.verbose = False
+            self.force = None
+            self.help = 0
+            self.finalized = 0
+    class CompileCatalog(CommandMixin):
+        description = 'compile message catalogs to binary MO files'
+        user_options = [('domain=', 'D', "domains of PO files (space separated list, default 'messages')"), ('directory=', 'd', 'path to base directory containing the catalogs'), ('input-file=', 'i', 'name of the input file'), ('output-file=', 'o', "name of the output file (default '<output_dir>/<locale>/LC_MESSAGES/<domain>.mo')"), ('locale=', 'l', 'locale of the catalog to compile'), ('use-fuzzy', 'f', 'also include fuzzy translations'), ('statistics', None, 'print statistics about translations')]
+        boolean_options = ['use-fuzzy', 'statistics']
+    class ExtractMessages(CommandMixin):
+        description = 'extract localizable strings from the project code'
+        user_options = [('charset=', None, 'charset to use in the output file (default "utf-8")'), ('keywords=', 'k', 'space-separated list of keywords to look for in addition to the defaults (may be repeated multiple times)'), ('no-default-keywords', None, 'do not include the default keywords'), ('mapping-file=', 'F', 'path to the mapping configuration file'), ('no-location', None, 'do not include location comments with filename and line number'), ('add-location=', None, 'location lines format. If it is not given or "full", it generates the lines with both file name and line number. If it is "file", the line number part is omitted. If it is "never", it completely suppresses the lines (same as --no-location).'), ('omit-header', None, 'do not include msgid "" entry in header'), ('output-file=', 'o', 'name of the output file'), ('width=', 'w', 'set output line width (default 76)'), ('no-wrap', None, 'do not break long message lines, longer than the output line width, into several lines'), ('sort-output', None, 'generate sorted output (default False)'), ('sort-by-file', None, 'sort output by file location (default False)'), ('msgid-bugs-address=', None, 'set report address for msgid'), ('copyright-holder=', None, 'set copyright holder in output'), ('project=', None, 'set project name in output'), ('version=', None, 'set project version in output'), ('add-comments=', 'c', 'place comment block with TAG (or those preceding keyword lines) in output file. Separate multiple TAGs with commas(,)'), ('strip-comments', 's', 'strip the comment TAGs from the comments.'), ('input-paths=', None, 'files or directories that should be scanned for messages. Separate multiple files or directories with commas(,)'), ('input-dirs=', None, 'alias for input-paths (does allow files as well as directories).'), ('ignore-dirs=', None, 'Patterns for directories to ignore when scanning for messages. Separate multiple patterns with spaces (default ".* ._")'), ('header-comment=', None, 'header comment for the catalog'), ('last-translator=', None, 'set the name and email of the last translator in output')]
+        boolean_options = ['no-default-keywords', 'no-location', 'omit-header', 'no-wrap', 'sort-output', 'sort-by-file', 'strip-comments']
+        as_args = 'input-paths'
+        multiple_value_options = ('add-comments', 'keywords', 'ignore-dirs')
+        option_aliases = {'keywords': ('--keyword',), 'mapping-file': ('--mapping',), 'output-file': ('--output',), 'strip-comments': ('--strip-comment-tags',), 'last-translator': ('--last-translator',)}
+        option_choices = {'add-location': ('full', 'file', 'never')}
+    class InitCatalog(CommandMixin):
+        description = 'create a new catalog based on a POT file'
+        user_options = [('domain=', 'D', "domain of PO file (default 'messages')"), ('input-file=', 'i', 'name of the input file'), ('output-dir=', 'd', 'path to output directory'), ('output-file=', 'o', "name of the output file (default '<output_dir>/<locale>/LC_MESSAGES/<domain>.po')"), ('locale=', 'l', 'locale for the new localized catalog'), ('width=', 'w', 'set output line width (default 76)'), ('no-wrap', None, 'do not break long message lines, longer than the output line width, into several lines')]
+        boolean_options = ['no-wrap']
+    class UpdateCatalog(CommandMixin):
+        description = 'update message catalogs from a POT file'
+        user_options = [('domain=', 'D', "domain of PO file (default 'messages')"), ('input-file=', 'i', 'name of the input file'), ('output-dir=', 'd', 'path to base directory containing the catalogs'), ('output-file=', 'o', "name of the output file (default '<output_dir>/<locale>/LC_MESSAGES/<domain>.po')"), ('omit-header', None, 'do not include msgid  entry in header'), ('locale=', 'l', 'locale of the catalog to compile'), ('width=', 'w', 'set output line width (default 76)'), ('no-wrap', None, 'do not break long message lines, longer than the output line width, into several lines'), ('ignore-obsolete=', None, 'whether to omit obsolete messages from the output'), ('init-missing=', None, 'if any output files are missing, initialize them first'), ('no-fuzzy-matching', 'N', 'do not use fuzzy matching'), ('update-header-comment', None, 'update target header comment'), ('previous', None, 'keep previous msgids of translated messages'), ('check=', None, "don't update the catalog, just return the status. Return code 0 means nothing would change. Return code 1 means that the catalog would be updated"), ('ignore-pot-creation-date=', None, 'ignore changes to POT-Creation-Date when updating or checking')]
+        boolean_options = ['omit-header', 'no-wrap', 'ignore-obsolete', 'init-missing', 'no-fuzzy-matching', 'previous', 'update-header-comment', 'check', 'ignore-pot-creation-date']
+    class CommandLineInterface:
+        """Command-line interface.
+
+        This class provides a simple command-line interface to the message
+        extraction and PO file generation functionality.
+        """
+        usage = '%%prog %s [options] %s'
+        version = f'%prog {VERSION}'
+        commands = {'compile': 'compile message catalogs to MO files', 'extract': 'extract messages from source files and generate a POT file', 'init': 'create new message catalogs from a POT file', 'update': 'update existing message catalogs from a POT file'}
+        command_classes = {'compile': CompileCatalog, 'extract': ExtractMessages, 'init': InitCatalog, 'update': UpdateCatalog}
+        log = None
+
+        def run(self, argv=None):
+            """Main entry point of the command-line interface.
+
+            :param argv: list of arguments passed on the command-line
+            """
+            pass
+
+        def _configure_command(self, cmdname, argv):
+            """
+            :type cmdname: str
+            :type argv: list[str]
+            """
+            pass
+    if __name__ == '__main__':
+        main()
+
+
+preamble messages_jslexer:
+  source: babel/messages/jslexer.py
+  body: |
+    '\n    babel.messages.jslexer\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    A simple JavaScript 1.5 lexer which is used for the JavaScript\n    extractor.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    from __future__ import annotations
+    import re
+    from collections.abc import Generator
+    from typing import NamedTuple
+    operators: list[str] = sorted(['+', '-', '*', '%', '!=', '==', '<', '>', '<=', '>=', '=', '+=', '-=', '*=', '%=', '<<', '>>', '>>>', '<<=', '>>=', '>>>=', '&', '&=', '|', '|=', '&&', '||', '^', '^=', '(', ')', '[', ']', '{', '}', '!', '--', '++', '~', ',', ';', '.', ':'], key=len, reverse=True)
+    escapes: dict[str, str] = {'b': '\x08', 'f': '\x0c', 'n': '\n', 'r': '\r', 't': '\t'}
+    name_re = re.compile('[\\w$_][\\w\\d$_]*', re.UNICODE)
+    dotted_name_re = re.compile('[\\w$_][\\w\\d$_.]*[\\w\\d$_.]', re.UNICODE)
+    division_re = re.compile('/=?')
+    regex_re = re.compile('/(?:[^/\\\\]*(?:\\\\.[^/\\\\]*)*)/[a-zA-Z]*', re.DOTALL)
+    line_re = re.compile('(\\r\\n|\\n|\\r)')
+    line_join_re = re.compile('\\\\' + line_re.pattern)
+    uni_escape_re = re.compile('[a-fA-F0-9]{1,4}')
+    hex_escape_re = re.compile('[a-fA-F0-9]{1,2}')
+    class Token(NamedTuple):
+        type: str
+        value: str
+        lineno: int
+    _rules: list[tuple[str | None, re.Pattern[str]]] = [(None, re.compile('\\s+', re.UNICODE)), (None, re.compile('<!--.*')), ('linecomment', re.compile('//.*')), ('multilinecomment', re.compile('/\\*.*?\\*/', re.UNICODE | re.DOTALL)), ('dotted_name', dotted_name_re), ('name', name_re), ('number', re.compile('(\n        (?:0|[1-9]\\d*)\n        (\\.\\d+)?\n        ([eE][-+]?\\d+)? |\n        (0x[a-fA-F0-9]+)\n    )', re.VERBOSE)), ('jsx_tag', re.compile('(?:</?[^>\\s]+|/>)', re.I)), ('operator', re.compile('(%s)' % '|'.join(map(re.escape, operators)))), ('template_string', re.compile('`(?:[^`\\\\]*(?:\\\\.[^`\\\\]*)*)`', re.UNICODE)), ('string', re.compile('(\n        \'(?:[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\'  |\n        "(?:[^"\\\\]*(?:\\\\.[^"\\\\]*)*)"\n    )', re.VERBOSE | re.DOTALL))]
+
+
+preamble messages_mofile:
+  source: babel/messages/mofile.py
+  body: |
+    '\n    babel.messages.mofile\n    ~~~~~~~~~~~~~~~~~~~~~\n\n    Writing of files in the ``gettext`` MO (machine object) format.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    from __future__ import annotations
+    import array
+    import struct
+    from typing import TYPE_CHECKING
+    from babel.messages.catalog import Catalog, Message
+    if TYPE_CHECKING:
+        from _typeshed import SupportsRead, SupportsWrite
+    LE_MAGIC: int = 2500072158
+    BE_MAGIC: int = 3725722773
+
+
+preamble messages_plurals:
+  source: babel/messages/plurals.py
+  body: |
+    '\n    babel.messages.plurals\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    Plural form definitions.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    from __future__ import annotations
+    from operator import itemgetter
+    from babel.core import Locale, default_locale
+    LC_CTYPE: str | None = default_locale('LC_CTYPE')
+    PLURALS: dict[str, tuple[int, str]] = {'af': (2, '(n != 1)'), 'ar': (6, '(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=0 && n%100<=2 ? 4 : 5)'), 'be': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'bg': (2, '(n != 1)'), 'bn': (2, '(n != 1)'), 'bo': (1, '0'), 'br': (6, '(n==1 ? 0 : n%10==1 && n%100!=11 && n%100!=71 && n%100!=91 ? 1 : n%10==2 && n%100!=12 && n%100!=72 && n%100!=92 ? 2 : (n%10==3 || n%10==4 || n%10==9) && n%100!=13 && n%100!=14 && n%100!=19 && n%100!=73 && n%100!=74 && n%100!=79 && n%100!=93 && n%100!=94 && n%100!=99 ? 3 : n%1000000==0 ? 4 : 5)'), 'bs': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'ca': (2, '(n != 1)'), 'cs': (3, '((n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2)'), 'cv': (1, '0'), 'cy': (5, '(n==1 ? 1 : n==2 ? 2 : n==3 ? 3 : n==6 ? 4 : 0)'), 'da': (2, '(n != 1)'), 'de': (2, '(n != 1)'), 'dz': (1, '0'), 'el': (2, '(n != 1)'), 'en': (2, '(n != 1)'), 'eo': (2, '(n != 1)'), 'es': (2, '(n != 1)'), 'et': (2, '(n != 1)'), 'eu': (2, '(n != 1)'), 'fa': (1, '0'), 'fi': (2, '(n != 1)'), 'fr': (2, '(n > 1)'), 'fur': (2, '(n > 1)'), 'ga': (5, '(n==1 ? 0 : n==2 ? 1 : n>=3 && n<=6 ? 2 : n>=7 && n<=10 ? 3 : 4)'), 'gl': (2, '(n != 1)'), 'ha': (2, '(n != 1)'), 'he': (2, '(n != 1)'), 'hi': (2, '(n != 1)'), 'hr': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'hu': (1, '0'), 'hy': (1, '0'), 'is': (2, '(n%10==1 && n%100!=11 ? 0 : 1)'), 'it': (2, '(n != 1)'), 'ja': (1, '0'), 'ka': (1, '0'), 'kg': (2, '(n != 1)'), 'km': (1, '0'), 'ko': (1, '0'), 'ku': (2, '(n != 1)'), 'lo': (1, '0'), 'lt': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'lv': (3, '(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2)'), 'mt': (4, '(n==1 ? 0 : n==0 || ( n%100>=1 && n%100<=10) ? 1 : (n%100>10 && n%100<20 ) ? 2 : 3)'), 'nb': (2, '(n != 1)'), 'nl': (2, '(n != 1)'), 'nn': (2, '(n != 1)'), 'no': (2, '(n != 1)'), 'pa': (2, '(n != 1)'), 'pl': (3, '(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'pt': (2, '(n != 1)'), 'pt_BR': (2, '(n > 1)'), 'ro': (3, '(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < 20)) ? 1 : 2)'), 'ru': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'sk': (3, '((n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2)'), 'sl': (4, '(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3)'), 'sr': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'st': (2, '(n != 1)'), 'sv': (2, '(n != 1)'), 'th': (1, '0'), 'tr': (1, '0'), 'uk': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 've': (2, '(n != 1)'), 'vi': (1, '0'), 'xh': (2, '(n != 1)'), 'zh': (1, '0')}
+    DEFAULT_PLURAL: tuple[int, str] = (2, '(n != 1)')
+    class _PluralTuple(tuple):
+        """A tuple with plural information."""
+        __slots__ = ()
+        num_plurals = property(itemgetter(0), doc='\n    The number of plurals used by the locale.')
+        plural_expr = property(itemgetter(1), doc='\n    The plural expression used by the locale.')
+        plural_forms = property(lambda x: 'nplurals={}; plural={};'.format(*x), doc='\n    The plural expression used by the catalog or locale.')
+
+        def __str__(self) -> str:
+            return self.plural_forms
+
+
+preamble messages_pofile:
+  source: babel/messages/pofile.py
+  body: |
+    '\n    babel.messages.pofile\n    ~~~~~~~~~~~~~~~~~~~~~\n\n    Reading and writing of files in the ``gettext`` PO (portable object)\n    format.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    from __future__ import annotations
+    import os
+    import re
+    from collections.abc import Iterable
+    from typing import TYPE_CHECKING
+    from babel.core import Locale
+    from babel.messages.catalog import Catalog, Message
+    from babel.util import _cmp, wraptext
+    if TYPE_CHECKING:
+        from typing import IO, AnyStr
+        from _typeshed import SupportsWrite
+        from typing_extensions import Literal
+    class PoFileError(Exception):
+        """Exception thrown by PoParser when an invalid po file is encountered."""
+
+        def __init__(self, message: str, catalog: Catalog, line: str, lineno: int) -> None:
+            super().__init__(f'{message} on {lineno}')
+            self.catalog = catalog
+            self.line = line
+            self.lineno = lineno
+    class _NormalizedString:
+
+        def __init__(self, *args: str) -> None:
+            self._strs: list[str] = []
+            for arg in args:
+                self.append(arg)
+
+        def __bool__(self) -> bool:
+            return bool(self._strs)
+
+        def __repr__(self) -> str:
+            return os.linesep.join(self._strs)
+
+        def __cmp__(self, other: object) -> int:
+            if not other:
+                return 1
+            return _cmp(str(self), str(other))
+
+        def __gt__(self, other: object) -> bool:
+            return self.__cmp__(other) > 0
+
+        def __lt__(self, other: object) -> bool:
+            return self.__cmp__(other) < 0
+
+        def __ge__(self, other: object) -> bool:
+            return self.__cmp__(other) >= 0
+
+        def __le__(self, other: object) -> bool:
+            return self.__cmp__(other) <= 0
+
+        def __eq__(self, other: object) -> bool:
+            return self.__cmp__(other) == 0
+
+        def __ne__(self, other: object) -> bool:
+            return self.__cmp__(other) != 0
+    class PoFileParser:
+        """Support class to  read messages from a ``gettext`` PO (portable object) file
+        and add them to a `Catalog`
+
+        See `read_po` for simple cases.
+        """
+        _keywords = ['msgid', 'msgstr', 'msgctxt', 'msgid_plural']
+
+        def __init__(self, catalog: Catalog, ignore_obsolete: bool=False, abort_invalid: bool=False) -> None:
+            self.catalog = catalog
+            self.ignore_obsolete = ignore_obsolete
+            self.counter = 0
+            self.offset = 0
+            self.abort_invalid = abort_invalid
+            self._reset_message_state()
+
+        def _add_message(self) -> None:
+            """
+            Add a message to the catalog based on the current parser state and
+            clear the state ready to process the next message.
+            """
+            pass
+
+        def parse(self, fileobj: IO[AnyStr]) -> None:
+            """
+            Reads from the file-like object `fileobj` and adds any po file
+            units found in it to the `Catalog` supplied to the constructor.
+            """
+            pass
+    WORD_SEP = re.compile('(\\s+|[^\\s\\w]*\\w+[a-zA-Z]-(?=\\w+[a-zA-Z])|(?<=[\\w\\!\\"\\\'\\&\\.\\,\\?])-{2,}(?=\\w))')
+
+
+preamble messages_setuptools_frontend:
+  source: babel/messages/setuptools_frontend.py
+  body: |
+    from __future__ import annotations
+    from babel.messages import frontend
+    try:
+        from setuptools import Command
+        try:
+            from setuptools.errors import BaseError, OptionError, SetupError
+        except ImportError:
+            OptionError = SetupError = BaseError = Exception
+    except ImportError:
+        from distutils.cmd import Command
+        from distutils.errors import DistutilsSetupError as SetupError
+    class compile_catalog(frontend.CompileCatalog, Command):
+        """Catalog compilation command for use in ``setup.py`` scripts.
+
+        If correctly installed, this command is available to Setuptools-using
+        setup scripts automatically. For projects using plain old ``distutils``,
+        the command needs to be registered explicitly in ``setup.py``::
+
+            from babel.messages.setuptools_frontend import compile_catalog
+
+            setup(
+                ...
+                cmdclass = {'compile_catalog': compile_catalog}
+            )
+
+        .. versionadded:: 0.9
+        """
+    class extract_messages(frontend.ExtractMessages, Command):
+        """Message extraction command for use in ``setup.py`` scripts.
+
+        If correctly installed, this command is available to Setuptools-using
+        setup scripts automatically. For projects using plain old ``distutils``,
+        the command needs to be registered explicitly in ``setup.py``::
+
+            from babel.messages.setuptools_frontend import extract_messages
+
+            setup(
+                ...
+                cmdclass = {'extract_messages': extract_messages}
+            )
+        """
+    class init_catalog(frontend.InitCatalog, Command):
+        """New catalog initialization command for use in ``setup.py`` scripts.
+
+        If correctly installed, this command is available to Setuptools-using
+        setup scripts automatically. For projects using plain old ``distutils``,
+        the command needs to be registered explicitly in ``setup.py``::
+
+            from babel.messages.setuptools_frontend import init_catalog
+
+            setup(
+                ...
+                cmdclass = {'init_catalog': init_catalog}
+            )
+        """
+    class update_catalog(frontend.UpdateCatalog, Command):
+        """Catalog merging command for use in ``setup.py`` scripts.
+
+        If correctly installed, this command is available to Setuptools-using
+        setup scripts automatically. For projects using plain old ``distutils``,
+        the command needs to be registered explicitly in ``setup.py``::
+
+            from babel.messages.setuptools_frontend import update_catalog
+
+            setup(
+                ...
+                cmdclass = {'update_catalog': update_catalog}
+            )
+
+        .. versionadded:: 0.9
+        """
+    COMMANDS = {'compile_catalog': compile_catalog, 'extract_messages': extract_messages, 'init_catalog': init_catalog, 'update_catalog': update_catalog}
+
+
+preamble numbers:
+  source: babel/numbers.py
+  body: |
+    '\n    babel.numbers\n    ~~~~~~~~~~~~~\n\n    Locale dependent formatting and parsing of numeric data.\n\n    The default locale for the functions in this module is determined by the\n    following environment variables, in that order:\n\n     * ``LC_NUMERIC``,\n     * ``LC_ALL``, and\n     * ``LANG``\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    from __future__ import annotations
+    import datetime
+    import decimal
+    import re
+    import warnings
+    from typing import TYPE_CHECKING, Any, cast, overload
+    from babel.core import Locale, default_locale, get_global
+    from babel.localedata import LocaleDataDict
+    if TYPE_CHECKING:
+        from typing_extensions import Literal
+    LC_NUMERIC = default_locale('LC_NUMERIC')
+    class UnknownCurrencyError(Exception):
+        """Exception thrown when a currency is requested for which no data is available.
+        """
+
+        def __init__(self, identifier: str) -> None:
+            """Create the exception.
+            :param identifier: the identifier string of the unsupported currency
+            """
+            Exception.__init__(self, f'Unknown currency {identifier!r}.')
+            self.identifier = identifier
+    class UnsupportedNumberingSystemError(Exception):
+        """Exception thrown when an unsupported numbering system is requested for the given Locale."""
+        pass
+    class UnknownCurrencyFormatError(KeyError):
+        """Exception raised when an unknown currency format is requested."""
+    class NumberFormatError(ValueError):
+        """Exception raised when a string cannot be parsed into a number."""
+
+        def __init__(self, message: str, suggestions: list[str] | None=None) -> None:
+            super().__init__(message)
+            self.suggestions = suggestions
+    PREFIX_END = '[^0-9@#.,]'
+    NUMBER_TOKEN = '[0-9@#.,E+]'
+    PREFIX_PATTERN = "(?P<prefix>(?:'[^']*'|%s)*)" % PREFIX_END
+    NUMBER_PATTERN = '(?P<number>%s*)' % NUMBER_TOKEN
+    SUFFIX_PATTERN = '(?P<suffix>.*)'
+    number_re = re.compile(f'{PREFIX_PATTERN}{NUMBER_PATTERN}{SUFFIX_PATTERN}')
+    class NumberPattern:
+
+        def __init__(self, pattern: str, prefix: tuple[str, str], suffix: tuple[str, str], grouping: tuple[int, int], int_prec: tuple[int, int], frac_prec: tuple[int, int], exp_prec: tuple[int, int] | None, exp_plus: bool | None, number_pattern: str | None=None) -> None:
+            self.pattern = pattern
+            self.prefix = prefix
+            self.suffix = suffix
+            self.number_pattern = number_pattern
+            self.grouping = grouping
+            self.int_prec = int_prec
+            self.frac_prec = frac_prec
+            self.exp_prec = exp_prec
+            self.exp_plus = exp_plus
+            self.scale = self.compute_scale()
+
+        def __repr__(self) -> str:
+            return f'<{type(self).__name__} {self.pattern!r}>'
+
+        def compute_scale(self) -> Literal[0, 2, 3]:
+            """Return the scaling factor to apply to the number before rendering.
+
+            Auto-set to a factor of 2 or 3 if presence of a ``%`` or ``‰`` sign is
+            detected in the prefix or suffix of the pattern. Default is to not mess
+            with the scale at all and keep it to 0.
+            """
+            pass
+
+        def scientific_notation_elements(self, value: decimal.Decimal, locale: Locale | str | None, *, numbering_system: Literal['default'] | str='latn') -> tuple[decimal.Decimal, int, str]:
+            """ Returns normalized scientific notation components of a value.
+            """
+            pass
+
+        def apply(self, value: float | decimal.Decimal | str, locale: Locale | str | None, currency: str | None=None, currency_digits: bool=True, decimal_quantization: bool=True, force_frac: tuple[int, int] | None=None, group_separator: bool=True, *, numbering_system: Literal['default'] | str='latn'):
+            """Renders into a string a number following the defined pattern.
+
+            Forced decimal quantization is active by default so we'll produce a
+            number string that is strictly following CLDR pattern definitions.
+
+            :param value: The value to format. If this is not a Decimal object,
+                          it will be cast to one.
+            :type value: decimal.Decimal|float|int
+            :param locale: The locale to use for formatting.
+            :type locale: str|babel.core.Locale
+            :param currency: Which currency, if any, to format as.
+            :type currency: str|None
+            :param currency_digits: Whether or not to use the currency's precision.
+                                    If false, the pattern's precision is used.
+            :type currency_digits: bool
+            :param decimal_quantization: Whether decimal numbers should be forcibly
+                                         quantized to produce a formatted output
+                                         strictly matching the CLDR definition for
+                                         the locale.
+            :type decimal_quantization: bool
+            :param force_frac: DEPRECATED - a forced override for `self.frac_prec`
+                               for a single formatting invocation.
+            :param numbering_system: The numbering system used for formatting number symbols. Defaults to "latn".
+                                     The special value "default" will use the default numbering system of the locale.
+            :return: Formatted decimal string.
+            :rtype: str
+            :raise UnsupportedNumberingSystemError: If the numbering system is not supported by the locale.
+            """
+            pass
+
+
+preamble support:
+  source: babel/support.py
+  body: |
+    '\n    babel.support\n    ~~~~~~~~~~~~~\n\n    Several classes and functions that help with integrating and using Babel\n    in applications.\n\n    .. note: the code in this module is not used by Babel itself\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    from __future__ import annotations
+    import decimal
+    import gettext
+    import locale
+    import os
+    from collections.abc import Iterator
+    from typing import TYPE_CHECKING, Any, Callable, Iterable
+    from babel.core import Locale
+    from babel.dates import format_date, format_datetime, format_time, format_timedelta
+    from babel.numbers import format_compact_currency, format_compact_decimal, format_currency, format_decimal, format_percent, format_scientific
+    if TYPE_CHECKING:
+        from typing_extensions import Literal
+        from babel.dates import _PredefinedTimeFormat
+    class Format:
+        """Wrapper class providing the various date and number formatting functions
+        bound to a specific locale and time-zone.
+
+        >>> from babel.util import UTC
+        >>> from datetime import date
+        >>> fmt = Format('en_US', UTC)
+        >>> fmt.date(date(2007, 4, 1))
+        u'Apr 1, 2007'
+        >>> fmt.decimal(1.2345)
+        u'1.234'
+        """
+
+        def __init__(self, locale: Locale | str, tzinfo: datetime.tzinfo | None=None, *, numbering_system: Literal['default'] | str='latn') -> None:
+            """Initialize the formatter.
+
+            :param locale: the locale identifier or `Locale` instance
+            :param tzinfo: the time-zone info (a `tzinfo` instance or `None`)
+            :param numbering_system: The numbering system used for formatting number symbols. Defaults to "latn".
+                                     The special value "default" will use the default numbering system of the locale.
+            """
+            self.locale = Locale.parse(locale)
+            self.tzinfo = tzinfo
+            self.numbering_system = numbering_system
+
+        def date(self, date: datetime.date | None=None, format: _PredefinedTimeFormat | str='medium') -> str:
+            """Return a date formatted according to the given pattern.
+
+            >>> from datetime import date
+            >>> fmt = Format('en_US')
+            >>> fmt.date(date(2007, 4, 1))
+            u'Apr 1, 2007'
+            """
+            pass
+
+        def datetime(self, datetime: datetime.date | None=None, format: _PredefinedTimeFormat | str='medium') -> str:
+            """Return a date and time formatted according to the given pattern.
+
+            >>> from datetime import datetime
+            >>> from babel.dates import get_timezone
+            >>> fmt = Format('en_US', tzinfo=get_timezone('US/Eastern'))
+            >>> fmt.datetime(datetime(2007, 4, 1, 15, 30))
+            u'Apr 1, 2007, 11:30:00\u202fAM'
+            """
+            pass
+
+        def time(self, time: datetime.time | datetime.datetime | None=None, format: _PredefinedTimeFormat | str='medium') -> str:
+            """Return a time formatted according to the given pattern.
+
+            >>> from datetime import datetime
+            >>> from babel.dates import get_timezone
+            >>> fmt = Format('en_US', tzinfo=get_timezone('US/Eastern'))
+            >>> fmt.time(datetime(2007, 4, 1, 15, 30))
+            u'11:30:00\u202fAM'
+            """
+            pass
+
+        def timedelta(self, delta: datetime.timedelta | int, granularity: Literal['year', 'month', 'week', 'day', 'hour', 'minute', 'second']='second', threshold: float=0.85, format: Literal['narrow', 'short', 'medium', 'long']='long', add_direction: bool=False) -> str:
+            """Return a time delta according to the rules of the given locale.
+
+            >>> from datetime import timedelta
+            >>> fmt = Format('en_US')
+            >>> fmt.timedelta(timedelta(weeks=11))
+            u'3 months'
+            """
+            pass
+
+        def number(self, number: float | decimal.Decimal | str) -> str:
+            """Return an integer number formatted for the locale.
+
+            >>> fmt = Format('en_US')
+            >>> fmt.number(1099)
+            u'1,099'
+            """
+            pass
+
+        def decimal(self, number: float | decimal.Decimal | str, format: str | None=None) -> str:
+            """Return a decimal number formatted for the locale.
+
+            >>> fmt = Format('en_US')
+            >>> fmt.decimal(1.2345)
+            u'1.234'
+            """
+            pass
+
+        def compact_decimal(self, number: float | decimal.Decimal | str, format_type: Literal['short', 'long']='short', fraction_digits: int=0) -> str:
+            """Return a number formatted in compact form for the locale.
+
+            >>> fmt = Format('en_US')
+            >>> fmt.compact_decimal(123456789)
+            u'123M'
+            >>> fmt.compact_decimal(1234567, format_type='long', fraction_digits=2)
+            '1.23 million'
+            """
+            pass
+
+        def currency(self, number: float | decimal.Decimal | str, currency: str) -> str:
+            """Return a number in the given currency formatted for the locale.
+            """
+            pass
+
+        def compact_currency(self, number: float | decimal.Decimal | str, currency: str, format_type: Literal['short']='short', fraction_digits: int=0) -> str:
+            """Return a number in the given currency formatted for the locale
+            using the compact number format.
+
+            >>> Format('en_US').compact_currency(1234567, "USD", format_type='short', fraction_digits=2)
+            '$1.23M'
+            """
+            pass
+
+        def percent(self, number: float | decimal.Decimal | str, format: str | None=None) -> str:
+            """Return a number formatted as percentage for the locale.
+
+            >>> fmt = Format('en_US')
+            >>> fmt.percent(0.34)
+            u'34%'
+            """
+            pass
+
+        def scientific(self, number: float | decimal.Decimal | str) -> str:
+            """Return a number formatted using scientific notation for the locale.
+            """
+            pass
+    class LazyProxy:
+        """Class for proxy objects that delegate to a specified function to evaluate
+        the actual object.
+
+        >>> def greeting(name='world'):
+        ...     return 'Hello, %s!' % name
+        >>> lazy_greeting = LazyProxy(greeting, name='Joe')
+        >>> print(lazy_greeting)
+        Hello, Joe!
+        >>> u'  ' + lazy_greeting
+        u'  Hello, Joe!'
+        >>> u'(%s)' % lazy_greeting
+        u'(Hello, Joe!)'
+
+        This can be used, for example, to implement lazy translation functions that
+        delay the actual translation until the string is actually used. The
+        rationale for such behavior is that the locale of the user may not always
+        be available. In web applications, you only know the locale when processing
+        a request.
+
+        The proxy implementation attempts to be as complete as possible, so that
+        the lazy objects should mostly work as expected, for example for sorting:
+
+        >>> greetings = [
+        ...     LazyProxy(greeting, 'world'),
+        ...     LazyProxy(greeting, 'Joe'),
+        ...     LazyProxy(greeting, 'universe'),
+        ... ]
+        >>> greetings.sort()
+        >>> for greeting in greetings:
+        ...     print(greeting)
+        Hello, Joe!
+        Hello, universe!
+        Hello, world!
+        """
+        __slots__ = ['_func', '_args', '_kwargs', '_value', '_is_cache_enabled', '_attribute_error']
+        if TYPE_CHECKING:
+            _func: Callable[..., Any]
+            _args: tuple[Any, ...]
+            _kwargs: dict[str, Any]
+            _is_cache_enabled: bool
+            _value: Any
+            _attribute_error: AttributeError | None
+
+        def __init__(self, func: Callable[..., Any], *args: Any, enable_cache: bool=True, **kwargs: Any) -> None:
+            object.__setattr__(self, '_func', func)
+            object.__setattr__(self, '_args', args)
+            object.__setattr__(self, '_kwargs', kwargs)
+            object.__setattr__(self, '_is_cache_enabled', enable_cache)
+            object.__setattr__(self, '_value', None)
+            object.__setattr__(self, '_attribute_error', None)
+
+        def __contains__(self, key: object) -> bool:
+            return key in self.value
+
+        def __bool__(self) -> bool:
+            return bool(self.value)
+
+        def __dir__(self) -> list[str]:
+            return dir(self.value)
+
+        def __iter__(self) -> Iterator[Any]:
+            return iter(self.value)
+
+        def __len__(self) -> int:
+            return len(self.value)
+
+        def __str__(self) -> str:
+            return str(self.value)
+
+        def __add__(self, other: object) -> Any:
+            return self.value + other
+
+        def __radd__(self, other: object) -> Any:
+            return other + self.value
+
+        def __mod__(self, other: object) -> Any:
+            return self.value % other
+
+        def __rmod__(self, other: object) -> Any:
+            return other % self.value
+
+        def __mul__(self, other: object) -> Any:
+            return self.value * other
+
+        def __rmul__(self, other: object) -> Any:
+            return other * self.value
+
+        def __call__(self, *args: Any, **kwargs: Any) -> Any:
+            return self.value(*args, **kwargs)
+
+        def __lt__(self, other: object) -> bool:
+            return self.value < other
+
+        def __le__(self, other: object) -> bool:
+            return self.value <= other
+
+        def __eq__(self, other: object) -> bool:
+            return self.value == other
+
+        def __ne__(self, other: object) -> bool:
+            return self.value != other
+
+        def __gt__(self, other: object) -> bool:
+            return self.value > other
+
+        def __ge__(self, other: object) -> bool:
+            return self.value >= other
+
+        def __delattr__(self, name: str) -> None:
+            delattr(self.value, name)
+
+        def __getattr__(self, name: str) -> Any:
+            if self._attribute_error is not None:
+                raise self._attribute_error
+            return getattr(self.value, name)
+
+        def __setattr__(self, name: str, value: Any) -> None:
+            setattr(self.value, name, value)
+
+        def __delitem__(self, key: Any) -> None:
+            del self.value[key]
+
+        def __getitem__(self, key: Any) -> Any:
+            return self.value[key]
+
+        def __setitem__(self, key: Any, value: Any) -> None:
+            self.value[key] = value
+
+        def __copy__(self) -> LazyProxy:
+            return LazyProxy(self._func, *self._args, enable_cache=self._is_cache_enabled, **self._kwargs)
+
+        def __deepcopy__(self, memo: Any) -> LazyProxy:
+            from copy import deepcopy
+            return LazyProxy(deepcopy(self._func, memo), *deepcopy(self._args, memo), enable_cache=deepcopy(self._is_cache_enabled, memo), **deepcopy(self._kwargs, memo))
+    class NullTranslations(gettext.NullTranslations):
+        if TYPE_CHECKING:
+            _info: dict[str, str]
+            _fallback: NullTranslations | None
+        DEFAULT_DOMAIN = None
+
+        def __init__(self, fp: gettext._TranslationsReader | None=None) -> None:
+            """Initialize a simple translations class which is not backed by a
+            real catalog. Behaves similar to gettext.NullTranslations but also
+            offers Babel's on *gettext methods (e.g. 'dgettext()').
+
+            :param fp: a file-like object (ignored in this class)
+            """
+            self._catalog: dict[tuple[str, Any] | str, str] = {}
+            self.plural: Callable[[float | decimal.Decimal], int] = lambda n: int(n != 1)
+            super().__init__(fp=fp)
+            self.files = list(filter(None, [getattr(fp, 'name', None)]))
+            self.domain = self.DEFAULT_DOMAIN
+            self._domains: dict[str, NullTranslations] = {}
+
+        def dgettext(self, domain: str, message: str) -> str:
+            """Like ``gettext()``, but look the message up in the specified
+            domain.
+            """
+            pass
+
+        def ldgettext(self, domain: str, message: str) -> str:
+            """Like ``lgettext()``, but look the message up in the specified
+            domain.
+            """
+            pass
+
+        def udgettext(self, domain: str, message: str) -> str:
+            """Like ``ugettext()``, but look the message up in the specified
+            domain.
+            """
+            pass
+        dugettext = udgettext
+
+        def dngettext(self, domain: str, singular: str, plural: str, num: int) -> str:
+            """Like ``ngettext()``, but look the message up in the specified
+            domain.
+            """
+            pass
+
+        def ldngettext(self, domain: str, singular: str, plural: str, num: int) -> str:
+            """Like ``lngettext()``, but look the message up in the specified
+            domain.
+            """
+            pass
+
+        def udngettext(self, domain: str, singular: str, plural: str, num: int) -> str:
+            """Like ``ungettext()`` but look the message up in the specified
+            domain.
+            """
+            pass
+        dungettext = udngettext
+        CONTEXT_ENCODING = '%s\x04%s'
+
+        def pgettext(self, context: str, message: str) -> str | object:
+            """Look up the `context` and `message` id in the catalog and return the
+            corresponding message string, as an 8-bit string encoded with the
+            catalog's charset encoding, if known.  If there is no entry in the
+            catalog for the `message` id and `context` , and a fallback has been
+            set, the look up is forwarded to the fallback's ``pgettext()``
+            method. Otherwise, the `message` id is returned.
+            """
+            pass
+
+        def lpgettext(self, context: str, message: str) -> str | bytes | object:
+            """Equivalent to ``pgettext()``, but the translation is returned in the
+            preferred system encoding, if no other encoding was explicitly set with
+            ``bind_textdomain_codeset()``.
+            """
+            pass
+
+        def npgettext(self, context: str, singular: str, plural: str, num: int) -> str:
+            """Do a plural-forms lookup of a message id.  `singular` is used as the
+            message id for purposes of lookup in the catalog, while `num` is used to
+            determine which plural form to use.  The returned message string is an
+            8-bit string encoded with the catalog's charset encoding, if known.
+
+            If the message id for `context` is not found in the catalog, and a
+            fallback is specified, the request is forwarded to the fallback's
+            ``npgettext()`` method.  Otherwise, when ``num`` is 1 ``singular`` is
+            returned, and ``plural`` is returned in all other cases.
+            """
+            pass
+
+        def lnpgettext(self, context: str, singular: str, plural: str, num: int) -> str | bytes:
+            """Equivalent to ``npgettext()``, but the translation is returned in the
+            preferred system encoding, if no other encoding was explicitly set with
+            ``bind_textdomain_codeset()``.
+            """
+            pass
+
+        def upgettext(self, context: str, message: str) -> str:
+            """Look up the `context` and `message` id in the catalog and return the
+            corresponding message string, as a Unicode string.  If there is no entry
+            in the catalog for the `message` id and `context`, and a fallback has
+            been set, the look up is forwarded to the fallback's ``upgettext()``
+            method.  Otherwise, the `message` id is returned.
+            """
+            pass
+
+        def unpgettext(self, context: str, singular: str, plural: str, num: int) -> str:
+            """Do a plural-forms lookup of a message id.  `singular` is used as the
+            message id for purposes of lookup in the catalog, while `num` is used to
+            determine which plural form to use.  The returned message string is a
+            Unicode string.
+
+            If the message id for `context` is not found in the catalog, and a
+            fallback is specified, the request is forwarded to the fallback's
+            ``unpgettext()`` method.  Otherwise, when `num` is 1 `singular` is
+            returned, and `plural` is returned in all other cases.
+            """
+            pass
+
+        def dpgettext(self, domain: str, context: str, message: str) -> str | object:
+            """Like `pgettext()`, but look the message up in the specified
+            `domain`.
+            """
+            pass
+
+        def udpgettext(self, domain: str, context: str, message: str) -> str:
+            """Like `upgettext()`, but look the message up in the specified
+            `domain`.
+            """
+            pass
+        dupgettext = udpgettext
+
+        def ldpgettext(self, domain: str, context: str, message: str) -> str | bytes | object:
+            """Equivalent to ``dpgettext()``, but the translation is returned in the
+            preferred system encoding, if no other encoding was explicitly set with
+            ``bind_textdomain_codeset()``.
+            """
+            pass
+
+        def dnpgettext(self, domain: str, context: str, singular: str, plural: str, num: int) -> str:
+            """Like ``npgettext``, but look the message up in the specified
+            `domain`.
+            """
+            pass
+
+        def udnpgettext(self, domain: str, context: str, singular: str, plural: str, num: int) -> str:
+            """Like ``unpgettext``, but look the message up in the specified
+            `domain`.
+            """
+            pass
+        dunpgettext = udnpgettext
+
+        def ldnpgettext(self, domain: str, context: str, singular: str, plural: str, num: int) -> str | bytes:
+            """Equivalent to ``dnpgettext()``, but the translation is returned in
+            the preferred system encoding, if no other encoding was explicitly set
+            with ``bind_textdomain_codeset()``.
+            """
+            pass
+        ugettext = gettext.NullTranslations.gettext
+        ungettext = gettext.NullTranslations.ngettext
+    class Translations(NullTranslations, gettext.GNUTranslations):
+        """An extended translation catalog class."""
+        DEFAULT_DOMAIN = 'messages'
+
+        def __init__(self, fp: gettext._TranslationsReader | None=None, domain: str | None=None):
+            """Initialize the translations catalog.
+
+            :param fp: the file-like object the translation should be read from
+            :param domain: the message domain (default: 'messages')
+            """
+            super().__init__(fp=fp)
+            self.domain = domain or self.DEFAULT_DOMAIN
+        ugettext = gettext.GNUTranslations.gettext
+        ungettext = gettext.GNUTranslations.ngettext
+
+        @classmethod
+        def load(cls, dirname: str | os.PathLike[str] | None=None, locales: Iterable[str | Locale] | str | Locale | None=None, domain: str | None=None) -> NullTranslations:
+            """Load translations from the given directory.
+
+            :param dirname: the directory containing the ``MO`` files
+            :param locales: the list of locales in order of preference (items in
+                            this list can be either `Locale` objects or locale
+                            strings)
+            :param domain: the message domain (default: 'messages')
+            """
+            pass
+
+        def __repr__(self) -> str:
+            version = self._info.get('project-id-version')
+            return f'<{type(self).__name__}: "{version}">'
+
+        def add(self, translations: Translations, merge: bool=True):
+            """Add the given translations to the catalog.
+
+            If the domain of the translations is different than that of the
+            current catalog, they are added as a catalog that is only accessible
+            by the various ``d*gettext`` functions.
+
+            :param translations: the `Translations` instance with the messages to
+                                 add
+            :param merge: whether translations for message domains that have
+                          already been added should be merged with the existing
+                          translations
+            """
+            pass
+
+        def merge(self, translations: Translations):
+            """Merge the given translations into the catalog.
+
+            Message translations in the specified catalog override any messages
+            with the same identifier in the existing catalog.
+
+            :param translations: the `Translations` instance with the messages to
+                                 merge
+            """
+            pass
+
+
+preamble units:
+  source: babel/units.py
+  body: |
+    from __future__ import annotations
+    import decimal
+    from typing import TYPE_CHECKING
+    from babel.core import Locale
+    from babel.numbers import LC_NUMERIC, format_decimal
+    if TYPE_CHECKING:
+        from typing_extensions import Literal
+    class UnknownUnitError(ValueError):
+
+        def __init__(self, unit: str, locale: Locale) -> None:
+            ValueError.__init__(self, f'{unit} is not a known unit in {locale}')
+
+
+preamble util:
+  source: babel/util.py
+  body: |
+    '\n    babel.util\n    ~~~~~~~~~~\n\n    Various utility classes and functions.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    from __future__ import annotations
+    import codecs
+    import collections
+    import datetime
+    import os
+    import re
+    import textwrap
+    from collections.abc import Generator, Iterable
+    from typing import IO, Any, TypeVar
+    from babel import dates, localtime
+    missing = object()
+    _T = TypeVar('_T')
+    PYTHON_MAGIC_COMMENT_re = re.compile(b'[ \\t\\f]* \\# .* coding[=:][ \\t]*([-\\w.]+)', re.VERBOSE)
+    PYTHON_FUTURE_IMPORT_re = re.compile('from\\s+__future__\\s+import\\s+\\(*(.+)\\)*')
+    class TextWrapper(textwrap.TextWrapper):
+        wordsep_re = re.compile('(\\s+|(?<=[\\w\\!\\"\\\'\\&\\.\\,\\?])-{2,}(?=\\w))')
+    odict = collections.OrderedDict
+    class FixedOffsetTimezone(datetime.tzinfo):
+        """Fixed offset in minutes east from UTC."""
+
+        def __init__(self, offset: float, name: str | None=None) -> None:
+            self._offset = datetime.timedelta(minutes=offset)
+            if name is None:
+                name = 'Etc/GMT%+d' % offset
+            self.zone = name
+
+        def __str__(self) -> str:
+            return self.zone
+
+        def __repr__(self) -> str:
+            return f'<FixedOffset "{self.zone}" {self._offset}>'
+    UTC = dates.UTC
+    LOCALTZ = dates.LOCALTZ
+    get_localzone = localtime.get_localzone
+    STDOFFSET = localtime.STDOFFSET
+    DSTOFFSET = localtime.DSTOFFSET
+    DSTDIFF = localtime.DSTDIFF
+    ZERO = localtime.ZERO
+
+
 flow babel_lib:
   steps:
     - dates_group

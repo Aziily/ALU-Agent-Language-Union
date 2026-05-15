@@ -1,3 +1,504 @@
+preamble __init__:
+  source: cookiecutter/__init__.py
+  body: |
+    'Main package for Cookiecutter.'
+    from pathlib import Path
+    __version__ = _get_version()
+
+
+preamble __main__:
+  source: cookiecutter/__main__.py
+  body: |
+    'Allow cookiecutter to be executable through `python -m cookiecutter`.'
+    from cookiecutter.cli import main
+    if __name__ == '__main__':
+        main(prog_name='cookiecutter')
+
+
+preamble cli:
+  source: cookiecutter/cli.py
+  body: |
+    'Main `cookiecutter` CLI.'
+    import collections
+    import json
+    import os
+    import sys
+    import click
+    from cookiecutter import __version__
+    from cookiecutter.config import get_user_config
+    from cookiecutter.exceptions import ContextDecodingException, FailedHookException, InvalidModeException, InvalidZipRepository, OutputDirExistsException, RepositoryCloneFailed, RepositoryNotFound, UndefinedVariableInTemplate, UnknownExtension
+    from cookiecutter.log import configure_logger
+    from cookiecutter.main import cookiecutter
+    if __name__ == '__main__':
+        main()
+
+
+preamble config:
+  source: cookiecutter/config.py
+  body: |
+    'Global configuration handling.'
+    import collections
+    import copy
+    import logging
+    import os
+    import yaml
+    from cookiecutter.exceptions import ConfigDoesNotExistException, InvalidConfiguration
+    logger = logging.getLogger(__name__)
+    USER_CONFIG_PATH = os.path.expanduser('~/.cookiecutterrc')
+    BUILTIN_ABBREVIATIONS = {'gh': 'https://github.com/{0}.git', 'gl': 'https://gitlab.com/{0}.git', 'bb': 'https://bitbucket.org/{0}'}
+    DEFAULT_CONFIG = {'cookiecutters_dir': os.path.expanduser('~/.cookiecutters/'), 'replay_dir': os.path.expanduser('~/.cookiecutter_replay/'), 'default_context': collections.OrderedDict([]), 'abbreviations': BUILTIN_ABBREVIATIONS}
+
+
+preamble environment:
+  source: cookiecutter/environment.py
+  body: |
+    'Jinja2 environment and extensions loading.'
+    from jinja2 import Environment, StrictUndefined
+    from cookiecutter.exceptions import UnknownExtension
+    class ExtensionLoaderMixin:
+        """Mixin providing sane loading of extensions specified in a given context.
+
+        The context is being extracted from the keyword arguments before calling
+        the next parent class in line of the child.
+        """
+
+        def __init__(self, **kwargs):
+            """Initialize the Jinja2 Environment object while loading extensions.
+
+            Does the following:
+
+            1. Establishes default_extensions (currently just a Time feature)
+            2. Reads extensions set in the cookiecutter.json _extensions key.
+            3. Attempts to load the extensions. Provides useful error if fails.
+            """
+            context = kwargs.pop('context', {})
+            default_extensions = ['cookiecutter.extensions.JsonifyExtension', 'cookiecutter.extensions.RandomStringExtension', 'cookiecutter.extensions.SlugifyExtension', 'cookiecutter.extensions.TimeExtension', 'cookiecutter.extensions.UUIDExtension']
+            extensions = default_extensions + self._read_extensions(context)
+            try:
+                super().__init__(extensions=extensions, **kwargs)
+            except ImportError as err:
+                raise UnknownExtension(f'Unable to load extension: {err}') from err
+
+        def _read_extensions(self, context):
+            """Return list of extensions as str to be passed on to the Jinja2 env.
+
+            If context does not contain the relevant info, return an empty
+            list instead.
+            """
+            pass
+    class StrictEnvironment(ExtensionLoaderMixin, Environment):
+        """Create strict Jinja2 environment.
+
+        Jinja2 environment will raise error on undefined variable in template-
+        rendering context.
+        """
+
+        def __init__(self, **kwargs):
+            """Set the standard Cookiecutter StrictEnvironment.
+
+            Also loading extensions defined in cookiecutter.json's _extensions key.
+            """
+            super().__init__(undefined=StrictUndefined, **kwargs)
+
+
+preamble exceptions:
+  source: cookiecutter/exceptions.py
+  body: |
+    'All exceptions used in the Cookiecutter code base are defined here.'
+    class CookiecutterException(Exception):
+        """
+        Base exception class.
+
+        All Cookiecutter-specific exceptions should subclass this class.
+        """
+    class NonTemplatedInputDirException(CookiecutterException):
+        """
+        Exception for when a project's input dir is not templated.
+
+        The name of the input directory should always contain a string that is
+        rendered to something else, so that input_dir != output_dir.
+        """
+    class UnknownTemplateDirException(CookiecutterException):
+        """
+        Exception for ambiguous project template directory.
+
+        Raised when Cookiecutter cannot determine which directory is the project
+        template, e.g. more than one dir appears to be a template dir.
+        """
+    class MissingProjectDir(CookiecutterException):
+        """
+        Exception for missing generated project directory.
+
+        Raised during cleanup when remove_repo() can't find a generated project
+        directory inside of a repo.
+        """
+    class ConfigDoesNotExistException(CookiecutterException):
+        """
+        Exception for missing config file.
+
+        Raised when get_config() is passed a path to a config file, but no file
+        is found at that path.
+        """
+    class InvalidConfiguration(CookiecutterException):
+        """
+        Exception for invalid configuration file.
+
+        Raised if the global configuration file is not valid YAML or is
+        badly constructed.
+        """
+    class UnknownRepoType(CookiecutterException):
+        """
+        Exception for unknown repo types.
+
+        Raised if a repo's type cannot be determined.
+        """
+    class VCSNotInstalled(CookiecutterException):
+        """
+        Exception when version control is unavailable.
+
+        Raised if the version control system (git or hg) is not installed.
+        """
+    class ContextDecodingException(CookiecutterException):
+        """
+        Exception for failed JSON decoding.
+
+        Raised when a project's JSON context file can not be decoded.
+        """
+    class OutputDirExistsException(CookiecutterException):
+        """
+        Exception for existing output directory.
+
+        Raised when the output directory of the project exists already.
+        """
+    class InvalidModeException(CookiecutterException):
+        """
+        Exception for incompatible modes.
+
+        Raised when cookiecutter is called with both `no_input==True` and
+        `replay==True` at the same time.
+        """
+    class FailedHookException(CookiecutterException):
+        """
+        Exception for hook failures.
+
+        Raised when a hook script fails.
+        """
+    class UndefinedVariableInTemplate(CookiecutterException):
+        """
+        Exception for out-of-scope variables.
+
+        Raised when a template uses a variable which is not defined in the
+        context.
+        """
+
+        def __init__(self, message, error, context):
+            """Exception for out-of-scope variables."""
+            self.message = message
+            self.error = error
+            self.context = context
+
+        def __str__(self):
+            """Text representation of UndefinedVariableInTemplate."""
+            return f'{self.message}. Error message: {self.error.message}. Context: {self.context}'
+    class UnknownExtension(CookiecutterException):
+        """
+        Exception for un-importable extension.
+
+        Raised when an environment is unable to import a required extension.
+        """
+    class RepositoryNotFound(CookiecutterException):
+        """
+        Exception for missing repo.
+
+        Raised when the specified cookiecutter repository doesn't exist.
+        """
+    class RepositoryCloneFailed(CookiecutterException):
+        """
+        Exception for un-cloneable repo.
+
+        Raised when a cookiecutter template can't be cloned.
+        """
+    class InvalidZipRepository(CookiecutterException):
+        """
+        Exception for bad zip repo.
+
+        Raised when the specified cookiecutter repository isn't a valid
+        Zip archive.
+        """
+
+
+preamble extensions:
+  source: cookiecutter/extensions.py
+  body: |
+    'Jinja2 extensions.'
+    import json
+    import string
+    import uuid
+    from secrets import choice
+    import arrow
+    from jinja2 import nodes
+    from jinja2.ext import Extension
+    from slugify import slugify as pyslugify
+    class JsonifyExtension(Extension):
+        """Jinja2 extension to convert a Python object to JSON."""
+
+        def __init__(self, environment):
+            """Initialize the extension with the given environment."""
+            super().__init__(environment)
+
+            def jsonify(obj):
+                return json.dumps(obj, sort_keys=True, indent=4)
+            environment.filters['jsonify'] = jsonify
+    class RandomStringExtension(Extension):
+        """Jinja2 extension to create a random string."""
+
+        def __init__(self, environment):
+            """Jinja2 Extension Constructor."""
+            super().__init__(environment)
+
+            def random_ascii_string(length, punctuation=False):
+                if punctuation:
+                    corpus = ''.join((string.ascii_letters, string.punctuation))
+                else:
+                    corpus = string.ascii_letters
+                return ''.join((choice(corpus) for _ in range(length)))
+            environment.globals.update(random_ascii_string=random_ascii_string)
+    class SlugifyExtension(Extension):
+        """Jinja2 Extension to slugify string."""
+
+        def __init__(self, environment):
+            """Jinja2 Extension constructor."""
+            super().__init__(environment)
+
+            def slugify(value, **kwargs):
+                """Slugifies the value."""
+                return pyslugify(value, **kwargs)
+            environment.filters['slugify'] = slugify
+    class UUIDExtension(Extension):
+        """Jinja2 Extension to generate uuid4 string."""
+
+        def __init__(self, environment):
+            """Jinja2 Extension constructor."""
+            super().__init__(environment)
+
+            def uuid4():
+                """Generate UUID4."""
+                return str(uuid.uuid4())
+            environment.globals.update(uuid4=uuid4)
+    class TimeExtension(Extension):
+        """Jinja2 Extension for dates and times."""
+        tags = {'now'}
+
+        def __init__(self, environment):
+            """Jinja2 Extension constructor."""
+            super().__init__(environment)
+            environment.extend(datetime_format='%Y-%m-%d')
+
+        def parse(self, parser):
+            """Parse datetime template and add datetime value."""
+            pass
+
+
+preamble find:
+  source: cookiecutter/find.py
+  body: |
+    'Functions for finding Cookiecutter templates and other components.'
+    import logging
+    import os
+    from pathlib import Path
+    from jinja2 import Environment
+    from cookiecutter.exceptions import NonTemplatedInputDirException
+    logger = logging.getLogger(__name__)
+
+
+preamble generate:
+  source: cookiecutter/generate.py
+  body: |
+    'Functions for generating a project from a project template.'
+    import fnmatch
+    import json
+    import logging
+    import os
+    import shutil
+    import warnings
+    from collections import OrderedDict
+    from pathlib import Path
+    from binaryornot.check import is_binary
+    from jinja2 import Environment, FileSystemLoader
+    from jinja2.exceptions import TemplateSyntaxError, UndefinedError
+    from cookiecutter.exceptions import ContextDecodingException, OutputDirExistsException, UndefinedVariableInTemplate
+    from cookiecutter.find import find_template
+    from cookiecutter.hooks import run_hook_from_repo_dir
+    from cookiecutter.utils import create_env_with_context, make_sure_path_exists, rmtree, work_in
+    logger = logging.getLogger(__name__)
+
+
+preamble hooks:
+  source: cookiecutter/hooks.py
+  body: |
+    'Functions for discovering and executing various cookiecutter hooks.'
+    import errno
+    import logging
+    import os
+    import subprocess
+    import sys
+    import tempfile
+    from pathlib import Path
+    from jinja2.exceptions import UndefinedError
+    from cookiecutter import utils
+    from cookiecutter.exceptions import FailedHookException
+    from cookiecutter.utils import create_env_with_context, create_tmp_repo_dir, rmtree, work_in
+    logger = logging.getLogger(__name__)
+    _HOOKS = ['pre_prompt', 'pre_gen_project', 'post_gen_project']
+    EXIT_SUCCESS = 0
+
+
+preamble log:
+  source: cookiecutter/log.py
+  body: |
+    'Module for setting up logging.'
+    import logging
+    import sys
+    LOG_LEVELS = {'DEBUG': logging.DEBUG, 'INFO': logging.INFO, 'WARNING': logging.WARNING, 'ERROR': logging.ERROR, 'CRITICAL': logging.CRITICAL}
+    LOG_FORMATS = {'DEBUG': '%(levelname)s %(name)s: %(message)s', 'INFO': '%(levelname)s: %(message)s'}
+
+
+preamble main:
+  source: cookiecutter/main.py
+  body: |
+    '\nMain entry point for the `cookiecutter` command.\n\nThe code in this module is also a good example of how to use Cookiecutter as a\nlibrary rather than a script.\n'
+    import logging
+    import os
+    import sys
+    from copy import copy
+    from pathlib import Path
+    from cookiecutter.config import get_user_config
+    from cookiecutter.exceptions import InvalidModeException
+    from cookiecutter.generate import generate_context, generate_files
+    from cookiecutter.hooks import run_pre_prompt_hook
+    from cookiecutter.prompt import choose_nested_template, prompt_for_config
+    from cookiecutter.replay import dump, load
+    from cookiecutter.repository import determine_repo_dir
+    from cookiecutter.utils import rmtree
+    logger = logging.getLogger(__name__)
+    class _patch_import_path_for_repo:
+
+        def __init__(self, repo_dir: 'os.PathLike[str]'):
+            self._repo_dir = f'{repo_dir}' if isinstance(repo_dir, Path) else repo_dir
+            self._path = None
+
+        def __enter__(self):
+            self._path = copy(sys.path)
+            sys.path.append(self._repo_dir)
+
+        def __exit__(self, type, value, traceback):
+            sys.path = self._path
+
+
+preamble prompt:
+  source: cookiecutter/prompt.py
+  body: |
+    'Functions for prompting the user for project info.'
+    import json
+    import os
+    import re
+    import sys
+    from collections import OrderedDict
+    from pathlib import Path
+    from jinja2.exceptions import UndefinedError
+    from rich.prompt import Confirm, InvalidResponse, Prompt, PromptBase
+    from cookiecutter.exceptions import UndefinedVariableInTemplate
+    from cookiecutter.utils import create_env_with_context, rmtree
+    class YesNoPrompt(Confirm):
+        """A prompt that returns a boolean for yes/no questions."""
+        yes_choices = ['1', 'true', 't', 'yes', 'y', 'on']
+        no_choices = ['0', 'false', 'f', 'no', 'n', 'off']
+
+        def process_response(self, value: str) -> bool:
+            """Convert choices to a bool."""
+            pass
+    DEFAULT_DISPLAY = 'default'
+    class JsonPrompt(PromptBase[dict]):
+        """A prompt that returns a dict from JSON string."""
+        default = None
+        response_type = dict
+        validate_error_message = '[prompt.invalid]  Please enter a valid JSON string'
+
+        def process_response(self, value: str) -> dict:
+            """Convert choices to a dict."""
+            pass
+
+
+preamble replay:
+  source: cookiecutter/replay.py
+  body: |
+    '\ncookiecutter.replay.\n\n-------------------\n'
+    import json
+    import os
+    from cookiecutter.utils import make_sure_path_exists
+
+
+preamble repository:
+  source: cookiecutter/repository.py
+  body: |
+    'Cookiecutter repository functions.'
+    import os
+    import re
+    from cookiecutter.exceptions import RepositoryNotFound
+    from cookiecutter.vcs import clone
+    from cookiecutter.zipfile import unzip
+    REPO_REGEX = re.compile('\n# something like git:// ssh:// file:// etc.\n((((git|hg)\\+)?(git|ssh|file|https?):(//)?)\n |                                      # or\n (\\w+@[\\w\\.]+)                          # something like user@...\n)\n', re.VERBOSE)
+
+
+preamble utils:
+  source: cookiecutter/utils.py
+  body: |
+    'Helper functions used throughout Cookiecutter.'
+    import contextlib
+    import logging
+    import os
+    import shutil
+    import stat
+    import tempfile
+    from pathlib import Path
+    from typing import Dict
+    from jinja2.ext import Extension
+    from cookiecutter.environment import StrictEnvironment
+    logger = logging.getLogger(__name__)
+
+
+preamble vcs:
+  source: cookiecutter/vcs.py
+  body: |
+    'Helper functions for working with version control systems.'
+    import logging
+    import os
+    import subprocess
+    from pathlib import Path
+    from shutil import which
+    from typing import Optional
+    from cookiecutter.exceptions import RepositoryCloneFailed, RepositoryNotFound, UnknownRepoType, VCSNotInstalled
+    from cookiecutter.prompt import prompt_and_delete
+    from cookiecutter.utils import make_sure_path_exists
+    logger = logging.getLogger(__name__)
+    BRANCH_ERRORS = ['error: pathspec', 'unknown revision']
+
+
+preamble zipfile:
+  source: cookiecutter/zipfile.py
+  body: |
+    'Utility functions for handling and fetching repo archives in zip format.'
+    import os
+    import tempfile
+    from pathlib import Path
+    from typing import Optional
+    from zipfile import BadZipFile, ZipFile
+    import requests
+    from cookiecutter.exceptions import InvalidZipRepository
+    from cookiecutter.prompt import prompt_and_delete, read_repo_password
+    from cookiecutter.utils import make_sure_path_exists
+
+
 flow cookiecutter_lib:
   steps:
     - cli_group

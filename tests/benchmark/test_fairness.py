@@ -225,3 +225,95 @@ def test_truncate_tail_is_shared_helper_in_runner():
     assert hasattr(runner, "_truncate_tail")
     assert hasattr(runner, "MAX_FEEDBACK_TEST_OUTPUT_CHARS")
     assert runner.MAX_FEEDBACK_TEST_OUTPUT_CHARS == 8 * 1024
+
+
+# ---------------------------------------------------------------------------
+# Phase 1.AL.7 — preamble content reaches the LLM via the AL prompt
+# ---------------------------------------------------------------------------
+
+
+_PREAMBLE_SKELETON = (
+    "preamble cachetools_keys:\n"
+    "  source: cachetools/keys.py\n"
+    "  body: |\n"
+    "    class _HashedTuple(tuple):\n"
+    "        \"\"\"Cached-hash tuple.\"\"\"\n"
+    "        __hashvalue = None\n"
+    "        def __hash__(self, hash=tuple.__hash__):\n"
+    "            return hash(self)\n"
+    "\n"
+    "    _kwmark = (_HashedTuple,)\n"
+    "\n\n"
+    "flow keys_group:\n"
+    "  steps:\n"
+    "    - hashkey\n"
+    "\n\n"
+    "code hashkey:\n"
+    "  body: |\n"
+    "    def hashkey(*args, **kwargs):\n"
+    "        \"\"\"Return a cache key.\"\"\"\n"
+    "        pass\n"
+)
+
+
+def _capture_al_prompt_with(skeleton: str) -> str:
+    """Helper: run the AL implementer on the given skeleton, return the
+    prompt text the LLM would have received."""
+    captured = {}
+
+    def grab(prompt, **kw):
+        captured["p"] = prompt
+        return CompletionResult(
+            text=skeleton, prompt_tokens=0, completion_tokens=0, model="mock",
+        )
+
+    class FakeLLM:
+        def complete(self, prompt, **kw):
+            return grab(prompt, **kw)
+
+    run_al_implementer(
+        spec_text="SPEC", skeleton_text=skeleton,
+        llm=FakeLLM(),
+        guide_text="GUIDE-MARKER",
+        iter_idx=0,
+    )
+    return captured["p"]
+
+
+def test_al_prompt_includes_preamble_body_text():
+    """A skeleton containing a preamble block ⇒ the LLM prompt contains
+    the preamble's body text. Without this, the LLM is blind to
+    module-level Python and the BL/AL comparison is structurally unfair
+    (the LLM in the BL path sees the full stripped .py including class
+    _HashedTuple + _kwmark, but the AL path's LLM would not)."""
+    p = _capture_al_prompt_with(_PREAMBLE_SKELETON)
+    assert "class _HashedTuple(tuple):" in p, \
+        "preamble's class declaration must appear in the AL prompt"
+    assert "_kwmark = (_HashedTuple,)" in p, \
+        "preamble's module-level constant must appear in the AL prompt"
+    # And the code-node body stub must also appear (the LLM still has to fill it)
+    assert "def hashkey(*args, **kwargs):" in p
+
+
+def test_al_prompt_surfaces_critical_module_level_symbols_for_fair_compare():
+    """For a repo whose stripped Python has module-level scaffolding,
+    AL's prompt (preamble + skeleton) must surface the same critical
+    symbols that BL's prompt (whole stripped file) gives naturally.
+
+    Operational definition of 'fair comparison after Phase 1.AL':
+    BL sees these symbols natively in the stripped Python; AL sees them
+    via the preamble block. If preamble is missing or doesn't contain
+    them, AL is at a structural disadvantage and the comparison is
+    invalid.
+    """
+    al_prompt = _capture_al_prompt_with(_PREAMBLE_SKELETON)
+
+    # The two critical pieces of module-level info that the
+    # Phase 1.H'.F.2 run on cachetools showed were missing on the AL side:
+    must_have_in_al = ["_HashedTuple", "_kwmark", "tuple.__hash__"]
+    for marker in must_have_in_al:
+        assert marker in al_prompt, (
+            f"AL prompt must surface module-level symbol {marker!r} via "
+            "preamble. Without it, the LLM reinvents (badly) and the "
+            "BL/AL comparison is structurally unfair."
+        )

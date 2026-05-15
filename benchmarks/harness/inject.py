@@ -105,6 +105,13 @@ def inject_filled_al(
          one match.
       5. Otherwise record in report.skipped with reason.
 
+    Phase 1.AL.6: top-level defs other than ``code`` are skipped silently:
+      - ``preamble`` defs are LLM-facing module-level context (imports,
+        classes, constants) that already exist in the stripped repo; we
+        don't re-inject them.
+      - ``flow`` / ``agent`` / ``set`` are orchestration concepts not
+        relevant to the commit0 benchmark pipeline.
+
     Returns an InjectReport.
     """
     report = InjectReport()

@@ -50,7 +50,7 @@ class OpenAICompatClient:
         self,
         config: LLMConfig | None = None,
         *,
-        timeout: float = 120.0,
+        timeout: float = 300.0,
         transport: httpx.BaseTransport | None = None,
         max_retries: int = 3,
         retry_backoff_sec: float = 5.0,

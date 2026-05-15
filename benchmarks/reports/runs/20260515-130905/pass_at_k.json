@@ -1,6 +1,6 @@
 {
   "k": 1,
-  "n_projects": 1,
+  "n_projects": 3,
   "baseline": {
     "pass_at_1": 0.0,
     "pass_at_k": 0.0

@@ -1,17 +1,28 @@
 {
   "$schema": "Phase 1.AL-LOOP autonomous design-iteration state",
-  "started_at": null,
+  "started_at": "2026-05-15T12:00:00",
   "round": 0,
-  "phase": "preflight",
-  "baseline_commit": null,
+  "phase": "preflight-baseline-locked",
+  "baseline_commit": "08771f6_plus_timeout",
   "baseline_metrics": {
-    "preview": null,
+    "preview": {
+      "run_dir": "benchmarks/reports/runs/20260515-130905",
+      "repos": ["cachetools", "voluptuous", "deprecated"],
+      "k_repeats": 1,
+      "bl_final_pct": 89.9, "al_final_pct": 63.6, "tax_pp_final": 26.3,
+      "bl_best_pct": 93.1, "al_best_pct": 64.9, "tax_pp_best": 28.2,
+      "per_repo": {
+        "cachetools":  {"bl_final": 95.8, "al_final": 83.3, "tax_pp": 12.6},
+        "deprecated":  {"bl_final": 89.5, "al_final": 39.2, "tax_pp": 50.3, "note": "BL hit 99.4% at iter 1 then regressed to 89.5% at iter 2"},
+        "voluptuous":  {"bl_final": 81.9, "al_final":  0.0, "tax_pp": 81.9, "note": "AL inject collected only 1/149 tests — needs investigation"}
+      },
+      "tokens": 539000
+    },
     "validation": null
   },
   "staged_commits": [],
   "hypothesis_queue": [
     "H2_preserve_working_code_prompt",
-    "H3_best_iter_already_done",
     "H7_tox_ini_aware_pytest",
     "H4_imports_keyword",
     "H5_constant_keyword",
@@ -23,8 +34,24 @@
   ],
   "rejected_hypotheses": [],
   "consecutive_rejects": 0,
-  "tokens_consumed_total": 0,
-  "metrics_history": [],
+  "tokens_consumed_total": 422348,
+  "metrics_history": [
+    {
+      "round": "0_preview_attempt_1",
+      "kind": "baseline_preview",
+      "run_dir": "benchmarks/reports/runs/20260515-120601",
+      "repos": ["cachetools", "voluptuous", "deprecated"],
+      "k_repeats": 1,
+      "bl_final_pct": 89.6,
+      "al_final_pct": 69.7,
+      "tax_pp_final": 19.9,
+      "bl_best_pct": 97.4,
+      "al_best_pct": 71.0,
+      "tax_pp_best": 26.4,
+      "tokens": 422348,
+      "notes": "voluptuous: 0/0 due to ReadTimeout (4 attempts × 120s). Increasing HTTP timeout to 300s and re-running."
+    }
+  ],
   "halt": false,
   "halt_reason": null,
   "stopping_rules": {
@@ -33,5 +60,14 @@
     "max_rounds": 15,
     "max_tokens_total": 50000000,
     "max_hours_wall_clock": 8
+  },
+  "decisions_locked": {
+    "D-ξ_per_round_scope": "Large 16×k=3 (validation); preview 3×k=1 for screening",
+    "D-π_regression": "auto-revert + log + next hypothesis",
+    "D-ρ_stop_multi": "first of: 3 consecutive rejects / target met / 15 rounds / 50M tokens / 8 hours",
+    "D-σ_fitness_signal": "final-iter pass% (commit0-aligned)",
+    "D-τ_validation_cadence": "every 2-3 accepted hypotheses",
+    "D-υ_concision_metric": "skeleton .al total lines ≤ stripped .py total lines",
+    "D-φ_first_hypothesis": "H2_preserve_working_code_prompt"
   }
 }

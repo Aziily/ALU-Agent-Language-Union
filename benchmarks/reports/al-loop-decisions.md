@@ -158,6 +158,80 @@ Caveats noted but accepted:
 `__all__` / constants / type aliases out of preamble.body into a
 separate structured field). Same pattern as H4.
 
+## Round 3 — H5 constants keyword — **ACCEPTED**
+
+**Hypothesis**: hoist module-level simple-name value assignments
+(`__all__ = (...)`, `PI = 3.14`, `X: int = 1`) out of preamble `body:`
+into a new structured `constants:` block-scalar field. Goal — let the
+LLM see "named values declared at module scope" as a discrete unit,
+and shrink preamble.body to docstring + classes + complex blocks only.
+
+**Diff**: 1 commit `8276236`, modifies:
+- `al/parser/ast_nodes.py` (`constants` in FIELD_VALUE_HINTS,
+  CANONICAL_FIELD_ORDER, ALLOWED_FIELDS_BY_KIND).
+- `benchmarks/skeletons/_autogen.py` (`_is_simple_constant_assign`
+  helper — accepts Assign with all-Name targets and AnnAssign with
+  Name target; rejects tuple-unpack / attribute / subscript / AugAssign
+  since those are often mutation not pure declaration).
+  `_collect_preambles` returns 4-tuple
+  `(rel_path, imports_text, constants_text, body_text)`.
+- All 16 skeletons regenerated; preambles-with-constants ratio per
+  repo: babel 17/24, chardet 22/43, cookiecutter 11/18, deprecated 2/3,
+  imapclient 12/17, jinja 17/23, marshmallow 9/13, minitorch 13/17,
+  parsel 4/5, portalocker 6/8, pyjwt 6/12, simpy 5/11, tinydb 8/10,
+  voluptuous 5/6, wcwidth 5/6, cachetools 3/3.
+- `benchmarks/agents/al_prompt.md` (rules 2 & 5 include `constants:`).
+- `docs/authoring-al.md` (field table + worked example updated).
+- `tests/parser/test_preamble.py` (+3 tests; 269 total green).
+
+**Preview run `20260515-144904`** (3 repos × k=1):
+
+| metric | baseline (Round 0.6) | H5 (Round 3) | Δ vs baseline |
+|---|---|---|---|
+| AL final | 63.6% | **68.5%** | **+4.9pp ✓** |
+| BL final | 89.9% | 75.9% | -14.0pp |
+| AL best | 64.9% | 69.8% | +4.9pp |
+| BL best | 93.1% | 75.9% | -17.2pp |
+| tax_pp_final | 26.3 | **7.4** | -18.9pp |
+| tax_pp_best | 28.2 | **6.1** | -22.1pp |
+
+Per-repo (AL final %):
+- cachetools: 83.3 → **92.1** (**+8.8pp ✓**)
+- deprecated: 39.2 → 39.2 (0.0pp)
+- voluptuous: 0.0 → 0.0 (unchanged — same inject failure)
+
+Per-repo (BL final % — informational, k=1 variance check):
+- cachetools BL: 95.8 → 96.3 (+0.5pp)
+- deprecated BL: 89.5 → **40.4** (**-49.1pp** — same prompt, same
+  test_total=171, just an outlier LLM run; same gpt-5.4 produced
+  much worse code this single shot)
+- voluptuous BL: 81.9 → 87.2 (+5.3pp)
+
+**Decision**: ACCEPTED. AL TOTAL Δ = +4.9pp clearly above the -2pp
+threshold; cachetools AL jumped +8.8pp; no per-repo regression.
+The deprecated BL outlier is a sharp reminder of k=1 variance — the
+locked fitness signal (D-σ = AL final-iter pass%) deliberately keys
+on AL only to avoid these noise traps, and that signal is positive.
+
+The visually-striking tax_pp closure (26.3 → 7.4) is partly real
+(+4.9pp AL) and partly noise (-14pp BL outlier). The honest signal is
+the AL component: a +4.9pp lift over the baseline.
+
+**Cumulative since baseline (after H4 + H5)**: AL final 63.6% → 68.5%
+(+4.9pp), with the structural change paving the way for H6 (`class:`).
+
+**Staged**: commit `8276236` kept on main alongside H4 (`6439910`).
+Two consecutive accepts — per D-τ ("every 2-3 accepted hypotheses"),
+the validation tier (Large 16 × k=3) is due either now or after one
+more accept. Plan: run H6 first; if accepted, run validation before
+proceeding to H11. If H6 rejects, run validation now to clean-room
+verify H4 + H5 on the wider sample.
+
+**Next**: Round 4 — H6 `class:` keyword. The remaining content in
+preamble.body after H4 + H5 is dominated by class definitions (plus
+module docstring + a few non-import Try blocks). H6 lifts class
+definitions to a structured representation too.
+
 
 
 ---

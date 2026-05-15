@@ -1,4 +1,4 @@
-base_dir: /private/var/folders/_t/ylqsfbjj0yq186__fw77qlqr0000gn/T/pytest-of-azily/pytest-248/test_setup_split_wcwidth_smoke0
+base_dir: /private/var/folders/_t/ylqsfbjj0yq186__fw77qlqr0000gn/T/pytest-of-azily/pytest-247/test_setup_split_wcwidth_smoke0
 dataset_name: wentingzhao/commit0_combined
 dataset_split: test
 repo_split: wcwidth

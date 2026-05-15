@@ -165,13 +165,6 @@ def _format_iter_history(
         "the test suite. Use the test output below to identify and fix the "
         "problems, then emit a corrected full version.",
         "",
-        "**Important**: many tests in the pytest output ALREADY PASSED. "
-        "When you rewrite the code, keep the implementations that produced "
-        "those passing tests intact. Only modify what the failing tests "
-        "tell you to fix. Do not refactor working functions or change "
-        "semantics that already work — over-editing has caused regressions "
-        "where iter k-1 passed more tests than iter k.",
-        "",
     ]
     if previous_filled:
         parts.append("### Previous filled files")

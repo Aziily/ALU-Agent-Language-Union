@@ -159,13 +159,6 @@ def _format_iter_history(
         "identify the problems in your code-node bodies, and emit a "
         "corrected full .al.",
         "",
-        "**Important**: many tests in the pytest output ALREADY PASSED. "
-        "When you rewrite the .al file, keep the code-node body "
-        "implementations that produced those passing tests intact. Only "
-        "modify what the failing tests tell you to fix. Do not refactor "
-        "working code or change semantics that already work — over-editing "
-        "has caused regressions where iter k-1 passed more tests than iter k.",
-        "",
     ]
     if previous_filled:
         parts.append("### Previous filled .al")

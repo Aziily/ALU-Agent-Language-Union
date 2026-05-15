@@ -32,11 +32,66 @@ Infrastructure fixes that gate the loop:
   sandboxed `~/Downloads/proxy/opencc/`). Loop uses :9000 directly.
   State file `.al-iter-state.json` + this decisions log created.
 
-## Round 0.6 — establish baseline (to do)
+## Round 0.6 — baseline locked (commit `bb3b7c7`)
 
-Run preview (3 repos × k=1) and Large (16 × k=3) to record the
-"known-best" numbers HEAD currently delivers. Subsequent rounds
-compare against these.
+Preview metrics (3 repos × k=1, run `20260515-130905`):
+
+| pipeline | final iter | best iter | tokens |
+|---|---|---|---|
+| baseline | **89.9%** | 93.1% | 539k |
+| agent-lang | **63.6%** | 64.9% | (see breakdown) |
+| **tax_pp_final** | **26.3** | 28.2 | — |
+
+Per-repo:
+- cachetools: BL 95.8% / AL 83.3% — single-cell variance (earlier runs had AL > BL)
+- deprecated: BL 89.5% / AL 39.2% — BL had 99.4% at iter 1 then regressed
+- voluptuous: BL 81.9% / AL 0.0% — AL inject only collected 1/149 tests (worth investigating in a future hypothesis)
+
+Large validation: deferred until queue has ≥2 accepted hypotheses.
+
+## Round 1 — H2 preserve-working-code prompt — **REJECTED**
+
+**Hypothesis**: add explicit instruction to both `python_prompt.md`
+and `al_prompt.md` iter-feedback block: "many tests in pytest output
+already passed; do not break that working code when emitting iter k.
+Over-editing has caused regressions where iter k-1 passed more tests
+than iter k."
+
+**Diff**: 1 commit `5ab7409`, modifies both implementers' `_format_iter_history()`.
+
+**Preview run `20260515-133658`** (3 repos × k=1):
+
+| metric | baseline | H2 | Δ vs baseline |
+|---|---|---|---|
+| AL final | 63.6% | **59.4%** | **−4.2pp ❌** |
+| BL final | 89.9% | 83.4% | −6.5pp |
+| AL best | 64.9% | **69.8%** | +4.9pp ✓ (helped at peak iter) |
+| BL best | 93.1% | 86.9% | −6.2pp |
+| tax_pp_final | 26.3 | 23.9 | -2.4 (closed) |
+| tax_pp_best | 28.2 | **17.1** | **−11.1pp** (much closer) |
+
+Per-repo (AL final %):
+- cachetools: 83.3 → 80.5  (−2.8pp)
+- deprecated: 39.2 → 33.3  (−5.9pp)
+- voluptuous: 0.0 → 0.0    (unchanged, still inject failure)
+
+**Decision**: REJECTED. Per locked policy (D-π auto-revert, D-σ
+fitness = final-iter), AL TOTAL Δ = −4.2pp misses the −2pp acceptance
+threshold. Best-iter improved noticeably (+4.9pp AL, −11.1pp tax),
+suggesting the instruction DOES help the LLM find better iters; but
+final-iter (which commit0 records) still regresses on average.
+
+**Reverted**: `383632f`.
+
+**Hypothesis added to rejected list** with note: "useful for best-iter
+signal but final-iter ambiguous under k=1 variance; may revisit at
+k=3 validation tier".
+
+## Round 2 prep — H7 marked done in preflight
+
+H7 (tox.ini-aware pytest) was effectively addressed by installing
+`pytest-json-report` + `pytest-cov` globally on the host (round 0.3).
+Skipping to H4.
 
 ---
 

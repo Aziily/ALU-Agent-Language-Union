@@ -1,0 +1,137 @@
+{
+  "project": "deprecated",
+  "baseline": [
+    {
+      "project": "deprecated",
+      "k_iter": 0,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 134,
+      "test_passing_with_xfail": 134,
+      "test_failing": 37,
+      "duration_sec": 0.2895359992980957,
+      "llm_total_tokens": 39353,
+      "implementer_ok": true,
+      "inject_injected": 2,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": -1,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_passing": 108,
+          "test_passing_with_xfail": 108,
+          "test_total": 171,
+          "test_failing": 43,
+          "duration_sec": 0.4357781410217285,
+          "tokens": 8833,
+          "implementer_ok": true,
+          "inject_injected": 2,
+          "inject_skipped": 0,
+          "json_report_ok": true,
+          "error": ""
+        },
+        {
+          "iter": 1,
+          "test_passing": 140,
+          "test_passing_with_xfail": 140,
+          "test_total": 171,
+          "test_failing": 26,
+          "duration_sec": 0.2945871353149414,
+          "tokens": 15255,
+          "implementer_ok": true,
+          "inject_injected": 2,
+          "inject_skipped": 0,
+          "json_report_ok": true,
+          "error": ""
+        },
+        {
+          "iter": 2,
+          "test_passing": 134,
+          "test_passing_with_xfail": 134,
+          "test_total": 171,
+          "test_failing": 37,
+          "duration_sec": 0.2895359992980957,
+          "tokens": 15265,
+          "implementer_ok": true,
+          "inject_injected": 2,
+          "inject_skipped": 0,
+          "json_report_ok": true,
+          "error": ""
+        }
+      ],
+      "best_iter_idx": 1,
+      "best_iter_passing_with_xfail": 140,
+      "best_iter_pass_pct": 81.87134502923976
+    }
+  ],
+  "al": [
+    {
+      "project": "deprecated",
+      "k_iter": 0,
+      "pipeline": "al",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 57,
+      "test_passing_with_xfail": 57,
+      "test_failing": 64,
+      "duration_sec": 0.4956679344177246,
+      "llm_total_tokens": 55504,
+      "implementer_ok": true,
+      "inject_injected": 4,
+      "inject_skipped": 1,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": -1,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_passing": 57,
+          "test_passing_with_xfail": 57,
+          "test_total": 171,
+          "test_failing": 64,
+          "duration_sec": 0.45720815658569336,
+          "tokens": 14100,
+          "implementer_ok": true,
+          "inject_injected": 4,
+          "inject_skipped": 1,
+          "json_report_ok": true,
+          "error": ""
+        },
+        {
+          "iter": 1,
+          "test_passing": 72,
+          "test_passing_with_xfail": 72,
+          "test_total": 171,
+          "test_failing": 49,
+          "duration_sec": 0.43164706230163574,
+          "tokens": 20693,
+          "implementer_ok": true,
+          "inject_injected": 4,
+          "inject_skipped": 1,
+          "json_report_ok": true,
+          "error": ""
+        },
+        {
+          "iter": 2,
+          "test_passing": 57,
+          "test_passing_with_xfail": 57,
+          "test_total": 171,
+          "test_failing": 64,
+          "duration_sec": 0.4956679344177246,
+          "tokens": 20711,
+          "implementer_ok": true,
+          "inject_injected": 4,
+          "inject_skipped": 1,
+          "json_report_ok": true,
+          "error": ""
+        }
+      ],
+      "best_iter_idx": 1,
+      "best_iter_passing_with_xfail": 72,
+      "best_iter_pass_pct": 42.10526315789474
+    }
+  ]
+}

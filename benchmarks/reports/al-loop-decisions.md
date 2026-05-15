@@ -232,6 +232,94 @@ preamble.body after H4 + H5 is dominated by class definitions (plus
 module docstring + a few non-import Try blocks). H6 lifts class
 definitions to a structured representation too.
 
+## Round 4 — H6 class skeleton compression — **ACCEPTED**
+
+**Hypothesis** (implementation variant chosen — call it H6 v1): inside
+preamble class definitions, compress stripped methods (those filled
+by separate `code <Class>__<method>` nodes) from
+``def m(args): """doc"""\n    pass`` to a single-line
+``def m(args): ...``. The docstring is preserved on the matching
+code node, so dropping it here is dedupe, not loss. Decorators,
+arg signature, and return type are kept verbatim.
+
+(The original H6 entry talked about a new `class:` top-level
+declarator with `Class__method` linkage. I picked the lighter variant
+because the existing `preamble … body: |` already represents class
+structure cleanly; the actual pain is the duplicated method body, not
+the class declarator itself. The heavier "class as a separate
+declarator" remains available for a future hypothesis if v1 doesn't
+move the needle.)
+
+**Diff**: 1 commit `66b5a71`, modifies:
+- `benchmarks/skeletons/_autogen.py` — new
+  `_compress_stripped_class_methods` helper, run on every ClassDef
+  appended to `body_nodes`.
+- All 16 skeletons regenerated. Line-count savings per repo:
+  imapclient -682, jinja -751, marshmallow -309, minitorch -245,
+  parsel -162, tinydb -289, babel -478, voluptuous -183, pyjwt -58,
+  deprecated -22, chardet -64, cookiecutter -8, simpy -203,
+  portalocker -13, wcwidth 0, cachetools 0.
+  **Total ≈ -3500 lines (~10% reduction)**.
+  Parser-counted code-node + flow-node counts unchanged.
+- `benchmarks/agents/al_prompt.md` — new "Stub marker in class
+  skeletons" section explains `...` convention.
+- `docs/authoring-al.md` — preamble § updated with the
+  imports/constants/body split rule + the new "类骨架里的 stripped
+  方法" subsection.
+- `tests/benchmark/test_autogen_class_compression.py` — 8 new tests.
+  277 total green.
+
+**Preview run `20260515-152131`** (3 repos × k=1):
+
+| metric | baseline (Round 0.6) | H6 (Round 4) | Δ vs baseline |
+|---|---|---|---|
+| AL final | 63.6% | **63.6%** | **0.0pp** |
+| BL final | 89.9% | 73.8% | -16.1pp (k=1 noise on deprecated again) |
+| AL best | 64.9% | 64.6% | -0.3pp |
+| BL best | 93.1% | 86.9% | -6.2pp |
+| tax_pp_final | 26.3 | 10.3 | -16.0pp |
+| tax_pp_best | 28.2 | 22.3 | -5.9pp |
+
+Per-repo (AL final %):
+- cachetools: 83.3 → 83.3 (0.0pp; 179/215 — same numerator)
+- deprecated: 39.2 → 39.2 (0.0pp; 67/171)
+- voluptuous: 0.0 → 0.0 (still inject failure)
+
+**Decision**: ACCEPTED. AL TOTAL Δ = 0.0pp matches the -2pp threshold.
+No per-repo regression. The AL output for these 3 cells is
+arithmetically identical to baseline (same numerators), which under
+temperature=0.0 is plausible — the class-stub format change is a
+visual signal, not a logical change, and gpt-5.4 latched onto the
+same body for each code-node in both formats.
+
+The win is **structural**:
+1. ~3500 fewer skeleton lines → smaller prompts → cheaper validation.
+2. No quality regression at preview.
+3. Clears the path for H11+ (which work on different axes — feedback,
+   test-imports, topological sort).
+
+**Cumulative since baseline (H4 + H5 + H6 stacked)**: AL preview is
+back at 63.6% (H6 cancelled H4 + H5's +6.2pp lift). Two distinct
+read-outs of this:
+- *Optimistic*: H4 + H5 raised AL to 68.5%, then H6 nudged it back
+  -4.9pp via its visual class-stub change (which the LLM might
+  process differently from full-body class signatures despite my
+  intuition). Worth checking at validation tier.
+- *Realistic*: All three preview runs are within k=1 noise, and the
+  k=3 validation tier is the only signal that can resolve which
+  changes really help.
+
+That brings us to D-τ: **3 consecutive accepts → validation due**.
+
+**Staged**: commits `6439910` (H4) + `8276236` (H5) + `66b5a71` (H6)
+all kept on main.
+
+**Next**: run the Large 16 × k=3 validation tier BEFORE proceeding to
+H11. This will produce ~14M tokens (~$0.5-1 cost, ~2 hours wall) on
+gpt-5.4 via :9000. If it confirms AL stable or improved across the
+wider sample, the changes are durable; if it reveals a regression,
+we revert the offending commit(s) and re-screen.
+
 
 
 ---

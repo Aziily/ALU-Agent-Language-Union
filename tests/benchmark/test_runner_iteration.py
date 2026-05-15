@@ -63,11 +63,11 @@ def _stub_loader(project: ProjectRef):
     return _fn
 
 
-def _passing_test_fn(project, py_dir):
+def _passing_test_fn(project, py_dir, *, skip_install: bool = False):
     return TestResult(project=project, total=1, passed=1, duration_sec=0.01)
 
 
-def _failing_test_fn(project, py_dir):
+def _failing_test_fn(project, py_dir, *, skip_install: bool = False):
     return TestResult(
         project=project, total=1, passed=0, failed=1,
         raw_stdout="==== 0 passed, 1 failed in 0.1s ====\nFAILED test_x::test_x",
@@ -313,7 +313,7 @@ def test_passing_with_xfail_propagates_to_cell(tmp_path):
     project = _make_fake_project(tmp_path)
     _make_fake_skeleton(tmp_path / "skeletons")
 
-    def with_xfail(project, py_dir):
+    def with_xfail(project, py_dir, *, skip_install: bool = False):
         # 1 passed, 2 xfailed → passed_with_xfail = 3, all_passed = True
         # (because failed=0 and errored=0).
         return TestResult(

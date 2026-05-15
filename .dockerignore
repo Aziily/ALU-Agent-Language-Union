@@ -15,7 +15,18 @@ build/
 .env
 .env.local
 .commit0.yaml
-thirdparty/commit0_repos/
+# thirdparty/commit0_repos/  ← INTENTIONALLY NOT IGNORED. The Docker
+# benchmark redesign (May 2026) bakes all 16 lite repos into the image
+# so the container can run without bind-mounts. We only ignore the
+# per-repo build/cache noise that pytest creates inside them.
+thirdparty/commit0_repos/**/__pycache__/
+thirdparty/commit0_repos/**/.pytest_cache/
+thirdparty/commit0_repos/**/.mypy_cache/
+thirdparty/commit0_repos/**/*.egg-info/
+thirdparty/commit0_repos/**/build/
+thirdparty/commit0_repos/**/dist/
+thirdparty/commit0_repos/**/.tox/
+thirdparty/commit0_repos/**/.coverage
 benchmarks/reports/
 archive/
 docs/spec/history/

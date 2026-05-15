@@ -51,7 +51,7 @@ def _make_fake_skeleton(skeletons_dir: Path, name: str = "fakelib") -> None:
 
 def _stub_run_tests(passed: int = 1, failed: int = 0):
     """Build a stub that returns TestResult with given pass/fail counts."""
-    def _fn(project, py_dir):
+    def _fn(project, py_dir, *, skip_install: bool = False):
         return TestResult(
             project=project,
             total=passed + failed,

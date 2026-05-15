@@ -159,6 +159,7 @@ def run_pipeline(
     skeletons_dir: Path = SKELETONS_DIR,
     repos_base: Path | None = None,
     project_names: Iterable[str] | None = None,
+    parallel_cells: int = 1,
 ) -> Path:
     """Run the full benchmark and write reports. Return report dir.
 
@@ -176,6 +177,11 @@ def run_pipeline(
         repos_base: where commit0 setup'd the repos to. Defaults to
             ``thirdparty/commit0_repos/``.
         project_names: override V1_SUBSET (for partial runs / smoke tests).
+        parallel_cells: when > 1, run independent ``(project, k, pipeline)``
+            cells concurrently via a ThreadPoolExecutor. Each cell makes
+            its own LLM calls + pytest subprocesses; cells don't share
+            state so parallelism is safe. The LLM client is reused across
+            threads (httpx is thread-safe). Defaults to 1 (sequential).
     """
     ts = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
     out_dir = out_dir or _default_report_dir(ts)
@@ -189,6 +195,8 @@ def run_pipeline(
 
     summary = RunSummary(timestamp=ts, n_projects=len(names), k_repeats=k_repeats)
 
+    # 1. Materialise per-repo metadata (project ref, skeleton, spec, stripped files)
+    repo_meta: dict[str, dict] = {}
     for project_name in names:
         try:
             project = loader(project_name, repos_base)
@@ -211,35 +219,87 @@ def run_pipeline(
                 )
             )
             continue
-        skeleton_text = skeleton_path.read_text(encoding="utf-8")
-
-        spec_text = _load_spec(project.path)
-        stripped_files = _collect_stripped_files(project.path)
-
-        per_repo_data: dict = {
-            "project": project_name,
-            "baseline": [],
-            "al": [],
+        repo_meta[project_name] = {
+            "project": project,
+            "skeleton_text": skeleton_path.read_text(encoding="utf-8"),
+            "spec_text": _load_spec(project.path),
+            "stripped_files": _collect_stripped_files(project.path),
         }
 
+    # 2. Build the cell work list: every (project, k, pipeline) triple.
+    Cell = tuple  # (name, k, pipeline)
+    cells: list[Cell] = []
+    for project_name in repo_meta:
         for k in range(k_repeats):
-            # Phase 1.H'.F.2: per-cell 3-iter test-driven loop for each pipeline.
-            r_a = _run_baseline_cell(
-                project=project, project_name=project_name, k=k,
-                spec_text=spec_text, stripped_files=stripped_files,
+            cells.append((project_name, k, "baseline"))
+            cells.append((project_name, k, "al"))
+
+    def _execute_cell(triple: Cell) -> PipelineRunResult:
+        name, k, pipeline = triple
+        m = repo_meta[name]
+        if pipeline == "baseline":
+            return _run_baseline_cell(
+                project=m["project"], project_name=name, k=k,
+                spec_text=m["spec_text"], stripped_files=m["stripped_files"],
                 llm=llm, run_tests_fn=run_tests_fn, out_dir=out_dir,
             )
-            summary.results.append(r_a)
-            per_repo_data["baseline"].append(asdict(r_a))
+        return _run_al_cell(
+            project=m["project"], project_name=name, k=k,
+            spec_text=m["spec_text"], skeleton_text=m["skeleton_text"],
+            llm=llm, run_tests_fn=run_tests_fn, out_dir=out_dir,
+        )
 
-            r_b = _run_al_cell(
-                project=project, project_name=project_name, k=k,
-                spec_text=spec_text, skeleton_text=skeleton_text,
-                llm=llm, run_tests_fn=run_tests_fn, out_dir=out_dir,
-            )
-            summary.results.append(r_b)
-            per_repo_data["al"].append(asdict(r_b))
+    # 3. Run cells — sequentially if parallel_cells <= 1, else thread pool.
+    cell_results: list[tuple[Cell, PipelineRunResult]] = []
+    if parallel_cells <= 1:
+        for triple in cells:
+            cell_results.append((triple, _execute_cell(triple)))
+    else:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        print(
+            f"  [runner] launching {len(cells)} cells with parallel_cells={parallel_cells}",
+            file=sys.stderr, flush=True,
+        )
+        with ThreadPoolExecutor(max_workers=parallel_cells) as ex:
+            future_to_triple = {ex.submit(_execute_cell, t): t for t in cells}
+            for fut in as_completed(future_to_triple):
+                triple = future_to_triple[fut]
+                try:
+                    res = fut.result()
+                except Exception as e:
+                    name, k, pipeline = triple
+                    res = PipelineRunResult(
+                        project=name, k_iter=k, pipeline=pipeline,
+                        test_passed=False,
+                        error=f"cell crashed: {e!r}",
+                    )
+                cell_results.append((triple, res))
 
+    # 4. Stable order: by (project, k, pipeline) — pipeline 'baseline' first.
+    cell_results.sort(
+        key=lambda x: (
+            list(repo_meta).index(x[0][0]),
+            x[0][1],
+            0 if x[0][2] == "baseline" else 1,
+        )
+    )
+    for triple, res in cell_results:
+        summary.results.append(res)
+
+    # 5. Write per-repo aggregate JSON (always created so the file layout
+    # matches the sequential path).
+    for project_name in repo_meta:
+        per_repo_data: dict = {
+            "project": project_name,
+            "baseline": [
+                asdict(r) for (t, r) in cell_results
+                if t[0] == project_name and t[2] == "baseline"
+            ],
+            "al": [
+                asdict(r) for (t, r) in cell_results
+                if t[0] == project_name and t[2] == "al"
+            ],
+        }
         (out_dir / "per_repo" / f"{project_name}.json").write_text(
             json.dumps(per_repo_data, indent=2, ensure_ascii=False),
             encoding="utf-8",
@@ -351,6 +411,10 @@ def _run_baseline_cell(
     last_py_res = None
     last_prompt = ""
     last_completion_text = ""
+    # Tracks every file ever injected into ``workdir`` across iters; used
+    # by ``_revert_files`` between iters to restore pristine content
+    # without rebuilding ``.egg-info`` / pip-install side effects.
+    injected_files_so_far: set[str] = set()
 
     for iter_idx in range(MAX_ITERATIONS):
         print(f"  [{project_name}] k={k} baseline iter={iter_idx} ...",
@@ -379,12 +443,16 @@ def _run_baseline_cell(
         last_prompt = py_res.prompt_used
         last_completion_text = py_res.raw_completion.text if py_res.raw_completion else ""
         total_tokens += py_res.total_tokens
-        # Inject into a FRESH workdir each iter (commit0's eval script does
-        # `git reset --hard <base> && git apply patch` per iter; we emulate
-        # by re-copying the stripped repo and re-injecting the latest output).
-        _reset_workdir(project.path, workdir)
+        # Restore previously-injected files to their pristine state so
+        # this iter's inject lands on a clean stripped baseline (commit0's
+        # eval script does `git reset --hard <base> && git apply patch`
+        # per iter; ``_revert_files`` emulates that without wiping the
+        # pip-install metadata under ``.egg-info``).
+        if iter_idx > 0 and injected_files_so_far:
+            _revert_files(project.path, workdir, injected_files_so_far)
         inject = inject_python_files(workdir, py_res.files)
-        test = run_tests_fn(project, workdir)
+        injected_files_so_far.update(py_res.files.keys())
+        test = run_tests_fn(project, workdir, skip_install=(iter_idx > 0))
         final_test = test
         final_inject = inject
         final_impl_ok = py_res.parse_ok
@@ -457,7 +525,7 @@ def _run_al_cell(
     implementer. BL/AL symmetry is asserted by tests in
     ``tests/benchmark/test_fairness.py``.
     """
-    workdir = out_dir / "workdirs/{project_name}-k{k}-al"
+    workdir = out_dir / "workdirs" / f"{project_name}-k{k}-al"
     _copy_repo(project.path, workdir)
 
     last_filled: str | None = None
@@ -472,6 +540,8 @@ def _run_al_cell(
     last_al_res = None
     last_prompt = ""
     last_completion_text = ""
+    # See _run_baseline_cell for the same tracking-set rationale.
+    injected_files_so_far: set[str] = set()
 
     for iter_idx in range(MAX_ITERATIONS):
         print(f"  [{project_name}] k={k} al iter={iter_idx} ...",
@@ -496,12 +566,24 @@ def _run_al_cell(
         last_prompt = al_res.prompt_used
         last_completion_text = al_res.raw_completion.text if al_res.raw_completion else ""
         total_tokens += al_res.total_tokens
-        _reset_workdir(project.path, workdir)
+        # Revert previously-injected files, preserve pip-install state.
+        if iter_idx > 0 and injected_files_so_far:
+            _revert_files(project.path, workdir, injected_files_so_far)
         if al_res.al_parse_ok:
             inject = inject_filled_al(workdir, al_res.filled_al)
+            # ``inject_filled_al`` reports files_modified relative to workdir;
+            # translate to repo-relative paths for the revert map.
+            for abs_path in inject.files_modified:
+                try:
+                    injected_files_so_far.add(
+                        str(Path(abs_path).resolve().relative_to(workdir.resolve()))
+                    )
+                except ValueError:
+                    # Outside the workdir (shouldn't happen) — skip.
+                    pass
         else:
             inject = InjectReport()
-        test = run_tests_fn(project, workdir)
+        test = run_tests_fn(project, workdir, skip_install=(iter_idx > 0))
         final_test = test
         final_inject = inject
         final_impl_ok = al_res.al_parse_ok and al_res.all_bodies_valid
@@ -556,13 +638,40 @@ def _run_al_cell(
 
 
 def _reset_workdir(src: Path, dst: Path) -> None:
-    """Wipe ``dst`` and re-copy ``src``. Used between iters so each
-    iter's `pip install -e .` runs against a clean stripped state +
-    fresh inject (commit0's eval script does `git reset --hard` between
-    iters; we emulate by re-copy)."""
+    """Wipe ``dst`` and re-copy ``src``. Heavy reset; only used at cell
+    start now — between iters we use the lighter ``_revert_files``."""
     if dst.exists():
         shutil.rmtree(dst)
     _copy_repo(src, dst)
+
+
+def _revert_files(src: Path, dst: Path, rel_paths: set[str]) -> None:
+    """Restore ``rel_paths`` in ``dst`` from their pristine versions in ``src``.
+
+    Used between iters in place of the old ``_reset_workdir``: each iter's
+    inject should land on a stripped (pristine) state, but rebuilding the
+    entire workdir wipes ``.egg-info`` / pip metadata and forces a slow
+    re-install. By restoring only the files the previous iter touched,
+    we preserve the pip-install side effects (5-30s saved per iter on
+    big repos) without compromising correctness.
+
+    Files that exist in ``dst`` but not in ``src`` (e.g. ``.pytest-report.json``
+    from the prior pytest run) are NOT removed — they'll get overwritten
+    or simply ignored by the next pytest invocation.
+    """
+    for rel in rel_paths:
+        sp = src / rel
+        dp = dst / rel
+        if sp.exists():
+            dp.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(sp, dp)
+        else:
+            # Was created by inject and didn't exist in pristine — drop it.
+            if dp.exists():
+                try:
+                    dp.unlink()
+                except OSError:
+                    pass
 
 
 # ---------------------------------------------------------------------------

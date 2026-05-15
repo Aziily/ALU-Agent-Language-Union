@@ -1,53 +1,75 @@
-# Dockerfile.benchmark — runs the Phase 1.H benchmark with Claude Code as
-# the implementer LLM. Claude Code is in turn redirected (via standard
-# ANTHROPIC_* env vars) to a third-party gateway (traxnode) so each LLM
-# call ultimately hits whatever model the gateway resolves
-# ``ANTHROPIC_DEFAULT_OPUS_MODEL`` to (e.g. gemini-3-flash).
+# Dockerfile.benchmark — Phase 1.AL-LOOP container.
+#
+# Two LLM backends supported, picked by harness CLI flag:
+#   --real             OpenAICompatClient → LLM_BASE_URL (e.g. host's
+#                      http://host.docker.internal:9000/v1, gpt-5.4)
+#   --use-claude-code  ClaudeCodeClient → Claude Code CLI → ANTHROPIC_BASE_URL
+#                      gateway (e.g. traxnode → gemini-3-flash)
+#
+# Performance design (May 2026, Docker redesign):
+#   1. All 16 commit0 lite repos are COPIED into the image at build time
+#      under /workspace/repos_pristine/<name>/.
+#   2. Each repo is editable-installed (pip install -e .) at build time so
+#      .egg-info lands in the image's site-packages — `import <pkg>` works
+#      out of the box at container start. Per-iter pip install is skipped
+#      whenever workdir reuses the same package layout.
+#   3. The runner uses file-level revert (just the .py files changed by
+#      inject) between iters instead of re-copying whole repos — saves
+#      5-30s per iter on big repos (jinja, chardet, babel).
+#   4. ``--parallel-cells N`` runs independent (project, k, pipeline)
+#      cells concurrently in a thread pool — N=4-8 is a sweet spot
+#      bounded by host CPU + LLM rate limit.
 #
 # Build:
-#   docker build -f Dockerfile.benchmark -t agentlang-bench:latest .
+#   docker build -f Dockerfile.benchmark -t al-bench:latest .
+#
 # Run (preferred — via ./benchmark.sh):
-#   ./benchmark.sh --n-projects 5 --k-repeats 5
-# Run (manual):
+#   ./benchmark.sh --docker-real --n-projects 16 --k-repeats 3 --parallel-cells 6
+#
+# Run (manual, OpenAI-compat against host's :9000):
 #   docker run --rm \
 #     --env-file .env \
-#     -v "$(pwd)/thirdparty/commit0_repos:/workspace/thirdparty/commit0_repos:ro" \
+#     --add-host=host.docker.internal:host-gateway \
 #     -v "$(pwd)/benchmarks/reports:/workspace/benchmarks/reports" \
-#     agentlang-bench:latest python -m benchmarks.harness --use-claude-code
+#     -v "$(pwd)/benchmarks/skeletons:/workspace/benchmarks/skeletons:ro" \
+#     al-bench:latest --real --n-projects 16 --k-repeats 3 --parallel-cells 6
 #
-# Required env (.env passed via --env-file):
-#   ANTHROPIC_AUTH_TOKEN          gateway token (rotate after sharing!)
-#   ANTHROPIC_BASE_URL            e.g. https://canvas.aipaibox.com
-#   ANTHROPIC_DEFAULT_OPUS_MODEL  e.g. gemini-3-flash
+# Required env (--real mode, .env passed via --env-file):
+#   LLM_API_KEY          gateway / proxy token
+#   LLM_BASE_URL         e.g. http://host.docker.internal:9000/v1
+#   LLM_MODEL            e.g. gpt-5.4
 #
-# Optional env (already baked in below or harmless extras):
-#   ANTHROPIC_DEFAULT_SONNET_MODEL / ANTHROPIC_DEFAULT_HAIKU_MODEL
-#   ANTHROPIC_DEFAULT_OPUS_MODEL_NAME / ..._SUPPORTED_CAPABILITIES
+# Required env (--use-claude-code mode):
+#   ANTHROPIC_AUTH_TOKEN
+#   ANTHROPIC_BASE_URL
+#   ANTHROPIC_DEFAULT_OPUS_MODEL
 
 FROM python:3.11-slim
 
-# Node 20 — for `@anthropic-ai/claude-code`
+# System deps. rsync is used by the runner for fast workdir setup.
+# Build-essential / git stay because some commit0 lite repos (chardet, lxml)
+# pull source distributions during pip install -e .
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-        curl ca-certificates gnupg git build-essential \
+        curl ca-certificates gnupg git build-essential rsync \
  && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
  && apt-get install -y --no-install-recommends nodejs \
  && rm -rf /var/lib/apt/lists/*
 
-# Container hygiene env (these don't carry secrets)
+# Container hygiene env
 ENV DISABLE_AUTOUPDATER=1 \
     CLAUDE_CODE_ATTRIBUTION_HEADER=0 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-# Claude Code CLI
+# Claude Code CLI (only used in --use-claude-code mode but cheap to bake in)
 RUN npm install -g --no-fund --no-audit @anthropic-ai/claude-code \
  && claude --version
 
 WORKDIR /workspace
 
-# Copy project source (excludes via .dockerignore)
+# Project source first (small, frequently changing layer)
 COPY pyproject.toml ./
 COPY al/ ./al/
 COPY benchmarks/ ./benchmarks/
@@ -55,29 +77,59 @@ COPY docs/ ./docs/
 COPY examples/ ./examples/
 COPY thirdparty/commit0/ ./thirdparty/commit0/
 COPY thirdparty/README.md ./thirdparty/
-COPY README.md README.zh.md LICENSE CONTRIBUTING.md ./
+COPY README.md LICENSE ./
 
-# Install editable so `python -m agentlang` / `python -m benchmarks.harness` work,
-# plus commit0 CLI (its setup.py uses pyproject.toml — pin via editable install).
-# commit0 0.1.8 imports pydantic but doesn't list it in pyproject.toml deps —
-# install it explicitly so `commit0 test` doesn't ModuleNotFoundError.
-#
-# Phase 1.H'.B: full commit0 lite split needs cryptography (pyjwt), lxml
-# (parsel HTML/XML), numpy (minitorch). pre-install once at image-build
-# time so per-repo `pip install -e .` doesn't re-fetch them.
+# Core Python deps
 RUN pip install --no-cache-dir -e . \
  && pip install --no-cache-dir -e ./thirdparty/commit0 \
  && pip install --no-cache-dir pydantic \
  && pip install --no-cache-dir cryptography lxml numpy \
- && pip install --no-cache-dir pytest-json-report
+ && pip install --no-cache-dir pytest-json-report pytest-cov
 
-# Reports + commit0 setup workdir are mounted at runtime (see benchmark.sh).
-RUN mkdir -p /workspace/benchmarks/reports /workspace/thirdparty/commit0_repos
+# Per-repo runtime deps that the commit0 lite split pulls in transitively.
+# Pre-installing them here means runtime pip install -e . (with --no-deps)
+# can skip dep resolution — `import <pkg>` just works.
+#   wrapt       → deprecated
+#   MarkupSafe  → jinja
+#   packaging   → marshmallow
+#   PyYAML / click / Jinja2 / binaryornot / arrow / requests / python-slugify
+#               → cookiecutter
+#   parse / hypothesis     → wcwidth tests
+#   w3lib / cssselect      → parsel
+RUN pip install --no-cache-dir \
+        wrapt MarkupSafe packaging \
+        PyYAML click binaryornot arrow requests python-slugify \
+        parse hypothesis \
+        w3lib cssselect
 
-# commit0 test reads .commit0.yaml from CWD. We generate a container-local one
-# with container-internal paths so commit0 finds its bind-mounted repos.
-RUN printf 'base_dir: /workspace/thirdparty/commit0_repos\ndataset_name: wentingzhao/commit0_combined\ndataset_split: test\nrepo_split: lite\n' > /workspace/.commit0.yaml
+# Pre-stage all 16 commit0 lite repos so they live IN the image (no bind mount).
+# That way each cell can `rsync` from a pristine repo without ever crossing
+# the Docker bind boundary.
+COPY thirdparty/commit0_repos/ /workspace/repos_pristine/
 
-# Default entrypoint = mock run (sanity), override via `docker run ... <args>`.
+# Pre-install every repo editable so `import <pkg>` works without re-running
+# pip at container start. The runner's skip_install=(iter > 0) path then
+# reuses the .egg-info from the pristine copy.
+RUN set -eux; \
+    for d in /workspace/repos_pristine/*/; do \
+        echo ">>> pip install -e $d"; \
+        pip install --no-cache-dir -e "$d" --no-deps || true; \
+    done
+
+# Symlink pristine repos under thirdparty/commit0_repos so the harness's
+# default ``_default_repos_dir`` resolution finds them without any bind-mount.
+RUN ln -sfn /workspace/repos_pristine /workspace/thirdparty/commit0_repos
+
+# Run-time mounted dirs (reports only; repos live inside the image now)
+RUN mkdir -p /workspace/benchmarks/reports
+
+# .commit0.yaml inside the image so commit0 CLI finds repos at the pristine
+# baked-in location. The runner uses its own paths and ignores this for the
+# pipeline, but downstream commit0 CLI calls (if any) still want it.
+RUN printf 'base_dir: /workspace/repos_pristine\ndataset_name: wentingzhao/commit0_combined\ndataset_split: test\nrepo_split: lite\n' > /workspace/.commit0.yaml
+
+# A small wrapper picks --real vs --use-claude-code based on env presence.
+# The harness already handles both modes; the wrapper just gives benchmark.sh
+# something to pass --real / --use-claude-code through.
 ENTRYPOINT ["python", "-m", "benchmarks.harness"]
-CMD ["--use-claude-code", "--n-projects", "1", "--k-repeats", "1"]
+CMD ["--mock", "--n-projects", "1", "--k-repeats", "1"]

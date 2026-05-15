@@ -63,6 +63,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--setup-only", action="store_true",
                         help="just run commit0 setup for V1_SUBSET, then exit")
+    parser.add_argument("--parallel-cells", type=int, default=1,
+                        help="run independent (project, k, pipeline) cells in "
+                             "a thread pool with N workers. Defaults to 1 "
+                             "(sequential). Set to 4-8 for big runs.")
     args = parser.parse_args(argv)
 
     if args.setup_only:
@@ -144,6 +148,7 @@ def main(argv: list[str] | None = None) -> int:
         k_repeats=args.k_repeats,
         out_dir=args.out_dir,
         project_names=project_names,
+        parallel_cells=args.parallel_cells,
     )
     print(f"\nReport written: {out_dir}", file=sys.stderr)
     summary = (out_dir / "summary.md").read_text()

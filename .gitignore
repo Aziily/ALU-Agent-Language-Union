@@ -12,3 +12,14 @@ benchmarks/reports/**/workdirs/
 
 # Local env
 .env
+
+# thirdparty/ — materialised copies (not symlinks) of commit0 + lite repos,
+# pulled in for the Docker build context. Heavy (~130 MB total) and
+# regenerable: rm -rf + re-cp from the original AgentLanguage workspace
+# (or `git submodule update` against upstream commit0).
+thirdparty/commit0/
+thirdparty/commit0_repos/
+thirdparty/README.md
+
+# .commit0.yaml — auto-rewritten by pytest tmpdir hooks; keep local-only
+.commit0.yaml

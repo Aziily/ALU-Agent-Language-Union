@@ -308,6 +308,7 @@ def run_tests(
     timeout: int = 600,
     backend: str = "local",  # unused — direct pytest below
     config_file: Path | None = None,  # unused
+    skip_install: bool = False,
 ) -> TestResult:
     """Run the project's pytest suite directly in ``py_dir``.
 
@@ -315,8 +316,13 @@ def run_tests(
     impl code to be committed to a branch in the canonical commit0 repo)
     and instead:
 
-      1. ``pip install -e .`` inside py_dir so the package is importable
-         under its real name (e.g. ``import cachetools``).
+      1. (optional) ``pip install -e .`` inside py_dir so the package is
+         importable under its real name (e.g. ``import cachetools``).
+         Skipped when ``skip_install=True`` — useful after the first iter
+         of a cell, since the editable install metadata under
+         ``<pkg>.egg-info`` survives file-level revert and pytest can
+         still import the package without re-running pip (saves
+         5-30s per iter on big repos).
       2. bare ``pytest -v --tb=short --no-header -q`` (no path arg) so
          the repo's own pytest config drives test discovery — matches
          what commit0's dataset specifies in its per-instance ``test_cmd``
@@ -330,17 +336,19 @@ def run_tests(
     if not target.exists():
         raise FileNotFoundError(f"test target dir does not exist: {target}")
 
-    # 1. Install package (so `import <pkg>` works in pytest).
-    install = subprocess.run(
-        ["pip", "install", "-e", ".", "--quiet", "--no-deps"],
-        cwd=str(target),
-        capture_output=True,
-        text=True,
-        timeout=120,
-        check=False,
-    )
-    # If install fails we still try pytest — sometimes the package is
-    # already importable via PYTHONPATH or the failure is in optional deps.
+    install: subprocess.CompletedProcess | None = None
+    if not skip_install:
+        # 1. Install package (so `import <pkg>` works in pytest).
+        install = subprocess.run(
+            ["pip", "install", "-e", ".", "--quiet", "--no-deps"],
+            cwd=str(target),
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+        # If install fails we still try pytest — sometimes the package is
+        # already importable via PYTHONPATH or the failure is in optional deps.
 
     # 2. pytest — NO path arg; let each repo's pytest config find tests.
     #
@@ -377,11 +385,13 @@ def run_tests(
     )
     # Compose stdout for parser (include install stderr for debugging if
     # pytest produced nothing).
+    fallback_stdout = install.stdout if install else ""
+    fallback_stderr = install.stderr if install else ""
     combined = subprocess.CompletedProcess(
         args=pytest_args,
         returncode=r.returncode,
-        stdout=r.stdout or install.stdout,
-        stderr=r.stderr or install.stderr,
+        stdout=r.stdout or fallback_stdout,
+        stderr=r.stderr or fallback_stderr,
     )
     return _parse_pytest_result(project, combined, json_report_path)
 

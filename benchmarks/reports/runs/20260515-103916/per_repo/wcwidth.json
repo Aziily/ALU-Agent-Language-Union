@@ -1,0 +1,103 @@
+{
+  "project": "wcwidth",
+  "baseline": [
+    {
+      "project": "wcwidth",
+      "k_iter": 0,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 39,
+      "test_passing": 1,
+      "test_passing_with_xfail": 1,
+      "test_failing": 37,
+      "duration_sec": 0.6673727035522461,
+      "llm_total_tokens": 192237,
+      "implementer_ok": true,
+      "inject_injected": 2,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": -1,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_passing": 26,
+          "test_passing_with_xfail": 26,
+          "test_total": 39,
+          "test_failing": 12,
+          "duration_sec": 0.5324397087097168,
+          "tokens": 59648,
+          "implementer_ok": true,
+          "inject_injected": 2,
+          "inject_skipped": 0,
+          "json_report_ok": true,
+          "error": ""
+        },
+        {
+          "iter": 1,
+          "test_passing": 31,
+          "test_passing_with_xfail": 31,
+          "test_total": 39,
+          "test_failing": 7,
+          "duration_sec": 0.5267300605773926,
+          "tokens": 66390,
+          "implementer_ok": true,
+          "inject_injected": 2,
+          "inject_skipped": 0,
+          "json_report_ok": true,
+          "error": ""
+        },
+        {
+          "iter": 2,
+          "test_passing": 1,
+          "test_passing_with_xfail": 1,
+          "test_total": 39,
+          "test_failing": 37,
+          "duration_sec": 0.6673727035522461,
+          "tokens": 66199,
+          "implementer_ok": true,
+          "inject_injected": 2,
+          "inject_skipped": 0,
+          "json_report_ok": true,
+          "error": ""
+        }
+      ]
+    }
+  ],
+  "al": [
+    {
+      "project": "wcwidth",
+      "k_iter": 0,
+      "pipeline": "al",
+      "test_passed": false,
+      "test_total": 0,
+      "test_passing": 0,
+      "test_passing_with_xfail": 0,
+      "test_failing": 0,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 0,
+      "implementer_ok": false,
+      "inject_injected": 0,
+      "inject_skipped": 0,
+      "error": "all iterations failed at LLM call",
+      "n_iterations": 1,
+      "final_iter_idx": -1,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_passing": 0,
+          "test_passing_with_xfail": 0,
+          "test_total": 0,
+          "test_failing": 0,
+          "duration_sec": 0.0,
+          "tokens": 0,
+          "implementer_ok": false,
+          "inject_injected": 0,
+          "inject_skipped": 0,
+          "json_report_ok": false,
+          "error": "LLM call failed: ReadTimeout('timed out')"
+        }
+      ]
+    }
+  ]
+}

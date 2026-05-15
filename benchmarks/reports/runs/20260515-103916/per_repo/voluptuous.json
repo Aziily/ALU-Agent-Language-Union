@@ -1,0 +1,75 @@
+{
+  "project": "voluptuous",
+  "baseline": [
+    {
+      "project": "voluptuous",
+      "k_iter": 0,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 0,
+      "test_passing": 0,
+      "test_passing_with_xfail": 0,
+      "test_failing": 0,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 0,
+      "implementer_ok": false,
+      "inject_injected": 0,
+      "inject_skipped": 0,
+      "error": "all iterations failed at LLM call",
+      "n_iterations": 1,
+      "final_iter_idx": -1,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_passing": 0,
+          "test_passing_with_xfail": 0,
+          "test_total": 0,
+          "test_failing": 0,
+          "duration_sec": 0.0,
+          "tokens": 0,
+          "implementer_ok": false,
+          "inject_injected": 0,
+          "inject_skipped": 0,
+          "json_report_ok": false,
+          "error": "LLM call failed: RuntimeError('http://127.0.0.1:9000/v1/chat/completions returned 502: <html>\\r\\n<head><title>502 Bad Gateway</title></head>\\r\\n<body>\\r\\n<center><h1>502 Bad Gateway</h1></center>\\r\\n<hr><center>openresty</center>\\r\\n</body>\\r\\n</html>\\r\\n')"
+        }
+      ]
+    }
+  ],
+  "al": [
+    {
+      "project": "voluptuous",
+      "k_iter": 0,
+      "pipeline": "al",
+      "test_passed": false,
+      "test_total": 0,
+      "test_passing": 0,
+      "test_passing_with_xfail": 0,
+      "test_failing": 0,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 0,
+      "implementer_ok": false,
+      "inject_injected": 0,
+      "inject_skipped": 0,
+      "error": "all iterations failed at LLM call",
+      "n_iterations": 1,
+      "final_iter_idx": -1,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_passing": 0,
+          "test_passing_with_xfail": 0,
+          "test_total": 0,
+          "test_failing": 0,
+          "duration_sec": 0.0,
+          "tokens": 0,
+          "implementer_ok": false,
+          "inject_injected": 0,
+          "inject_skipped": 0,
+          "json_report_ok": false,
+          "error": "LLM call failed: ReadTimeout('timed out')"
+        }
+      ]
+    }
+  ]
+}

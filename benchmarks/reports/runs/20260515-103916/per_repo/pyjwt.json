@@ -1,0 +1,75 @@
+{
+  "project": "pyjwt",
+  "baseline": [
+    {
+      "project": "pyjwt",
+      "k_iter": 0,
+      "pipeline": "baseline",
+      "test_passed": true,
+      "test_total": 1,
+      "test_passing": 1,
+      "test_passing_with_xfail": 1,
+      "test_failing": 0,
+      "duration_sec": 0.35646820068359375,
+      "llm_total_tokens": 12045,
+      "implementer_ok": true,
+      "inject_injected": 12,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 1,
+      "final_iter_idx": 0,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_passing": 1,
+          "test_passing_with_xfail": 1,
+          "test_total": 1,
+          "test_failing": 0,
+          "duration_sec": 0.35646820068359375,
+          "tokens": 12045,
+          "implementer_ok": true,
+          "inject_injected": 12,
+          "inject_skipped": 0,
+          "json_report_ok": true,
+          "error": ""
+        }
+      ]
+    }
+  ],
+  "al": [
+    {
+      "project": "pyjwt",
+      "k_iter": 0,
+      "pipeline": "al",
+      "test_passed": true,
+      "test_total": 1,
+      "test_passing": 1,
+      "test_passing_with_xfail": 1,
+      "test_failing": 0,
+      "duration_sec": 0.16841983795166016,
+      "llm_total_tokens": 18948,
+      "implementer_ok": true,
+      "inject_injected": 16,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 1,
+      "final_iter_idx": 0,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_passing": 1,
+          "test_passing_with_xfail": 1,
+          "test_total": 1,
+          "test_failing": 0,
+          "duration_sec": 0.16841983795166016,
+          "tokens": 18948,
+          "implementer_ok": true,
+          "inject_injected": 16,
+          "inject_skipped": 0,
+          "json_report_ok": true,
+          "error": ""
+        }
+      ]
+    }
+  ]
+}

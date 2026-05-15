@@ -1,0 +1,12 @@
+{
+  "k": 1,
+  "n_projects": 5,
+  "baseline": {
+    "pass_at_1": 0.2,
+    "pass_at_k": 0.2
+  },
+  "al": {
+    "pass_at_1": 0.2,
+    "pass_at_k": 0.2
+  }
+}

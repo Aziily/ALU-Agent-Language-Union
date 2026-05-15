@@ -43,6 +43,7 @@
 | `output:` | flow / code / agent | inline 或嵌套 | 输出形状 |
 | `body:` | code, **preamble** | block scalar `|` | 字面 Python 源 |
 | `source:` | **preamble** | inline | 该 preamble 对应的源 `.py` 文件相对路径（hint） |
+| `imports:` | **preamble** | block scalar `|` | 该 module 的所有 `import` / `from ... import ...` 行（H4 引入，单独 hoist 出来便于 LLM 把"导入"作为独立单元看待） |
 | `steps:` | flow | 列表 | flow 的有序子步骤；项可为 ref / parallel / each / if |
 | `prompt:` | agent | block scalar `|` | 给 LLM 的自然语言指令 |
 | `fallback:` | agent | bare name | agent 失败时调用的另一节点（**必须是 code/agent 节点名，不能是工具名**） |
@@ -69,6 +70,9 @@ fail。`preamble` 就是修这个的。
 ```al
 preamble cachetools_keys:
   source: cachetools/keys.py
+  imports: |
+    import collections
+    from . import keys
   body: |
     """Key functions for memoizing decorators."""
     __all__ = ('hashkey', 'methodkey', 'typedkey', 'typedmethodkey')
@@ -100,7 +104,15 @@ code hashkey:
 ```
 
 LLM 写 `hashkey` body 时能直接引用 `_HashedTuple` / `_kwmark`，因为它们在
-preamble 里可见。
+preamble 里可见。同样，`imports:` 块里的 `collections` 等也是 module-level 已经在 scope 内的——
+LLM 写 code body 时无需在 body 里再重复 `import collections`。
+
+> **`imports:` vs `body:` 在 preamble 里如何分**：所有以 `import X` 或
+> `from X import Y` 开头的语句 → `imports:`；其余 module-level Python
+> （class 定义、常量、`__all__`、module docstring、类型别名）→ `body:`。
+> 即使是 `try: from X import Y\nexcept ImportError: from Z import Y` 这种
+> "条件性导入"块，只要里面**全是** import 语句，也归入 `imports:`。
+> 这条规则由 `benchmarks/skeletons/_autogen.py` 自动执行。
 
 **何时该写 preamble**：源文件除了"被 strip 成 `pass` 的函数"以外还含有
 以下任何一项时，就该写：

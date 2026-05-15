@@ -1,19 +1,20 @@
 preamble __init__:
   source: parsel/__init__.py
+  imports: |
+    from parsel import xpathfuncs
+    from parsel.csstranslator import css2xpath
+    from parsel.selector import Selector, SelectorList
   body: |
     '\nParsel lets you extract text from XML/HTML documents using XPath\nor CSS selectors\n'
     __author__ = 'Scrapy project'
     __email__ = 'info@scrapy.org'
     __version__ = '1.9.1'
     __all__ = ['Selector', 'SelectorList', 'css2xpath', 'xpathfuncs']
-    from parsel import xpathfuncs
-    from parsel.csstranslator import css2xpath
-    from parsel.selector import Selector, SelectorList
 
 
 preamble csstranslator:
   source: parsel/csstranslator.py
-  body: |
+  imports: |
     from functools import lru_cache
     from typing import TYPE_CHECKING, Any, Optional, Protocol
     from cssselect import GenericTranslator as OriginalGenericTranslator
@@ -21,6 +22,7 @@ preamble csstranslator:
     from cssselect.parser import Element, FunctionalPseudoElement, PseudoElement
     from cssselect.xpath import ExpressionError
     from cssselect.xpath import XPathExpr as OriginalXPathExpr
+  body: |
     if TYPE_CHECKING:
         from typing_extensions import Self
     class XPathExpr(OriginalXPathExpr):
@@ -71,8 +73,7 @@ preamble csstranslator:
 
 preamble selector:
   source: parsel/selector.py
-  body: |
-    'XPath and JMESPath selectors based on the lxml and jmespath Python\npackages.'
+  imports: |
     import json
     import typing
     import warnings
@@ -84,6 +85,8 @@ preamble selector:
     from packaging.version import Version
     from .csstranslator import GenericTranslator, HTMLTranslator
     from .utils import extract_regex, flatten, iflatten, shorten
+  body: |
+    'XPath and JMESPath selectors based on the lxml and jmespath Python\npackages.'
     _SelectorType = TypeVar('_SelectorType', bound='Selector')
     _ParserType = Union[etree.XMLParser, etree.HTMLParser]
     _TostringMethodType = Literal['html', 'xml']
@@ -448,7 +451,7 @@ preamble selector:
 
 preamble utils:
   source: parsel/utils.py
-  body: |
+  imports: |
     import re
     from typing import Any, Iterable, Iterator, List, Match, Pattern, Union, cast
     from w3lib.html import replace_entities as w3lib_replace_entities
@@ -456,11 +459,12 @@ preamble utils:
 
 preamble xpathfuncs:
   source: parsel/xpathfuncs.py
-  body: |
+  imports: |
     import re
     from typing import Any, Callable, Optional
     from lxml import etree
     from w3lib.html import HTML5_WHITESPACE
+  body: |
     regex = f'[{HTML5_WHITESPACE}]+'
     replace_html5_whitespaces = re.compile(regex).sub
 

@@ -91,23 +91,57 @@ def _collect_stripped(src_dir: Path) -> dict[str, list[tuple[str, str, str, str]
     return out
 
 
-def _collect_preambles(src_dir: Path) -> dict[str, tuple[str, str]]:
-    """Phase 1.AL.5 — return {file_stem: (rel_path, preamble_body_text)}.
+def _is_import_only_try(node: ast.AST) -> bool:
+    """True if a ``try: ... except: ...`` block contains ONLY import statements.
+
+    Many libraries have ``try: from X import Y\nexcept ImportError: from Z
+    import Y`` — that whole block is conceptually an import, so H4 hoists
+    it out alongside other imports. A try block that does real work
+    (computation, side-effects) stays in body.
+    """
+    if not isinstance(node, ast.Try):
+        return False
+
+    def _stmts_are_imports(stmts: list[ast.stmt]) -> bool:
+        return bool(stmts) and all(
+            isinstance(s, (ast.Import, ast.ImportFrom)) for s in stmts
+        )
+
+    if not _stmts_are_imports(node.body):
+        return False
+    for handler in node.handlers:
+        if not _stmts_are_imports(handler.body):
+            return False
+    if node.orelse and not _stmts_are_imports(node.orelse):
+        return False
+    if node.finalbody and not _stmts_are_imports(node.finalbody):
+        return False
+    return True
+
+
+def _collect_preambles(src_dir: Path) -> dict[str, tuple[str, str, str]]:
+    """Phase 1.AL.5 + H4 — return {file_stem: (rel_path, imports_text, body_text)}.
 
     For each .py under ``src_dir`` (excluding tests / build), extract
-    the module-level Python that is NOT a stripped function/method:
-      - all imports (ast.Import, ast.ImportFrom)
-      - all top-level class definitions (full body — even if some methods
-        are stripped, since the class itself is module-level)
-      - all module-level assignments / annotated assignments (constants,
-        type aliases, ``__all__``)
-      - module docstring (if present at body[0])
+    the module-level Python that is NOT a stripped function/method, and
+    split it into:
+
+      * ``imports_text``: every ``ast.Import`` / ``ast.ImportFrom`` and
+        every ``try: ... except: ...`` block whose entire body is imports.
+      * ``body_text``: the remainder — module docstring, class definitions,
+        constants, type aliases, ``__all__``, conditional non-import
+        blocks.
+
+    The split is order-preserving WITHIN each bucket (so multi-line
+    import groups stay in their original sequence), but imports are
+    pulled to the top of the resulting preamble visually via the
+    skeleton emitter.
 
     Returns the body text using ``ast.unparse``. Module-level
     top-level functions are EXCLUDED whether stripped or not — those
     become ``code <name>`` nodes elsewhere.
     """
-    out: dict[str, tuple[str, str]] = {}
+    out: dict[str, tuple[str, str, str]] = {}
     for src_file in sorted(src_dir.rglob("*.py")):
         if any(p in src_file.parts for p in ("tests", "test", "__pycache__")):
             continue
@@ -120,41 +154,41 @@ def _collect_preambles(src_dir: Path) -> dict[str, tuple[str, str]]:
             else src_file.relative_to(src_dir).as_posix()
         rel_stem = src_file.relative_to(src_dir).as_posix().replace("/", "_").replace(".py", "")
 
-        preamble_nodes: list[ast.AST] = []
+        import_nodes: list[ast.AST] = []
+        body_nodes: list[ast.AST] = []
         for idx, node in enumerate(tree.body):
-            # Module docstring at body[0]
+            # Module docstring at body[0] → body (not an import).
             if idx == 0 and isinstance(node, ast.Expr) \
                     and isinstance(node.value, ast.Constant) \
                     and isinstance(node.value.value, str):
-                preamble_nodes.append(node)
+                body_nodes.append(node)
                 continue
-            # Module-level imports / classes / constants / type aliases /
-            # conditional import blocks. Skip top-level (Async)FunctionDef
-            # — those become code nodes (their bodies must not appear in
-            # the preamble or we'd duplicate them).
             if isinstance(node, (ast.Import, ast.ImportFrom)):
-                preamble_nodes.append(node)
+                import_nodes.append(node)
+            elif _is_import_only_try(node):
+                import_nodes.append(node)
             elif isinstance(node, ast.ClassDef):
-                preamble_nodes.append(node)
+                body_nodes.append(node)
             elif isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
-                preamble_nodes.append(node)
+                body_nodes.append(node)
             elif isinstance(node, ast.If):
                 # Module-level `if sys.version_info >= ...:` keep verbatim
-                preamble_nodes.append(node)
+                body_nodes.append(node)
             elif isinstance(node, ast.Try):
-                # Conditional import blocks (`try: import x except: ...`)
-                preamble_nodes.append(node)
+                # Try block with non-import statements — keep in body
+                body_nodes.append(node)
             # else: skip FunctionDef / AsyncFunctionDef — handled in _collect_stripped
 
-        if not preamble_nodes:
+        if not import_nodes and not body_nodes:
             continue
         try:
-            preamble_text = "\n".join(ast.unparse(n) for n in preamble_nodes)
+            imports_text = "\n".join(ast.unparse(n) for n in import_nodes)
+            body_text = "\n".join(ast.unparse(n) for n in body_nodes)
         except Exception:
             continue
-        if not preamble_text.strip():
+        if not imports_text.strip() and not body_text.strip():
             continue
-        out[rel_stem] = (rel_path, preamble_text)
+        out[rel_stem] = (rel_path, imports_text, body_text)
     return out
 
 
@@ -210,15 +244,27 @@ def generate_skeleton(repo: str, src_subdir: str) -> str:
     out: list[str] = []
 
     # 1. Preambles first (module-level Python context per source file).
-    for stem, (rel_path, body_text) in preambles.items():
+    #    H4 (Round 2): imports are emitted as a separate ``imports:`` block
+    #    above ``body:`` so the LLM sees them as a discrete unit and the
+    #    body is just the non-import module-level Python (classes,
+    #    constants, ``__all__``, module docstring).
+    for stem, (rel_path, imports_text, body_text) in preambles.items():
         out.append(f"preamble {stem}:")
         out.append(f"  source: {rel_path}")
-        out.append("  body: |")
-        for line in body_text.splitlines():
-            if line:
-                out.append(f"    {line}")
-            else:
-                out.append("")
+        if imports_text.strip():
+            out.append("  imports: |")
+            for line in imports_text.splitlines():
+                if line:
+                    out.append(f"    {line}")
+                else:
+                    out.append("")
+        if body_text.strip():
+            out.append("  body: |")
+            for line in body_text.splitlines():
+                if line:
+                    out.append(f"    {line}")
+                else:
+                    out.append("")
         out.append("")
         out.append("")
 

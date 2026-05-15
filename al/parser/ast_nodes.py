@@ -214,6 +214,12 @@ FIELD_VALUE_HINTS: dict[str, tuple[type, ...]] = {
     "extensions": (ReferenceList,),
     # Phase 1.AL.2: preamble fields
     "source": (InlineText,),  # optional file-path hint on preamble
+    # Phase 1.AL-LOOP H4 (Round 2): structured imports field on preamble.
+    # BlockScalar carrying raw ``import`` / ``from ... import ...`` lines.
+    # Lets the LLM see imports as a discrete unit separated from class /
+    # constants and lets the skeleton shrink by extracting imports out of
+    # the preamble ``body:`` block.
+    "imports": (BlockScalar,),
 }
 
 #: The ordered key sequence used by the canonical serializer.
@@ -221,6 +227,7 @@ CANONICAL_FIELD_ORDER: tuple[str, ...] = (
     "intent",
     "schedule",
     "source",     # Phase 1.AL.2: preamble's file-path hint, near top
+    "imports",    # Phase 1.AL-LOOP H4: preamble structured imports
     "input",
     "output",
     "use",
@@ -242,8 +249,11 @@ ALLOWED_FIELDS_BY_KIND: dict[str, set[str]] = {
     "code": {"intent", "input", "output", "body"},
     "agent": {"intent", "input", "output", "prompt", "fallback", "use"},
     "set": {"intent", "tools", "skills", "extensions", "memory"},
-    # Phase 1.AL.2: preamble only takes optional `source:` hint and
+    # Phase 1.AL.2: preamble takes optional `source:` hint and
     # required `body:` (raw Python). It is shown to the LLM as
     # module-level context but never injected by the benchmark pipeline.
-    "preamble": {"source", "body"},
+    # Phase 1.AL-LOOP H4 (Round 2): `imports:` is an optional structured
+    # block scalar that holds the file's import lines, hoisted out of
+    # the body so LLM sees them as a separate unit.
+    "preamble": {"source", "imports", "body"},
 }

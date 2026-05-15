@@ -1,6 +1,6 @@
 preamble __init__:
   source: minitorch/__init__.py
-  body: |
+  imports: |
     import minitorch.scalar_functions as scalar_functions
     from .autodiff import *
     from .cuda_ops import *
@@ -17,15 +17,17 @@ preamble __init__:
     from .tensor_functions import *
     from .tensor_ops import *
     from .testing import MathTest, MathTestVariable
+  body: |
     version = '0.4'
 
 
 preamble autodiff:
   source: minitorch/autodiff.py
-  body: |
+  imports: |
     from dataclasses import dataclass
     from typing import Any, Iterable, List, Tuple
     from typing_extensions import Protocol
+  body: |
     variable_count = 1
     class Variable(Protocol):
         pass
@@ -44,13 +46,14 @@ preamble autodiff:
 
 preamble cuda_ops:
   source: minitorch/cuda_ops.py
-  body: |
+  imports: |
     from typing import Callable, Optional
     import numba
     from numba import cuda
     from .tensor import Tensor
     from .tensor_data import MAX_DIMS, Shape, Storage, Strides, TensorData, broadcast_index, index_to_position, shape_broadcast, to_index
     from .tensor_ops import MapProto, TensorOps
+  body: |
     to_index = cuda.jit(device=True)(to_index)
     index_to_position = cuda.jit(device=True)(index_to_position)
     broadcast_index = cuda.jit(device=True)(broadcast_index)
@@ -69,11 +72,12 @@ preamble cuda_ops:
 
 preamble datasets:
   source: minitorch/datasets.py
-  body: |
+  imports: |
     import math
     import random
     from dataclasses import dataclass
     from typing import List, Tuple
+  body: |
     @dataclass
     class Graph:
         N: int
@@ -84,7 +88,7 @@ preamble datasets:
 
 preamble fast_conv:
   source: minitorch/fast_conv.py
-  body: |
+  imports: |
     from typing import Tuple
     import numpy as np
     from numba import njit, prange
@@ -92,6 +96,7 @@ preamble fast_conv:
     from .tensor import Tensor
     from .tensor_data import MAX_DIMS, Index, Shape, Strides, broadcast_index, index_to_position, to_index
     from .tensor_functions import Function
+  body: |
     to_index = njit(inline='always')(to_index)
     index_to_position = njit(inline='always')(index_to_position)
     broadcast_index = njit(inline='always')(broadcast_index)
@@ -135,13 +140,14 @@ preamble fast_conv:
 
 preamble fast_ops:
   source: minitorch/fast_ops.py
-  body: |
+  imports: |
     from __future__ import annotations
     from typing import TYPE_CHECKING
     import numpy as np
     from numba import njit, prange
     from .tensor_data import MAX_DIMS, broadcast_index, index_to_position, shape_broadcast, to_index
     from .tensor_ops import MapProto, TensorOps
+  body: |
     if TYPE_CHECKING:
         from typing import Callable, Optional
         from .tensor import Tensor
@@ -196,9 +202,10 @@ preamble fast_ops:
 
 preamble module:
   source: minitorch/module.py
-  body: |
+  imports: |
     from __future__ import annotations
     from typing import Any, Dict, Optional, Sequence, Tuple
+  body: |
     class Module:
         """
         Modules form a tree that store parameters and other
@@ -327,13 +334,14 @@ preamble module:
 
 preamble nn:
   source: minitorch/nn.py
-  body: |
+  imports: |
     from typing import Tuple
     from . import operators
     from .autodiff import Context
     from .fast_ops import FastOps
     from .tensor import Tensor
     from .tensor_functions import Function, rand, tensor
+  body: |
     max_reduce = FastOps.reduce(operators.max, -1000000000.0)
     class Max(Function):
 
@@ -350,19 +358,21 @@ preamble nn:
 
 preamble operators:
   source: minitorch/operators.py
-  body: |
-    '\nCollection of the core mathematical operators used throughout the code base.\n'
+  imports: |
     import math
     from typing import Callable, Iterable
+  body: |
+    '\nCollection of the core mathematical operators used throughout the code base.\n'
     EPS = 1e-06
 
 
 preamble optim:
   source: minitorch/optim.py
-  body: |
+  imports: |
     from typing import Sequence
     from .module import Parameter
     from .scalar import Scalar
+  body: |
     class Optimizer:
 
         def __init__(self, parameters: Sequence[Parameter]):
@@ -376,13 +386,14 @@ preamble optim:
 
 preamble scalar:
   source: minitorch/scalar.py
-  body: |
+  imports: |
     from __future__ import annotations
     from dataclasses import dataclass
     from typing import Any, Iterable, Optional, Sequence, Tuple, Type, Union
     import numpy as np
     from .autodiff import Context, Variable, backpropagate, central_difference
     from .scalar_functions import EQ, LT, Add, Exp, Inv, Log, Mul, Neg, ReLU, ScalarFunction, Sigmoid
+  body: |
     ScalarLike = Union[float, int, 'Scalar']
     @dataclass
     class ScalarHistory:
@@ -492,12 +503,13 @@ preamble scalar:
 
 preamble scalar_functions:
   source: minitorch/scalar_functions.py
-  body: |
+  imports: |
     from __future__ import annotations
     from typing import TYPE_CHECKING
     import minitorch
     from . import operators
     from .autodiff import Context
+  body: |
     if TYPE_CHECKING:
         from typing import Tuple
         from .scalar import Scalar, ScalarLike
@@ -533,8 +545,7 @@ preamble scalar_functions:
 
 preamble tensor:
   source: minitorch/tensor.py
-  body: |
-    '\nImplementation of the core Tensor object for autodifferentiation.\n'
+  imports: |
     from __future__ import annotations
     from dataclasses import dataclass
     from typing import TYPE_CHECKING
@@ -543,6 +554,8 @@ preamble tensor:
     from .autodiff import Context, Variable, backpropagate
     from .tensor_data import TensorData
     from .tensor_functions import EQ, LT, Add, All, Copy, Exp, Inv, IsClose, Log, MatMul, Mul, Neg, Permute, ReLU, Sigmoid, Sum, View, tensor
+  body: |
+    '\nImplementation of the core Tensor object for autodifferentiation.\n'
     if TYPE_CHECKING:
         from typing import Any, Iterable, List, Optional, Sequence, Tuple, Type, Union
         import numpy.typing as npt
@@ -735,7 +748,7 @@ preamble tensor:
 
 preamble tensor_data:
   source: minitorch/tensor_data.py
-  body: |
+  imports: |
     from __future__ import annotations
     import random
     from typing import Iterable, Optional, Sequence, Tuple, Union
@@ -745,6 +758,7 @@ preamble tensor_data:
     from numpy import array, float64
     from typing_extensions import TypeAlias
     from .operators import prod
+  body: |
     MAX_DIMS = 32
     class IndexingError(RuntimeError):
         """Exception raised for indexing errors."""
@@ -808,8 +822,7 @@ preamble tensor_data:
 
 preamble tensor_functions:
   source: minitorch/tensor_functions.py
-  body: |
-    '\nImplementation of the autodifferentiation Functions for Tensor.\n'
+  imports: |
     from __future__ import annotations
     import random
     from typing import TYPE_CHECKING
@@ -818,6 +831,8 @@ preamble tensor_functions:
     from . import operators
     from .autodiff import Context
     from .tensor_ops import SimpleBackend, TensorBackend
+  body: |
+    '\nImplementation of the autodifferentiation Functions for Tensor.\n'
     if TYPE_CHECKING:
         from typing import Any, List, Tuple
         from .tensor import Tensor
@@ -862,13 +877,14 @@ preamble tensor_functions:
 
 preamble tensor_ops:
   source: minitorch/tensor_ops.py
-  body: |
+  imports: |
     from __future__ import annotations
     from typing import TYPE_CHECKING, Callable, Optional, Type
     import numpy as np
     from typing_extensions import Protocol
     from . import operators
     from .tensor_data import MAX_DIMS, broadcast_index, index_to_position, shape_broadcast, to_index
+  body: |
     if TYPE_CHECKING:
         from .tensor import Tensor
         from .tensor_data import Index, Shape, Storage, Strides
@@ -1009,9 +1025,10 @@ preamble tensor_ops:
 
 preamble testing:
   source: minitorch/testing.py
-  body: |
+  imports: |
     from typing import Callable, Generic, Iterable, Tuple, TypeVar
     import minitorch.operators as operators
+  body: |
     A = TypeVar('A')
     class MathTest(Generic[A]):
 

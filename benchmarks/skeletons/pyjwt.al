@@ -1,11 +1,12 @@
 preamble __init__:
   source: jwt/__init__.py
-  body: |
+  imports: |
     from .api_jwk import PyJWK, PyJWKSet
     from .api_jws import PyJWS, get_algorithm_by_name, get_unverified_header, register_algorithm, unregister_algorithm
     from .api_jwt import PyJWT, decode, encode
     from .exceptions import DecodeError, ExpiredSignatureError, ImmatureSignatureError, InvalidAlgorithmError, InvalidAudienceError, InvalidIssuedAtError, InvalidIssuerError, InvalidKeyError, InvalidSignatureError, InvalidTokenError, MissingRequiredClaimError, PyJWKClientConnectionError, PyJWKClientError, PyJWKError, PyJWKSetError, PyJWTError
     from .jwks_client import PyJWKClient
+  body: |
     __version__ = '2.8.0'
     __title__ = 'PyJWT'
     __description__ = 'JSON Web Token implementation in Python'
@@ -21,7 +22,7 @@ preamble __init__:
 
 preamble algorithms:
   source: jwt/algorithms.py
-  body: |
+  imports: |
     from __future__ import annotations
     import hashlib
     import hmac
@@ -32,6 +33,7 @@ preamble algorithms:
     from .exceptions import InvalidKeyError
     from .types import HashlibHash, JWKDict
     from .utils import base64url_decode, base64url_encode, der_to_raw_signature, force_bytes, from_base64url_uint, is_pem_format, is_ssh_key, raw_to_der_signature, to_base64url_uint
+  body: |
     if sys.version_info >= (3, 8):
         from typing import Literal
     else:
@@ -191,7 +193,7 @@ preamble algorithms:
 
 preamble api_jwk:
   source: jwt/api_jwk.py
-  body: |
+  imports: |
     from __future__ import annotations
     import json
     import time
@@ -199,6 +201,7 @@ preamble api_jwk:
     from .algorithms import get_default_algorithms, has_crypto, requires_cryptography
     from .exceptions import InvalidKeyError, PyJWKError, PyJWKSetError, PyJWTError
     from .types import JWKDict
+  body: |
     class PyJWK:
 
         def __init__(self, jwk_data: JWKDict, algorithm: str | None=None) -> None:
@@ -271,7 +274,7 @@ preamble api_jwk:
 
 preamble api_jws:
   source: jwt/api_jws.py
-  body: |
+  imports: |
     from __future__ import annotations
     import binascii
     import json
@@ -281,6 +284,7 @@ preamble api_jws:
     from .exceptions import DecodeError, InvalidAlgorithmError, InvalidSignatureError, InvalidTokenError
     from .utils import base64url_decode, base64url_encode
     from .warnings import RemovedInPyjwt3Warning
+  body: |
     if TYPE_CHECKING:
         from .algorithms import AllowedPrivateKeys, AllowedPublicKeys
     class PyJWS:
@@ -344,7 +348,7 @@ preamble api_jws:
 
 preamble api_jwt:
   source: jwt/api_jwt.py
-  body: |
+  imports: |
     from __future__ import annotations
     import json
     import warnings
@@ -355,6 +359,7 @@ preamble api_jwt:
     from . import api_jws
     from .exceptions import DecodeError, ExpiredSignatureError, ImmatureSignatureError, InvalidAudienceError, InvalidIssuedAtError, InvalidIssuerError, MissingRequiredClaimError
     from .warnings import RemovedInPyjwt3Warning
+  body: |
     if TYPE_CHECKING:
         from .algorithms import AllowedPrivateKeys, AllowedPublicKeys
     class PyJWT:
@@ -435,12 +440,13 @@ preamble exceptions:
 
 preamble help:
   source: jwt/help.py
-  body: |
+  imports: |
     import json
     import platform
     import sys
     from typing import Dict
     from . import __version__ as pyjwt_version
+  body: |
     try:
         import cryptography
         cryptography_version = cryptography.__version__
@@ -452,10 +458,11 @@ preamble help:
 
 preamble jwk_set_cache:
   source: jwt/jwk_set_cache.py
-  body: |
+  imports: |
     import time
     from typing import Optional
     from .api_jwk import PyJWKSet, PyJWTSetWithTimestamp
+  body: |
     class JWKSetCache:
 
         def __init__(self, lifespan: int) -> None:
@@ -465,7 +472,7 @@ preamble jwk_set_cache:
 
 preamble jwks_client:
   source: jwt/jwks_client.py
-  body: |
+  imports: |
     import json
     import urllib.request
     from functools import lru_cache
@@ -476,6 +483,7 @@ preamble jwks_client:
     from .api_jwt import decode_complete as decode_token
     from .exceptions import PyJWKClientConnectionError, PyJWKClientError
     from .jwk_set_cache import JWKSetCache
+  body: |
     class PyJWKClient:
 
         def __init__(self, uri: str, cache_keys: bool=False, max_cached_keys: int=16, cache_jwk_set: bool=True, lifespan: int=300, headers: Optional[Dict[str, Any]]=None, timeout: int=30, ssl_context: Optional[SSLContext]=None):
@@ -498,19 +506,21 @@ preamble jwks_client:
 
 preamble types:
   source: jwt/types.py
-  body: |
+  imports: |
     from typing import Any, Callable, Dict
+  body: |
     JWKDict = Dict[str, Any]
     HashlibHash = Callable[..., Any]
 
 
 preamble utils:
   source: jwt/utils.py
-  body: |
+  imports: |
     import base64
     import binascii
     import re
     from typing import Union
+  body: |
     try:
         from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurve
         from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature, encode_dss_signature

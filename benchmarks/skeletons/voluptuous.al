@@ -1,19 +1,21 @@
 preamble __init__:
   source: voluptuous/__init__.py
-  body: |
-    "Schema validation for Python data structures.\n\nGiven eg. a nested data structure like this:\n\n    {\n        'exclude': ['Users', 'Uptime'],\n        'include': [],\n        'set': {\n            'snmp_community': 'public',\n            'snmp_timeout': 15,\n            'snmp_version': '2c',\n        },\n        'targets': {\n            'localhost': {\n                'exclude': ['Uptime'],\n                'features': {\n                    'Uptime': {\n                        'retries': 3,\n                    },\n                    'Users': {\n                        'snmp_community': 'monkey',\n                        'snmp_port': 15,\n                    },\n                },\n                'include': ['Users'],\n                'set': {\n                    'snmp_community': 'monkeys',\n                },\n            },\n        },\n    }\n\nA schema like this:\n\n    >>> settings = {\n    ...   'snmp_community': str,\n    ...   'retries': int,\n    ...   'snmp_version': All(Coerce(str), Any('3', '2c', '1')),\n    ... }\n    >>> features = ['Ping', 'Uptime', 'Http']\n    >>> schema = Schema({\n    ...    'exclude': features,\n    ...    'include': features,\n    ...    'set': settings,\n    ...    'targets': {\n    ...      'exclude': features,\n    ...      'include': features,\n    ...      'features': {\n    ...        str: settings,\n    ...      },\n    ...    },\n    ... })\n\nValidate like so:\n\n    >>> schema({\n    ...   'set': {\n    ...     'snmp_community': 'public',\n    ...     'snmp_version': '2c',\n    ...   },\n    ...   'targets': {\n    ...     'exclude': ['Ping'],\n    ...     'features': {\n    ...       'Uptime': {'retries': 3},\n    ...       'Users': {'snmp_community': 'monkey'},\n    ...     },\n    ...   },\n    ... }) == {\n    ...   'set': {'snmp_version': '2c', 'snmp_community': 'public'},\n    ...   'targets': {\n    ...     'exclude': ['Ping'],\n    ...     'features': {'Uptime': {'retries': 3},\n    ...                  'Users': {'snmp_community': 'monkey'}}}}\n    True\n"
+  imports: |
     from voluptuous.schema_builder import *
     from voluptuous.util import *
     from voluptuous.validators import *
     from voluptuous.error import *
+  body: |
+    "Schema validation for Python data structures.\n\nGiven eg. a nested data structure like this:\n\n    {\n        'exclude': ['Users', 'Uptime'],\n        'include': [],\n        'set': {\n            'snmp_community': 'public',\n            'snmp_timeout': 15,\n            'snmp_version': '2c',\n        },\n        'targets': {\n            'localhost': {\n                'exclude': ['Uptime'],\n                'features': {\n                    'Uptime': {\n                        'retries': 3,\n                    },\n                    'Users': {\n                        'snmp_community': 'monkey',\n                        'snmp_port': 15,\n                    },\n                },\n                'include': ['Users'],\n                'set': {\n                    'snmp_community': 'monkeys',\n                },\n            },\n        },\n    }\n\nA schema like this:\n\n    >>> settings = {\n    ...   'snmp_community': str,\n    ...   'retries': int,\n    ...   'snmp_version': All(Coerce(str), Any('3', '2c', '1')),\n    ... }\n    >>> features = ['Ping', 'Uptime', 'Http']\n    >>> schema = Schema({\n    ...    'exclude': features,\n    ...    'include': features,\n    ...    'set': settings,\n    ...    'targets': {\n    ...      'exclude': features,\n    ...      'include': features,\n    ...      'features': {\n    ...        str: settings,\n    ...      },\n    ...    },\n    ... })\n\nValidate like so:\n\n    >>> schema({\n    ...   'set': {\n    ...     'snmp_community': 'public',\n    ...     'snmp_version': '2c',\n    ...   },\n    ...   'targets': {\n    ...     'exclude': ['Ping'],\n    ...     'features': {\n    ...       'Uptime': {'retries': 3},\n    ...       'Users': {'snmp_community': 'monkey'},\n    ...     },\n    ...   },\n    ... }) == {\n    ...   'set': {'snmp_version': '2c', 'snmp_community': 'public'},\n    ...   'targets': {\n    ...     'exclude': ['Ping'],\n    ...     'features': {'Uptime': {'retries': 3},\n    ...                  'Users': {'snmp_community': 'monkey'}}}}\n    True\n"
     __version__ = '0.15.2'
     __author__ = 'alecthomas'
 
 
 preamble error:
   source: voluptuous/error.py
-  body: |
+  imports: |
     import typing
+  body: |
     class Error(Exception):
         """Base validation exception."""
     class SchemaError(Error):
@@ -120,17 +122,18 @@ preamble error:
 
 preamble humanize:
   source: voluptuous/humanize.py
-  body: |
+  imports: |
     import typing
     from voluptuous import Invalid, MultipleInvalid
     from voluptuous.error import Error
     from voluptuous.schema_builder import Schema
+  body: |
     MAX_VALIDATION_ERROR_ITEM_LENGTH = 500
 
 
 preamble schema_builder:
   source: voluptuous/schema_builder.py
-  body: |
+  imports: |
     from __future__ import annotations
     import collections
     import inspect
@@ -143,6 +146,7 @@ preamble schema_builder:
     from functools import cache, wraps
     from voluptuous import error as er
     from voluptuous.error import Error
+  body: |
     PREVENT_EXTRA = 0
     ALLOW_EXTRA = 1
     REMOVE_EXTRA = 2
@@ -688,12 +692,13 @@ preamble schema_builder:
 
 preamble util:
   source: voluptuous/util.py
-  body: |
+  imports: |
     import typing
     from voluptuous import validators
     from voluptuous.error import Invalid, LiteralInvalid, TypeInvalid
     from voluptuous.schema_builder import DefaultFactory
     from voluptuous.schema_builder import Schema, default_factory, raises
+  body: |
     __author__ = 'tusharmakkar08'
     class DefaultTo(object):
         """Sets a value to default_value if none provided.
@@ -779,7 +784,7 @@ preamble util:
 
 preamble validators:
   source: voluptuous/validators.py
-  body: |
+  imports: |
     from __future__ import annotations
     import datetime
     import os
@@ -790,6 +795,7 @@ preamble validators:
     from functools import wraps
     from voluptuous.error import AllInvalid, AnyInvalid, BooleanInvalid, CoerceInvalid, ContainsInvalid, DateInvalid, DatetimeInvalid, DirInvalid, EmailInvalid, ExactSequenceInvalid, FalseInvalid, FileInvalid, InInvalid, Invalid, LengthInvalid, MatchInvalid, MultipleInvalid, NotEnoughValid, NotInInvalid, PathInvalid, RangeInvalid, TooManyValid, TrueInvalid, TypeInvalid, UrlInvalid
     from voluptuous.schema_builder import Schema, Schemable, message, raises
+  body: |
     if typing.TYPE_CHECKING:
         from _typeshed import SupportsAllComparisons
     Enum: typing.Union[type, None]

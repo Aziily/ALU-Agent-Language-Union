@@ -35,8 +35,94 @@ def test_preamble_is_in_DECLARATORS():
 
 
 def test_allowed_fields_for_preamble():
-    """preamble accepts only `source` (optional) and `body` (required)."""
-    assert ALLOWED_FIELDS_BY_KIND["preamble"] == {"source", "body"}
+    """preamble accepts `source` (optional), `imports` (optional, H4),
+    and `body` (required)."""
+    assert ALLOWED_FIELDS_BY_KIND["preamble"] == {"source", "imports", "body"}
+
+
+def test_parse_preamble_with_imports_field():
+    """H4 (Round 2): preamble can have a structured ``imports:`` block
+    scalar holding raw Python ``import`` / ``from ... import ...`` lines
+    separately from the rest of module-level Python (classes, constants,
+    __all__) which stays in ``body:``."""
+    src = (
+        "preamble cachetools_keys:\n"
+        "  source: cachetools/keys.py\n"
+        "  imports: |\n"
+        "    import collections\n"
+        "    from . import keys\n"
+        "  body: |\n"
+        "    __all__ = ('hashkey',)\n"
+        "    class _HashedTuple(tuple):\n"
+        "        pass\n"
+    )
+    prog = parse(src)
+    d = prog.defs[0]
+    imports_field = next(f for f in d.fields if f.name == "imports")
+    assert isinstance(imports_field.value, BlockScalar)
+    assert "import collections" in imports_field.value.text
+    assert "from . import keys" in imports_field.value.text
+    body_field = next(f for f in d.fields if f.name == "body")
+    # Body should NOT contain the import lines (they're hoisted to imports)
+    assert "import collections" not in body_field.value.text
+    assert "class _HashedTuple" in body_field.value.text
+
+
+def test_parse_preamble_with_only_imports_no_body():
+    """A pure-imports module — preamble has ``imports:`` but no ``body:``.
+
+    Some __init__.py files are nothing but re-exports; emitting a body
+    field would be empty and noisy, so the autogen omits it.
+    """
+    src = (
+        "preamble pkg_init:\n"
+        "  source: pkg/__init__.py\n"
+        "  imports: |\n"
+        "    from .a import foo\n"
+        "    from .b import bar\n"
+    )
+    prog = parse(src)
+    d = prog.defs[0]
+    field_names = {f.name for f in d.fields}
+    assert field_names == {"source", "imports"}
+    imports_value = next(f.value for f in d.fields if f.name == "imports")
+    assert "from .a import foo" in imports_value.text
+
+
+def test_roundtrip_preamble_with_imports():
+    """Roundtrip: a preamble with imports + body parses → serializes →
+    parses to the same shape."""
+    src = (
+        "preamble x:\n"
+        "  source: pkg/x.py\n"
+        "  imports: |\n"
+        "    import os\n"
+        "    import sys\n"
+        "  body: |\n"
+        "    PI = 3.14\n"
+    )
+    p1 = parse(src)
+    p2 = parse(serialize(p1))
+    fields2 = {f.name for f in p2.defs[0].fields}
+    assert fields2 == {"source", "imports", "body"}
+    imports2 = next(f for f in p2.defs[0].fields if f.name == "imports").value
+    body2 = next(f for f in p2.defs[0].fields if f.name == "body").value
+    assert "import os" in imports2.text and "import sys" in imports2.text
+    assert "PI = 3.14" in body2.text
+
+
+def test_serializer_emits_imports_before_body():
+    """Canonical field order: source → imports → body inside a preamble."""
+    src = (
+        "preamble x:\n"
+        "  body: |\n"
+        "    PI = 3.14\n"
+        "  imports: |\n"
+        "    import math\n"
+        "  source: pkg/x.py\n"
+    )
+    out = serialize(parse(src))
+    assert out.index("source:") < out.index("imports:") < out.index("body:")
 
 
 # ---------------------------------------------------------------------------

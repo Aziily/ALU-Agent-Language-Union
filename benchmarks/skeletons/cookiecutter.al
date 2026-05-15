@@ -1,24 +1,25 @@
 preamble __init__:
   source: cookiecutter/__init__.py
+  imports: |
+    from pathlib import Path
   body: |
     'Main package for Cookiecutter.'
-    from pathlib import Path
     __version__ = _get_version()
 
 
 preamble __main__:
   source: cookiecutter/__main__.py
+  imports: |
+    from cookiecutter.cli import main
   body: |
     'Allow cookiecutter to be executable through `python -m cookiecutter`.'
-    from cookiecutter.cli import main
     if __name__ == '__main__':
         main(prog_name='cookiecutter')
 
 
 preamble cli:
   source: cookiecutter/cli.py
-  body: |
-    'Main `cookiecutter` CLI.'
+  imports: |
     import collections
     import json
     import os
@@ -29,20 +30,23 @@ preamble cli:
     from cookiecutter.exceptions import ContextDecodingException, FailedHookException, InvalidModeException, InvalidZipRepository, OutputDirExistsException, RepositoryCloneFailed, RepositoryNotFound, UndefinedVariableInTemplate, UnknownExtension
     from cookiecutter.log import configure_logger
     from cookiecutter.main import cookiecutter
+  body: |
+    'Main `cookiecutter` CLI.'
     if __name__ == '__main__':
         main()
 
 
 preamble config:
   source: cookiecutter/config.py
-  body: |
-    'Global configuration handling.'
+  imports: |
     import collections
     import copy
     import logging
     import os
     import yaml
     from cookiecutter.exceptions import ConfigDoesNotExistException, InvalidConfiguration
+  body: |
+    'Global configuration handling.'
     logger = logging.getLogger(__name__)
     USER_CONFIG_PATH = os.path.expanduser('~/.cookiecutterrc')
     BUILTIN_ABBREVIATIONS = {'gh': 'https://github.com/{0}.git', 'gl': 'https://gitlab.com/{0}.git', 'bb': 'https://bitbucket.org/{0}'}
@@ -51,10 +55,11 @@ preamble config:
 
 preamble environment:
   source: cookiecutter/environment.py
-  body: |
-    'Jinja2 environment and extensions loading.'
+  imports: |
     from jinja2 import Environment, StrictUndefined
     from cookiecutter.exceptions import UnknownExtension
+  body: |
+    'Jinja2 environment and extensions loading.'
     class ExtensionLoaderMixin:
         """Mixin providing sane loading of extensions specified in a given context.
 
@@ -229,8 +234,7 @@ preamble exceptions:
 
 preamble extensions:
   source: cookiecutter/extensions.py
-  body: |
-    'Jinja2 extensions.'
+  imports: |
     import json
     import string
     import uuid
@@ -239,6 +243,8 @@ preamble extensions:
     from jinja2 import nodes
     from jinja2.ext import Extension
     from slugify import slugify as pyslugify
+  body: |
+    'Jinja2 extensions.'
     class JsonifyExtension(Extension):
         """Jinja2 extension to convert a Python object to JSON."""
 
@@ -301,20 +307,20 @@ preamble extensions:
 
 preamble find:
   source: cookiecutter/find.py
-  body: |
-    'Functions for finding Cookiecutter templates and other components.'
+  imports: |
     import logging
     import os
     from pathlib import Path
     from jinja2 import Environment
     from cookiecutter.exceptions import NonTemplatedInputDirException
+  body: |
+    'Functions for finding Cookiecutter templates and other components.'
     logger = logging.getLogger(__name__)
 
 
 preamble generate:
   source: cookiecutter/generate.py
-  body: |
-    'Functions for generating a project from a project template.'
+  imports: |
     import fnmatch
     import json
     import logging
@@ -330,13 +336,14 @@ preamble generate:
     from cookiecutter.find import find_template
     from cookiecutter.hooks import run_hook_from_repo_dir
     from cookiecutter.utils import create_env_with_context, make_sure_path_exists, rmtree, work_in
+  body: |
+    'Functions for generating a project from a project template.'
     logger = logging.getLogger(__name__)
 
 
 preamble hooks:
   source: cookiecutter/hooks.py
-  body: |
-    'Functions for discovering and executing various cookiecutter hooks.'
+  imports: |
     import errno
     import logging
     import os
@@ -348,6 +355,8 @@ preamble hooks:
     from cookiecutter import utils
     from cookiecutter.exceptions import FailedHookException
     from cookiecutter.utils import create_env_with_context, create_tmp_repo_dir, rmtree, work_in
+  body: |
+    'Functions for discovering and executing various cookiecutter hooks.'
     logger = logging.getLogger(__name__)
     _HOOKS = ['pre_prompt', 'pre_gen_project', 'post_gen_project']
     EXIT_SUCCESS = 0
@@ -355,18 +364,18 @@ preamble hooks:
 
 preamble log:
   source: cookiecutter/log.py
-  body: |
-    'Module for setting up logging.'
+  imports: |
     import logging
     import sys
+  body: |
+    'Module for setting up logging.'
     LOG_LEVELS = {'DEBUG': logging.DEBUG, 'INFO': logging.INFO, 'WARNING': logging.WARNING, 'ERROR': logging.ERROR, 'CRITICAL': logging.CRITICAL}
     LOG_FORMATS = {'DEBUG': '%(levelname)s %(name)s: %(message)s', 'INFO': '%(levelname)s: %(message)s'}
 
 
 preamble main:
   source: cookiecutter/main.py
-  body: |
-    '\nMain entry point for the `cookiecutter` command.\n\nThe code in this module is also a good example of how to use Cookiecutter as a\nlibrary rather than a script.\n'
+  imports: |
     import logging
     import os
     import sys
@@ -380,6 +389,8 @@ preamble main:
     from cookiecutter.replay import dump, load
     from cookiecutter.repository import determine_repo_dir
     from cookiecutter.utils import rmtree
+  body: |
+    '\nMain entry point for the `cookiecutter` command.\n\nThe code in this module is also a good example of how to use Cookiecutter as a\nlibrary rather than a script.\n'
     logger = logging.getLogger(__name__)
     class _patch_import_path_for_repo:
 
@@ -397,8 +408,7 @@ preamble main:
 
 preamble prompt:
   source: cookiecutter/prompt.py
-  body: |
-    'Functions for prompting the user for project info.'
+  imports: |
     import json
     import os
     import re
@@ -409,6 +419,8 @@ preamble prompt:
     from rich.prompt import Confirm, InvalidResponse, Prompt, PromptBase
     from cookiecutter.exceptions import UndefinedVariableInTemplate
     from cookiecutter.utils import create_env_with_context, rmtree
+  body: |
+    'Functions for prompting the user for project info.'
     class YesNoPrompt(Confirm):
         """A prompt that returns a boolean for yes/no questions."""
         yes_choices = ['1', 'true', 't', 'yes', 'y', 'on']
@@ -431,29 +443,30 @@ preamble prompt:
 
 preamble replay:
   source: cookiecutter/replay.py
-  body: |
-    '\ncookiecutter.replay.\n\n-------------------\n'
+  imports: |
     import json
     import os
     from cookiecutter.utils import make_sure_path_exists
+  body: |
+    '\ncookiecutter.replay.\n\n-------------------\n'
 
 
 preamble repository:
   source: cookiecutter/repository.py
-  body: |
-    'Cookiecutter repository functions.'
+  imports: |
     import os
     import re
     from cookiecutter.exceptions import RepositoryNotFound
     from cookiecutter.vcs import clone
     from cookiecutter.zipfile import unzip
+  body: |
+    'Cookiecutter repository functions.'
     REPO_REGEX = re.compile('\n# something like git:// ssh:// file:// etc.\n((((git|hg)\\+)?(git|ssh|file|https?):(//)?)\n |                                      # or\n (\\w+@[\\w\\.]+)                          # something like user@...\n)\n', re.VERBOSE)
 
 
 preamble utils:
   source: cookiecutter/utils.py
-  body: |
-    'Helper functions used throughout Cookiecutter.'
+  imports: |
     import contextlib
     import logging
     import os
@@ -464,13 +477,14 @@ preamble utils:
     from typing import Dict
     from jinja2.ext import Extension
     from cookiecutter.environment import StrictEnvironment
+  body: |
+    'Helper functions used throughout Cookiecutter.'
     logger = logging.getLogger(__name__)
 
 
 preamble vcs:
   source: cookiecutter/vcs.py
-  body: |
-    'Helper functions for working with version control systems.'
+  imports: |
     import logging
     import os
     import subprocess
@@ -480,14 +494,15 @@ preamble vcs:
     from cookiecutter.exceptions import RepositoryCloneFailed, RepositoryNotFound, UnknownRepoType, VCSNotInstalled
     from cookiecutter.prompt import prompt_and_delete
     from cookiecutter.utils import make_sure_path_exists
+  body: |
+    'Helper functions for working with version control systems.'
     logger = logging.getLogger(__name__)
     BRANCH_ERRORS = ['error: pathspec', 'unknown revision']
 
 
 preamble zipfile:
   source: cookiecutter/zipfile.py
-  body: |
-    'Utility functions for handling and fetching repo archives in zip format.'
+  imports: |
     import os
     import tempfile
     from pathlib import Path
@@ -497,6 +512,8 @@ preamble zipfile:
     from cookiecutter.exceptions import InvalidZipRepository
     from cookiecutter.prompt import prompt_and_delete, read_repo_password
     from cookiecutter.utils import make_sure_path_exists
+  body: |
+    'Utility functions for handling and fetching repo archives in zip format.'
 
 
 flow cookiecutter_lib:

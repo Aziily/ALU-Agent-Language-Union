@@ -1,7 +1,6 @@
 preamble __init__:
   source: jinja2/__init__.py
-  body: |
-    'Jinja is a template engine written in pure Python. It provides a\nnon-XML syntax that supports inline expressions and an optional\nsandboxed environment.\n'
+  imports: |
     from .bccache import BytecodeCache as BytecodeCache
     from .bccache import FileSystemBytecodeCache as FileSystemBytecodeCache
     from .bccache import MemcachedBytecodeCache as MemcachedBytecodeCache
@@ -33,33 +32,36 @@ preamble __init__:
     from .utils import pass_environment as pass_environment
     from .utils import pass_eval_context as pass_eval_context
     from .utils import select_autoescape as select_autoescape
+  body: |
+    'Jinja is a template engine written in pure Python. It provides a\nnon-XML syntax that supports inline expressions and an optional\nsandboxed environment.\n'
     __version__ = '3.1.4'
 
 
 preamble _identifier:
   source: jinja2/_identifier.py
-  body: |
+  imports: |
     import re
+  body: |
     pattern = re.compile('[\\w·̀-ͯ·҃-֑҇-ׇֽֿׁׂׅׄؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۤۧۨ-ܑۭܰ-݊ަ-ް߫-߽߳ࠖ-࠙ࠛ-ࠣࠥ-ࠧࠩ-࡙࠭-࡛࣓-ࣣ࣡-ःऺ-़ा-ॏ॑-ॗॢॣঁ-ঃ়া-ৄেৈো-্ৗৢৣ৾ਁ-ਃ਼ਾ-ੂੇੈੋ-੍ੑੰੱੵઁ-ઃ઼ા-ૅે-ૉો-્ૢૣૺ-૿ଁ-ଃ଼ା-ୄେୈୋ-୍ୖୗୢୣஂா-ூெ-ைொ-்ௗఀ-ఄా-ౄె-ైొ-్ౕౖౢౣಁ-ಃ಼ಾ-ೄೆ-ೈೊ-್ೕೖೢೣഀ-ഃ഻഼ാ-ൄെ-ൈൊ-്ൗൢൣංඃ්ා-ුූෘ-ෟෲෳัิ-ฺ็-๎ັິ-ູົຼ່-ໍ༹༘༙༵༷༾༿ཱ-྄྆྇ྍ-ྗྙ-ྼ࿆ါ-ှၖ-ၙၞ-ၠၢ-ၤၧ-ၭၱ-ၴႂ-ႍႏႚ-ႝ፝-፟ᜒ-᜔ᜲ-᜴ᝒᝓᝲᝳ឴-៓៝᠋-᠍ᢅᢆᢩᤠ-ᤫᤰ-᤻ᨗ-ᨛᩕ-ᩞ᩠-᩿᩼᪰-᪽ᬀ-ᬄ᬴-᭄᭫-᭳ᮀ-ᮂᮡ-ᮭ᯦-᯳ᰤ-᰷᳐-᳔᳒-᳨᳭ᳲ-᳴᳷-᳹᷀-᷹᷻-᷿‿⁀⁔⃐-⃥⃜⃡-⃰℘℮⳯-⵿⳱ⷠ-〪ⷿ-゙゚〯꙯ꙴ-꙽ꚞꚟ꛰꛱ꠂ꠆ꠋꠣ-ꠧꢀꢁꢴ-ꣅ꣠-꣱ꣿꤦ-꤭ꥇ-꥓ꦀ-ꦃ꦳-꧀ꧥꨩ-ꨶꩃꩌꩍꩻ-ꩽꪰꪲ-ꪴꪷꪸꪾ꪿꫁ꫫ-ꫯꫵ꫶ꯣ-ꯪ꯬꯭ﬞ︀-️︠-︯︳︴﹍-﹏＿𐇽𐋠𐍶-𐍺𐨁-𐨃𐨅𐨆𐨌-𐨏𐨸-𐨿𐨺𐫦𐫥𐴤-𐽆𐴧-𐽐𑀀-𑀂𑀸-𑁆𑁿-𑂂𑂰-𑂺𑄀-𑄂𑄧-𑄴𑅅𑅆𑅳𑆀-𑆂𑆳-𑇀𑇉-𑇌𑈬-𑈷𑈾𑋟-𑋪𑌀-𑌃𑌻𑌼𑌾-𑍄𑍇𑍈𑍋-𑍍𑍗𑍢𑍣𑍦-𑍬𑍰-𑍴𑐵-𑑆𑑞𑒰-𑓃𑖯-𑖵𑖸-𑗀𑗜𑗝𑘰-𑙀𑚫-𑚷𑜝-𑜫𑠬-𑠺𑨁-𑨊𑨳-𑨹𑨻-𑨾𑩇𑩑-𑩛𑪊-𑪙𑰯-𑰶𑰸-𑰿𑲒-𑲧𑲩-𑲶𑴱-𑴶𑴺𑴼𑴽𑴿-𑵅𑵇𑶊-𑶎𑶐𑶑𑶓-𑶗𑻳-𑻶𖫰-𖫴𖬰-𖬶𖽑-𖽾𖾏-𖾒𛲝𛲞𝅥-𝅩𝅭-𝅲𝅻-𝆂𝆅-𝆋𝆪-𝆭𝉂-𝉄𝨀-𝨶𝨻-𝩬𝩵𝪄𝪛-𝪟𝪡-𝪯𞀀-𞀆𞀈-𞀘𞀛-𞀡𞀣𞀤𞀦-𞣐𞀪-𞣖𞥄-𞥊󠄀-󠇯]+')
 
 
 preamble async_utils:
   source: jinja2/async_utils.py
-  body: |
+  imports: |
     import inspect
     import typing as t
     from functools import WRAPPER_ASSIGNMENTS
     from functools import wraps
     from .utils import _PassArg
     from .utils import pass_eval_context
+  body: |
     V = t.TypeVar('V')
     _common_primitives = {int, float, bool, str, list, dict, tuple, type(None)}
 
 
 preamble bccache:
   source: jinja2/bccache.py
-  body: |
-    'The optional bytecode cache system. This is useful if you have very\ncomplex template situations and the compilation of all those templates\nslows down your application too much.\n\nSituations where this is useful are often forking web applications that\nare initialized on the first request.\n'
+  imports: |
     import errno
     import fnmatch
     import marshal
@@ -72,6 +74,8 @@ preamble bccache:
     from hashlib import sha1
     from io import BytesIO
     from types import CodeType
+  body: |
+    'The optional bytecode cache system. This is useful if you have very\ncomplex template situations and the compilation of all those templates\nslows down your application too much.\n\nSituations where this is useful are often forking web applications that\nare initialized on the first request.\n'
     if t.TYPE_CHECKING:
         import typing_extensions as te
         from .environment import Environment
@@ -258,8 +262,7 @@ preamble bccache:
 
 preamble compiler:
   source: jinja2/compiler.py
-  body: |
-    'Compiles nodes from the parser into Python code.'
+  imports: |
     import typing as t
     from contextlib import contextmanager
     from functools import update_wrapper
@@ -280,6 +283,8 @@ preamble compiler:
     from .utils import _PassArg
     from .utils import concat
     from .visitor import NodeVisitor
+  body: |
+    'Compiles nodes from the parser into Python code.'
     if t.TYPE_CHECKING:
         import typing_extensions as te
         from .environment import Environment
@@ -620,7 +625,7 @@ preamble constants:
 
 preamble debug:
   source: jinja2/debug.py
-  body: |
+  imports: |
     import sys
     import typing as t
     from types import CodeType
@@ -628,13 +633,14 @@ preamble debug:
     from .exceptions import TemplateSyntaxError
     from .utils import internal_code
     from .utils import missing
+  body: |
     if t.TYPE_CHECKING:
         from .runtime import Context
 
 
 preamble defaults:
   source: jinja2/defaults.py
-  body: |
+  imports: |
     import typing as t
     from .filters import FILTERS as DEFAULT_FILTERS
     from .tests import TESTS as DEFAULT_TESTS
@@ -642,6 +648,7 @@ preamble defaults:
     from .utils import generate_lorem_ipsum
     from .utils import Joiner
     from .utils import Namespace
+  body: |
     if t.TYPE_CHECKING:
         import typing_extensions as te
     BLOCK_START_STRING = '{%'
@@ -662,8 +669,7 @@ preamble defaults:
 
 preamble environment:
   source: jinja2/environment.py
-  body: |
-    'Classes for managing templates and their runtime and compile time\noptions.\n'
+  imports: |
     import os
     import typing
     import typing as t
@@ -713,6 +719,8 @@ preamble environment:
     from .utils import internalcode
     from .utils import LRUCache
     from .utils import missing
+  body: |
+    'Classes for managing templates and their runtime and compile time\noptions.\n'
     if t.TYPE_CHECKING:
         import typing_extensions as te
         from .bccache import BytecodeCache
@@ -1479,8 +1487,9 @@ preamble environment:
 
 preamble exceptions:
   source: jinja2/exceptions.py
-  body: |
+  imports: |
     import typing as t
+  body: |
     if t.TYPE_CHECKING:
         from .runtime import Undefined
     class TemplateError(Exception):
@@ -1589,8 +1598,7 @@ preamble exceptions:
 
 preamble ext:
   source: jinja2/ext.py
-  body: |
-    'Extension API for adding custom tags and behavior.'
+  imports: |
     import pprint
     import re
     import typing as t
@@ -1605,6 +1613,8 @@ preamble ext:
     from .runtime import Undefined
     from .utils import import_string
     from .utils import pass_context
+  body: |
+    'Extension API for adding custom tags and behavior.'
     if t.TYPE_CHECKING:
         import typing_extensions as te
         from .lexer import Token
@@ -1758,8 +1768,7 @@ preamble ext:
 
 preamble filters:
   source: jinja2/filters.py
-  body: |
-    'Built-in template filters used with the ``|`` operator.'
+  imports: |
     import math
     import random
     import re
@@ -1784,6 +1793,8 @@ preamble filters:
     from .utils import pformat
     from .utils import url_quote
     from .utils import urlize
+  body: |
+    'Built-in template filters used with the ``|`` operator.'
     if t.TYPE_CHECKING:
         import typing_extensions as te
         from .environment import Environment
@@ -1816,10 +1827,11 @@ preamble filters:
 
 preamble idtracking:
   source: jinja2/idtracking.py
-  body: |
+  imports: |
     import typing as t
     from . import nodes
     from .visitor import NodeVisitor
+  body: |
     VAR_LOAD_PARAMETER = 'param'
     VAR_LOAD_RESOLVE = 'resolve'
     VAR_LOAD_ALIAS = 'alias'
@@ -1887,8 +1899,7 @@ preamble idtracking:
 
 preamble loaders:
   source: jinja2/loaders.py
-  body: |
-    'API and implementations for loading templates from different data\nsources.\n'
+  imports: |
     import importlib.util
     import os
     import posixpath
@@ -1902,6 +1913,8 @@ preamble loaders:
     from types import ModuleType
     from .exceptions import TemplateNotFound
     from .utils import internalcode
+  body: |
+    'API and implementations for loading templates from different data\nsources.\n'
     if t.TYPE_CHECKING:
         from .environment import Environment
         from .environment import Template
@@ -2163,12 +2176,13 @@ preamble loaders:
 
 preamble meta:
   source: jinja2/meta.py
-  body: |
-    'Functions that expose information about templates that might be\ninteresting for introspection.\n'
+  imports: |
     import typing as t
     from . import nodes
     from .compiler import CodeGenerator
     from .compiler import Frame
+  body: |
+    'Functions that expose information about templates that might be\ninteresting for introspection.\n'
     if t.TYPE_CHECKING:
         from .environment import Environment
     class TrackingCodeGenerator(CodeGenerator):
@@ -2191,7 +2205,7 @@ preamble meta:
 
 preamble nativetypes:
   source: jinja2/nativetypes.py
-  body: |
+  imports: |
     import typing as t
     from ast import literal_eval
     from ast import parse
@@ -2204,6 +2218,7 @@ preamble nativetypes:
     from .compiler import has_safe_repr
     from .environment import Environment
     from .environment import Template
+  body: |
     class NativeCodeGenerator(CodeGenerator):
         """A code generator which renders Python types by not adding
         ``str()`` around output nodes.
@@ -2228,11 +2243,12 @@ preamble nativetypes:
 
 preamble optimizer:
   source: jinja2/optimizer.py
-  body: |
-    "The optimizer tries to constant fold expressions and modify the AST\nin place so that it should be faster to evaluate.\n\nBecause the AST does not contain all the scoping information and the\ncompiler has to find that out, we cannot do all the optimizations we\nwant. For example, loop unrolling doesn't work because unrolled loops\nwould have a different scope. The solution would be a second syntax tree\nthat stored the scoping rules.\n"
+  imports: |
     import typing as t
     from . import nodes
     from .visitor import NodeTransformer
+  body: |
+    "The optimizer tries to constant fold expressions and modify the AST\nin place so that it should be faster to evaluate.\n\nBecause the AST does not contain all the scoping information and the\ncompiler has to find that out, we cannot do all the optimizations we\nwant. For example, loop unrolling doesn't work because unrolled loops\nwould have a different scope. The solution would be a second syntax tree\nthat stored the scoping rules.\n"
     if t.TYPE_CHECKING:
         from .environment import Environment
     class Optimizer(NodeTransformer):
@@ -2243,8 +2259,7 @@ preamble optimizer:
 
 preamble parser:
   source: jinja2/parser.py
-  body: |
-    'Parse tokens from the lexer into nodes for the compiler.'
+  imports: |
     import typing
     import typing as t
     from . import nodes
@@ -2252,6 +2267,8 @@ preamble parser:
     from .exceptions import TemplateSyntaxError
     from .lexer import describe_token
     from .lexer import describe_token_expr
+  body: |
+    'Parse tokens from the lexer into nodes for the compiler.'
     if t.TYPE_CHECKING:
         import typing_extensions as te
         from .environment import Environment
@@ -2379,8 +2396,7 @@ preamble parser:
 
 preamble runtime:
   source: jinja2/runtime.py
-  body: |
-    'The runtime functions and state used by compiled templates.'
+  imports: |
     import functools
     import sys
     import typing as t
@@ -2402,6 +2418,8 @@ preamble runtime:
     from .utils import Namespace
     from .utils import object_type_repr
     from .utils import pass_eval_context
+  body: |
+    'The runtime functions and state used by compiled templates.'
     V = t.TypeVar('V')
     F = t.TypeVar('F', bound=t.Callable[..., t.Any])
     if t.TYPE_CHECKING:
@@ -2939,8 +2957,7 @@ preamble runtime:
 
 preamble sandbox:
   source: jinja2/sandbox.py
-  body: |
-    'A sandbox layer that ensures unsafe operations cannot be performed.\nUseful when the template itself comes from an untrusted source.\n'
+  imports: |
     import operator
     import types
     import typing as t
@@ -2954,6 +2971,8 @@ preamble sandbox:
     from .exceptions import SecurityError
     from .runtime import Context
     from .runtime import Undefined
+  body: |
+    'A sandbox layer that ensures unsafe operations cannot be performed.\nUseful when the template itself comes from an untrusted source.\n'
     F = t.TypeVar('F', bound=t.Callable[..., t.Any])
     MAX_RANGE = 100000
     UNSAFE_FUNCTION_ATTRIBUTES: t.Set[str] = set()
@@ -3059,14 +3078,15 @@ preamble sandbox:
 
 preamble tests:
   source: jinja2/tests.py
-  body: |
-    'Built-in template tests used with the ``is`` operator.'
+  imports: |
     import operator
     import typing as t
     from collections import abc
     from numbers import Number
     from .runtime import Undefined
     from .utils import pass_environment
+  body: |
+    'Built-in template tests used with the ``is`` operator.'
     if t.TYPE_CHECKING:
         from .environment import Environment
     TESTS = {'odd': test_odd, 'even': test_even, 'divisibleby': test_divisibleby, 'defined': test_defined, 'undefined': test_undefined, 'filter': test_filter, 'test': test_test, 'none': test_none, 'boolean': test_boolean, 'false': test_false, 'true': test_true, 'integer': test_integer, 'float': test_float, 'lower': test_lower, 'upper': test_upper, 'string': test_string, 'mapping': test_mapping, 'number': test_number, 'sequence': test_sequence, 'iterable': test_iterable, 'callable': callable, 'sameas': test_sameas, 'escaped': test_escaped, 'in': test_in, '==': operator.eq, 'eq': operator.eq, 'equalto': operator.eq, '!=': operator.ne, 'ne': operator.ne, '>': operator.gt, 'gt': operator.gt, 'greaterthan': operator.gt, 'ge': operator.ge, '>=': operator.ge, '<': operator.lt, 'lt': operator.lt, 'lessthan': operator.lt, '<=': operator.le, 'le': operator.le}
@@ -3074,7 +3094,7 @@ preamble tests:
 
 preamble utils:
   source: jinja2/utils.py
-  body: |
+  imports: |
     import enum
     import json
     import os
@@ -3088,6 +3108,7 @@ preamble utils:
     from types import CodeType
     from urllib.parse import quote_from_bytes
     import markupsafe
+  body: |
     if t.TYPE_CHECKING:
         import typing_extensions as te
     F = t.TypeVar('F', bound=t.Callable[..., t.Any])
@@ -3295,10 +3316,11 @@ preamble utils:
 
 preamble visitor:
   source: jinja2/visitor.py
-  body: |
-    'API for traversing the AST nodes. Implemented by the compiler and\nmeta introspection.\n'
+  imports: |
     import typing as t
     from .nodes import Node
+  body: |
+    'API for traversing the AST nodes. Implemented by the compiler and\nmeta introspection.\n'
     if t.TYPE_CHECKING:
         import typing_extensions as te
 

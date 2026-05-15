@@ -1,9 +1,6 @@
 preamble __init__:
   source: cachetools/__init__.py
-  body: |
-    'Extensible memoizing collections and decorators.'
-    __all__ = ('Cache', 'FIFOCache', 'LFUCache', 'LRUCache', 'MRUCache', 'RRCache', 'TLRUCache', 'TTLCache', 'cached', 'cachedmethod')
-    __version__ = '5.5.0'
+  imports: |
     import collections
     import collections.abc
     import functools
@@ -11,6 +8,10 @@ preamble __init__:
     import random
     import time
     from . import keys
+  body: |
+    'Extensible memoizing collections and decorators.'
+    __all__ = ('Cache', 'FIFOCache', 'LFUCache', 'LRUCache', 'MRUCache', 'RRCache', 'TLRUCache', 'TTLCache', 'cached', 'cachedmethod')
+    __version__ = '5.5.0'
     class _DefaultSize:
         __slots__ = ()
 
@@ -587,9 +588,7 @@ preamble __init__:
 
 preamble func:
   source: cachetools/func.py
-  body: |
-    '`functools.lru_cache` compatible memoizing function decorators.'
-    __all__ = ('fifo_cache', 'lfu_cache', 'lru_cache', 'mru_cache', 'rr_cache', 'ttl_cache')
+  imports: |
     import math
     import random
     import time
@@ -600,6 +599,9 @@ preamble func:
     from . import FIFOCache, LFUCache, LRUCache, MRUCache, RRCache, TTLCache
     from . import cached
     from . import keys
+  body: |
+    '`functools.lru_cache` compatible memoizing function decorators.'
+    __all__ = ('fifo_cache', 'lfu_cache', 'lru_cache', 'mru_cache', 'rr_cache', 'ttl_cache')
     class _UnboundTTLCache(TTLCache):
 
         def __init__(self, ttl, timer):

@@ -1,6 +1,6 @@
 preamble __init__:
   source: imapclient/__init__.py
-  body: |
+  imports: |
     from .imapclient import *
     from .response_parser import *
     from .tls import *
@@ -11,7 +11,7 @@ preamble __init__:
 
 preamble config:
   source: imapclient/config.py
-  body: |
+  imports: |
     import argparse
     import configparser
     import json
@@ -21,6 +21,7 @@ preamble config:
     import urllib.request
     from typing import Any, Callable, Dict, Optional, Tuple, TYPE_CHECKING, TypeVar
     import imapclient
+  body: |
     T = TypeVar('T')
     OAUTH2_REFRESH_URLS = {'imap.gmail.com': 'https://accounts.google.com/o/oauth2/token', 'imap.mail.yahoo.com': 'https://api.login.yahoo.com/oauth2/get_token'}
     _oauth2_cache: Dict[Tuple[str, str, str, str], str] = {}
@@ -28,19 +29,21 @@ preamble config:
 
 preamble datetime_util:
   source: imapclient/datetime_util.py
-  body: |
+  imports: |
     import re
     from datetime import datetime
     from email.utils import parsedate_tz
     from .fixed_offset import FixedOffset
+  body: |
     _SHORT_MONTHS = ' Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' ')
     _rfc822_dotted_time = re.compile('\\w+, ?\\d{1,2} \\w+ \\d\\d(\\d\\d)? \\d\\d?\\.\\d\\d?\\.\\d\\d?.*')
 
 
 preamble exceptions:
   source: imapclient/exceptions.py
-  body: |
+  imports: |
     import imaplib
+  body: |
     IMAPClientError = imaplib.IMAP4.error
     IMAPClientAbortError = imaplib.IMAP4.abort
     IMAPClientReadOnlyError = imaplib.IMAP4.readonly
@@ -71,10 +74,11 @@ preamble exceptions:
 
 preamble fixed_offset:
   source: imapclient/fixed_offset.py
-  body: |
+  imports: |
     import datetime
     import time
     from typing import Optional
+  body: |
     ZERO = datetime.timedelta(0)
     class FixedOffset(datetime.tzinfo):
         """
@@ -100,10 +104,11 @@ preamble fixed_offset:
 
 preamble imap4:
   source: imapclient/imap4.py
-  body: |
+  imports: |
     import imaplib
     import socket
     from typing import Optional
+  body: |
     class IMAP4WithTimeout(imaplib.IMAP4):
 
         def __init__(self, address: str, port: int, timeout: Optional[float]) -> None:
@@ -113,16 +118,17 @@ preamble imap4:
 
 preamble imap_utf7:
   source: imapclient/imap_utf7.py
-  body: |
+  imports: |
     import binascii
     from typing import List, Union
+  body: |
     AMPERSAND_ORD = ord('&')
     DASH_ORD = ord('-')
 
 
 preamble imapclient:
   source: imapclient/imapclient.py
-  body: |
+  imports: |
     import dataclasses
     import functools
     import imaplib
@@ -143,6 +149,7 @@ preamble imapclient:
     from .imap_utf7 import encode as encode_utf7
     from .response_parser import parse_fetch_response, parse_message_list, parse_response
     from .util import assert_imap_protocol, chunk, to_bytes, to_unicode
+  body: |
     if hasattr(select, 'poll'):
         POLL_SUPPORT = True
     else:
@@ -1254,21 +1261,23 @@ preamble imapclient:
 
 preamble interact:
   source: imapclient/interact.py
-  body: |
+  imports: |
     import argparse
     from getpass import getpass
     from . import imapclient
     from .config import create_client_from_config, get_config_defaults, parse_config_file
+  body: |
     if __name__ == '__main__':
         main()
 
 
 preamble response_lexer:
   source: imapclient/response_lexer.py
-  body: |
-    '\nA lexical analyzer class for IMAP responses.\n\nAlthough Lexer does all the work, TokenSource is the class to use for\nexternal callers.\n'
+  imports: |
     from typing import Iterator, List, Optional, Tuple, TYPE_CHECKING, Union
     from .util import assert_imap_protocol
+  body: |
+    '\nA lexical analyzer class for IMAP responses.\n\nAlthough Lexer does all the work, TokenSource is the class to use for\nexternal callers.\n'
     __all__ = ['TokenSource']
     CTRL_CHARS = frozenset((c for c in range(32)))
     ALL_CHARS = frozenset((c for c in range(256)))
@@ -1338,8 +1347,7 @@ preamble response_lexer:
 
 preamble response_parser:
   source: imapclient/response_parser.py
-  body: |
-    '\nParsing for IMAP command responses with focus on FETCH responses as\nreturned by imaplib.\n\nInitially inspired by http://effbot.org/zone/simple-iterator-parser.htm\n'
+  imports: |
     import datetime
     import re
     import sys
@@ -1350,6 +1358,8 @@ preamble response_parser:
     from .response_lexer import TokenSource
     from .response_types import Address, BodyData, Envelope, SearchIds
     from .typing_imapclient import _Atom
+  body: |
+    '\nParsing for IMAP command responses with focus on FETCH responses as\nreturned by imaplib.\n\nInitially inspired by http://effbot.org/zone/simple-iterator-parser.htm\n'
     __all__ = ['parse_response', 'parse_message_list']
     _msg_id_pattern = re.compile('(\\d+(?: +\\d+)*)')
     _ParseFetchResponseInnerDict = Dict[bytes, Optional[Union[datetime.datetime, int, BodyData, Envelope, _Atom]]]
@@ -1357,13 +1367,14 @@ preamble response_parser:
 
 preamble response_types:
   source: imapclient/response_types.py
-  body: |
+  imports: |
     import dataclasses
     import datetime
     from email.utils import formataddr
     from typing import Any, List, Optional, Tuple, TYPE_CHECKING, Union
     from .typing_imapclient import _Atom
     from .util import to_unicode
+  body: |
     @dataclasses.dataclass
     class Envelope:
         """Represents envelope structures of messages. Returned when parsing
@@ -1471,10 +1482,11 @@ preamble response_types:
 
 preamble testable_imapclient:
   source: imapclient/testable_imapclient.py
-  body: |
+  imports: |
     from typing import Any, Dict
     from unittest.mock import Mock
     from .imapclient import IMAPClient
+  body: |
     class TestableIMAPClient(IMAPClient):
         """Wrapper of :py:class:`imapclient.IMAPClient` that mocks all
         interaction with real IMAP server.
@@ -1498,13 +1510,14 @@ preamble testable_imapclient:
 
 preamble tls:
   source: imapclient/tls.py
-  body: |
-    "\nThis module contains IMAPClient's functionality related to Transport\nLayer Security (TLS a.k.a. SSL).\n"
+  imports: |
     import imaplib
     import io
     import socket
     import ssl
     from typing import Optional, TYPE_CHECKING
+  body: |
+    "\nThis module contains IMAPClient's functionality related to Transport\nLayer Security (TLS a.k.a. SSL).\n"
     if TYPE_CHECKING:
         from typing_extensions import Buffer
     class IMAP4_TLS(imaplib.IMAP4):
@@ -1522,18 +1535,20 @@ preamble tls:
 
 preamble typing_imapclient:
   source: imapclient/typing_imapclient.py
-  body: |
+  imports: |
     from typing import Tuple, Union
+  body: |
     _AtomPart = Union[None, int, bytes]
     _Atom = Union[_AtomPart, Tuple['_Atom', ...]]
 
 
 preamble util:
   source: imapclient/util.py
-  body: |
+  imports: |
     import logging
     from typing import Iterator, Optional, Tuple, Union
     from . import exceptions
+  body: |
     logger = logging.getLogger(__name__)
     _TupleAtomPart = Union[None, int, bytes]
     _TupleAtom = Tuple[Union[_TupleAtomPart, '_TupleAtom'], ...]
@@ -1541,8 +1556,9 @@ preamble util:
 
 preamble version:
   source: imapclient/version.py
-  body: |
+  imports: |
     from typing import Tuple
+  body: |
     version_info = (3, 0, 1, 'final')
     version = _imapclient_version_string(version_info)
     maintainer = 'IMAPClient Maintainers'

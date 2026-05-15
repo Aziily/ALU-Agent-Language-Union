@@ -1,23 +1,25 @@
 preamble __init__:
   source: deprecated/__init__.py
+  imports: |
+    from deprecated.classic import deprecated
   body: |
     '\nDeprecated Library\n==================\n\nPython ``@deprecated`` decorator to deprecate old python classes, functions or methods.\n\n'
     __version__ = '1.2.14'
     __author__ = u'Laurent LAPORTE <tantale.solutions@gmail.com>'
     __date__ = 'unreleased'
     __credits__ = '(c) Laurent LAPORTE'
-    from deprecated.classic import deprecated
 
 
 preamble classic:
   source: deprecated/classic.py
-  body: |
-    '\nClassic deprecation warning\n===========================\n\nClassic ``@deprecated`` decorator to deprecate old python classes, functions or methods.\n\n.. _The Warnings Filter: https://docs.python.org/3/library/warnings.html#the-warnings-filter\n'
+  imports: |
     import functools
     import inspect
     import platform
     import warnings
     import wrapt
+  body: |
+    '\nClassic deprecation warning\n===========================\n\nClassic ``@deprecated`` decorator to deprecate old python classes, functions or methods.\n\n.. _The Warnings Filter: https://docs.python.org/3/library/warnings.html#the-warnings-filter\n'
     try:
         import wrapt._wrappers
         _routine_stacklevel = 2
@@ -159,13 +161,14 @@ preamble classic:
 
 preamble sphinx:
   source: deprecated/sphinx.py
-  body: |
-    '\nSphinx directive integration\n============================\n\nWe usually need to document the life-cycle of functions and classes:\nwhen they are created, modified or deprecated.\n\nTo do that, `Sphinx <http://www.sphinx-doc.org>`_ has a set\nof `Paragraph-level markups <http://www.sphinx-doc.org/en/stable/markup/para.html>`_:\n\n- ``versionadded``: to document the version of the project which added the described feature to the library,\n- ``versionchanged``: to document changes of a feature,\n- ``deprecated``: to document a deprecated feature.\n\nThe purpose of this module is to defined decorators which adds this Sphinx directives\nto the docstring of your function and classes.\n\nOf course, the ``@deprecated`` decorator will emit a deprecation warning\nwhen the function/method is called or the class is constructed.\n'
+  imports: |
     import re
     import textwrap
     import wrapt
     from deprecated.classic import ClassicAdapter
     from deprecated.classic import deprecated as _classic_deprecated
+  body: |
+    '\nSphinx directive integration\n============================\n\nWe usually need to document the life-cycle of functions and classes:\nwhen they are created, modified or deprecated.\n\nTo do that, `Sphinx <http://www.sphinx-doc.org>`_ has a set\nof `Paragraph-level markups <http://www.sphinx-doc.org/en/stable/markup/para.html>`_:\n\n- ``versionadded``: to document the version of the project which added the described feature to the library,\n- ``versionchanged``: to document changes of a feature,\n- ``deprecated``: to document a deprecated feature.\n\nThe purpose of this module is to defined decorators which adds this Sphinx directives\nto the docstring of your function and classes.\n\nOf course, the ``@deprecated`` decorator will emit a deprecation warning\nwhen the function/method is called or the class is constructed.\n'
     class SphinxAdapter(ClassicAdapter):
         """
         Sphinx adapter -- *for advanced usage only*

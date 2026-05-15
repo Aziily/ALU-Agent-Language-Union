@@ -11,9 +11,10 @@ preamble __about__:
 
 preamble __init__:
   source: portalocker/__init__.py
-  body: |
+  imports: |
     from . import __about__, constants, exceptions, portalocker
     from .utils import BoundedSemaphore, Lock, RLock, TemporaryFileLock, open_atomic
+  body: |
     try:
         from .redis import RedisLock
     except ImportError:
@@ -38,13 +39,14 @@ preamble __init__:
 
 preamble __main__:
   source: portalocker/__main__.py
-  body: |
+  imports: |
     import argparse
     import logging
     import os
     import pathlib
     import re
     import typing
+  body: |
     base_path = pathlib.Path(__file__).parent.parent
     src_path = base_path / 'portalocker'
     dist_path = base_path / 'dist'
@@ -61,10 +63,11 @@ preamble __main__:
 
 preamble constants:
   source: portalocker/constants.py
-  body: |
-    '\nLocking constants\n\nLock types:\n\n- `EXCLUSIVE` exclusive lock\n- `SHARED` shared lock\n\nLock flags:\n\n- `NON_BLOCKING` non-blocking\n\nManually unlock, only needed internally\n\n- `UNBLOCK` unlock\n'
+  imports: |
     import enum
     import os
+  body: |
+    '\nLocking constants\n\nLock types:\n\n- `EXCLUSIVE` exclusive lock\n- `SHARED` shared lock\n\nLock flags:\n\n- `NON_BLOCKING` non-blocking\n\nManually unlock, only needed internally\n\n- `UNBLOCK` unlock\n'
     if os.name == 'nt':
         import msvcrt
         LOCK_EX = 1
@@ -88,8 +91,9 @@ preamble constants:
 
 preamble exceptions:
   source: portalocker/exceptions.py
-  body: |
+  imports: |
     import typing
+  body: |
     class BaseLockException(Exception):
         LOCK_FAILED = 1
 
@@ -106,10 +110,11 @@ preamble exceptions:
 
 preamble portalocker:
   source: portalocker/portalocker.py
-  body: |
+  imports: |
     import os
     import typing
     from . import constants, exceptions
+  body: |
     LockFlags = constants.LockFlags
     class HasFileno(typing.Protocol):
         pass
@@ -131,7 +136,7 @@ preamble portalocker:
 
 preamble redis:
   source: portalocker/redis.py
-  body: |
+  imports: |
     import _thread
     import json
     import logging
@@ -140,6 +145,7 @@ preamble redis:
     import typing
     from redis import client
     from . import exceptions, utils
+  body: |
     logger = logging.getLogger(__name__)
     DEFAULT_UNAVAILABLE_TIMEOUT = 1
     DEFAULT_THREAD_SLEEP_TIME = 0.1
@@ -208,7 +214,7 @@ preamble redis:
 
 preamble utils:
   source: portalocker/utils.py
-  body: |
+  imports: |
     import abc
     import atexit
     import contextlib
@@ -221,6 +227,7 @@ preamble utils:
     import typing
     import warnings
     from . import constants, exceptions, portalocker
+  body: |
     logger = logging.getLogger(__name__)
     DEFAULT_TIMEOUT = 5
     DEFAULT_CHECK_INTERVAL = 0.25

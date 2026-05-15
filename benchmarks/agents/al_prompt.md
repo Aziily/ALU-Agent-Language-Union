@@ -24,11 +24,11 @@ Your job: **rewrite the entire agent-lang file with all stub `body:` blocks repl
 
 ## Strict rules
 
-1. Output the **complete agent-lang source** (not a diff). Every flow / code node from the input MUST appear in the output, in the same order, with the same declarator and same name.
-2. Only the **inner Python code** inside each `code` node's `body: |` block may be modified. **All other lines stay BYTE-IDENTICAL.**
+1. Output the **complete agent-lang source** (not a diff). Every flow / code / preamble node from the input MUST appear in the output, in the same order, with the same declarator and same name.
+2. Only the **inner Python code** inside each `code` node's `body: |` block may be modified. **All other lines stay BYTE-IDENTICAL.** This explicitly includes every `preamble` node's `imports:` and `body:` blocks — those are module-level context, not editable.
 3. Each `code` body MUST start with `def <node_name>(...):` (or `@decorator` then `def`). The function name MUST match the agent-lang node name UNLESS the node name uses `<Class>__<method>` form (in which case the function name is the method portion — see the "class method" pattern in the authoring guide).
 4. The body must be valid Python that would `ast.parse` cleanly.
-5. Use only the imports already available in the project + Python stdlib. If you need a new import inside the body, add it inside the function.
+5. **Use the names already imported in the relevant preamble's `imports:` block.** The `imports:` block lists every `import` / `from ... import ...` statement that is already executed at module load time, so those names are in scope. Do NOT duplicate them inside a `code` body. If you need a new import that isn't in any preamble, add it inside the function body.
 6. Follow the docstring inside the body literally — that's your spec for what the function does.
 
 ## CRITICAL — Do NOT drop any field keyword

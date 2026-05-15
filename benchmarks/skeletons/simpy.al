@@ -1,7 +1,6 @@
 preamble __init__:
   source: simpy/__init__.py
-  body: |
-    "\nThe ``simpy`` module aggregates SimPy's most used components into a single\nnamespace. This is purely for convenience. You can of course also access\neverything (and more!) via their actual submodules.\n\nThe following tables list all the available components in this module.\n\n{toc}\n\n"
+  imports: |
     from __future__ import annotations
     import importlib.metadata
     from typing import Tuple, Type
@@ -12,6 +11,8 @@ preamble __init__:
     from simpy.resources.resource import PreemptiveResource, PriorityResource, Resource
     from simpy.resources.store import FilterStore, PriorityItem, PriorityStore, Store
     from simpy.rt import RealtimeEnvironment
+  body: |
+    "\nThe ``simpy`` module aggregates SimPy's most used components into a single\nnamespace. This is purely for convenience. You can of course also access\neverything (and more!) via their actual submodules.\n\nThe following tables list all the available components in this module.\n\n{toc}\n\n"
     __all__ = ['AllOf', 'AnyOf', 'Container', 'Environment', 'Event', 'FilterStore', 'Interrupt', 'PreemptiveResource', 'PriorityItem', 'PriorityResource', 'PriorityStore', 'Process', 'RealtimeEnvironment', 'Resource', 'SimPyException', 'Store', 'Timeout']
     _toc = (('Environments', (Environment, RealtimeEnvironment)), ('Events', (Event, Timeout, Process, AllOf, AnyOf, Interrupt)), ('Resources', (Resource, PriorityResource, PreemptiveResource, Container, Store, PriorityItem, PriorityStore, FilterStore)), ('Exceptions', (SimPyException, Interrupt)))
     if __doc__:
@@ -25,14 +26,15 @@ preamble __init__:
 
 preamble core:
   source: simpy/core.py
-  body: |
-    '\nCore components for event-discrete simulation environments.\n\n'
+  imports: |
     from __future__ import annotations
     from heapq import heappop, heappush
     from itertools import count
     from types import MethodType
     from typing import TYPE_CHECKING, Any, Generic, Iterable, List, Optional, Tuple, Type, TypeVar, Union
     from simpy.events import NORMAL, URGENT, AllOf, AnyOf, Event, EventPriority, Process, ProcessGenerator, Timeout
+  body: |
+    '\nCore components for event-discrete simulation environments.\n\n'
     Infinity: float = float('inf')
     T = TypeVar('T')
     class BoundClass(Generic[T]):
@@ -168,11 +170,12 @@ preamble core:
 
 preamble events:
   source: simpy/events.py
-  body: |
-    '\nThis module contains the basic event types used in SimPy.\n\nThe base class for all events is :class:`Event`. Though it can be directly\nused, there are several specialized subclasses of it.\n\n.. autosummary::\n\n    ~simpy.events.Event\n    ~simpy.events.Timeout\n    ~simpy.events.Process\n    ~simpy.events.AnyOf\n    ~simpy.events.AllOf\n\n'
+  imports: |
     from __future__ import annotations
     from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, Iterable, Iterator, List, NewType, Optional, Tuple, TypeVar
     from simpy.exceptions import Interrupt
+  body: |
+    '\nThis module contains the basic event types used in SimPy.\n\nThe base class for all events is :class:`Event`. Though it can be directly\nused, there are several specialized subclasses of it.\n\n.. autosummary::\n\n    ~simpy.events.Event\n    ~simpy.events.Timeout\n    ~simpy.events.Process\n    ~simpy.events.AnyOf\n    ~simpy.events.AllOf\n\n'
     if TYPE_CHECKING:
         from types import FrameType
         from simpy.core import Environment, SimTime
@@ -574,10 +577,11 @@ preamble events:
 
 preamble exceptions:
   source: simpy/exceptions.py
-  body: |
-    '\nSimPy specific exceptions.\n\n'
+  imports: |
     from __future__ import annotations
     from typing import Any, Optional
+  body: |
+    '\nSimPy specific exceptions.\n\n'
     class SimPyException(Exception):
         """Base class for all SimPy specific exceptions."""
     class Interrupt(SimPyException):
@@ -612,12 +616,13 @@ preamble resources___init__:
 
 preamble resources_base:
   source: simpy/resources/base.py
-  body: |
-    "\nBase classes of for SimPy's shared resource types.\n\n:class:`BaseResource` defines the abstract base resource. It supports *get* and\n*put* requests, which return :class:`Put` and :class:`Get` events respectively.\nThese events are triggered once the request has been completed.\n\n"
+  imports: |
     from __future__ import annotations
     from typing import TYPE_CHECKING, ClassVar, ContextManager, Generic, MutableSequence, Optional, Type, TypeVar, Union
     from simpy.core import BoundClass, Environment
     from simpy.events import Event, Process
+  body: |
+    "\nBase classes of for SimPy's shared resource types.\n\n:class:`BaseResource` defines the abstract base resource. It supports *get* and\n*put* requests, which return :class:`Put` and :class:`Get` events respectively.\nThese events are triggered once the request has been completed.\n\n"
     if TYPE_CHECKING:
         from types import TracebackType
     ResourceType = TypeVar('ResourceType', bound='BaseResource')
@@ -811,12 +816,13 @@ preamble resources_base:
 
 preamble resources_container:
   source: simpy/resources/container.py
-  body: |
-    "\nResource for sharing homogeneous matter between processes, either continuous\n(like water) or discrete (like apples).\n\nA :class:`Container` can be used to model the fuel tank of a gasoline station.\nTankers increase and refuelled cars decrease the amount of gas in the station's\nfuel tanks.\n\n"
+  imports: |
     from __future__ import annotations
     from typing import TYPE_CHECKING, Optional, Union
     from simpy.core import BoundClass, Environment
     from simpy.resources import base
+  body: |
+    "\nResource for sharing homogeneous matter between processes, either continuous\n(like water) or discrete (like apples).\n\nA :class:`Container` can be used to model the fuel tank of a gasoline station.\nTankers increase and refuelled cars decrease the amount of gas in the station's\nfuel tanks.\n\n"
     ContainerAmount = Union[int, float]
     class ContainerPut(base.Put):
         """Request to put *amount* of matter into the *container*. The request will
@@ -893,12 +899,13 @@ preamble resources_container:
 
 preamble resources_resource:
   source: simpy/resources/resource.py
-  body: |
-    '\nShared resources supporting priorities and preemption.\n\nThese resources can be used to limit the number of processes using them\nconcurrently. A process needs to *request* the usage right to a resource. Once\nthe usage right is not needed any more it has to be *released*. A gas station\ncan be modelled as a resource with a limited amount of fuel-pumps. Vehicles\narrive at the gas station and request to use a fuel-pump. If all fuel-pumps are\nin use, the vehicle needs to wait until one of the users has finished refueling\nand releases its fuel-pump.\n\nThese resources can be used by a limited number of processes at a time.\nProcesses *request* these resources to become a user and have to *release* them\nonce they are done. For example, a gas station with a limited number of fuel\npumps can be modeled with a `Resource`. Arriving vehicles request a fuel-pump.\nOnce one is available they refuel. When they are done, the release the\nfuel-pump and leave the gas station.\n\nRequesting a resource is modelled as "putting a process\' token into the\nresources" and releasing a resources correspondingly as "getting a process\'\ntoken out of the resource". Thus, calling ``request()``/``release()`` is\nequivalent to calling ``put()``/``get()``. Note, that releasing a resource will\nalways succeed immediately, no matter if a process is actually using a resource\nor not.\n\nBesides :class:`Resource`, there is a :class:`PriorityResource`, where\nprocesses can define a request priority, and a :class:`PreemptiveResource`\nwhose resource users can be preempted by requests with a higher priority.\n\n'
+  imports: |
     from __future__ import annotations
     from typing import TYPE_CHECKING, Any, List, Optional, Type
     from simpy.core import BoundClass, Environment, SimTime
     from simpy.resources import base
+  body: |
+    '\nShared resources supporting priorities and preemption.\n\nThese resources can be used to limit the number of processes using them\nconcurrently. A process needs to *request* the usage right to a resource. Once\nthe usage right is not needed any more it has to be *released*. A gas station\ncan be modelled as a resource with a limited amount of fuel-pumps. Vehicles\narrive at the gas station and request to use a fuel-pump. If all fuel-pumps are\nin use, the vehicle needs to wait until one of the users has finished refueling\nand releases its fuel-pump.\n\nThese resources can be used by a limited number of processes at a time.\nProcesses *request* these resources to become a user and have to *release* them\nonce they are done. For example, a gas station with a limited number of fuel\npumps can be modeled with a `Resource`. Arriving vehicles request a fuel-pump.\nOnce one is available they refuel. When they are done, the release the\nfuel-pump and leave the gas station.\n\nRequesting a resource is modelled as "putting a process\' token into the\nresources" and releasing a resources correspondingly as "getting a process\'\ntoken out of the resource". Thus, calling ``request()``/``release()`` is\nequivalent to calling ``put()``/``get()``. Note, that releasing a resource will\nalways succeed immediately, no matter if a process is actually using a resource\nor not.\n\nBesides :class:`Resource`, there is a :class:`PriorityResource`, where\nprocesses can define a request priority, and a :class:`PreemptiveResource`\nwhose resource users can be preempted by requests with a higher priority.\n\n'
     if TYPE_CHECKING:
         from types import TracebackType
         from simpy.events import Process
@@ -1063,13 +1070,14 @@ preamble resources_resource:
 
 preamble resources_store:
   source: simpy/resources/store.py
-  body: |
-    '\nShared resources for storing a possibly unlimited amount of objects supporting\nrequests for specific objects.\n\nThe :class:`Store` operates in a FIFO (first-in, first-out) order. Objects are\nretrieved from the store in the order they were put in. The *get* requests of a\n:class:`FilterStore` can be customized by a filter to only retrieve objects\nmatching a given criterion.\n\n'
+  imports: |
     from __future__ import annotations
     from heapq import heappop, heappush
     from typing import TYPE_CHECKING, Any, Callable, List, NamedTuple, Optional, Union
     from simpy.core import BoundClass, Environment
     from simpy.resources import base
+  body: |
+    '\nShared resources for storing a possibly unlimited amount of objects supporting\nrequests for specific objects.\n\nThe :class:`Store` operates in a FIFO (first-in, first-out) order. Objects are\nretrieved from the store in the order they were put in. The *get* requests of a\n:class:`FilterStore` can be customized by a filter to only retrieve objects\nmatching a given criterion.\n\n'
     class StorePut(base.Put):
         """Request to put *item* into the *store*. The request is triggered once
         there is space for the item in the store.
@@ -1186,10 +1194,11 @@ preamble resources_store:
 
 preamble rt:
   source: simpy/rt.py
-  body: |
-    'Execution environment for events that synchronizes passing of time\nwith the real-time (aka *wall-clock time*).\n\n'
+  imports: |
     from time import monotonic, sleep
     from simpy.core import EmptySchedule, Environment, Infinity, SimTime
+  body: |
+    'Execution environment for events that synchronizes passing of time\nwith the real-time (aka *wall-clock time*).\n\n'
     class RealtimeEnvironment(Environment):
         """Execution environment for an event-based simulation which is
         synchronized with the real-time (also known as wall-clock time). A time
@@ -1247,11 +1256,12 @@ preamble rt:
 
 preamble util:
   source: simpy/util.py
-  body: |
-    '\nA collection of utility functions:\n\n.. autosummary::\n   start_delayed\n\n'
+  imports: |
     from typing import Generator
     from simpy.core import Environment, SimTime
     from simpy.events import Event, Process, ProcessGenerator
+  body: |
+    '\nA collection of utility functions:\n\n.. autosummary::\n   start_delayed\n\n'
 
 
 flow simpy_lib:

@@ -1,31 +1,33 @@
 preamble __init__:
   source: babel/__init__.py
+  imports: |
+    from babel.core import Locale, UnknownLocaleError, default_locale, get_locale_identifier, negotiate_locale, parse_locale
   body: |
     '\n    babel\n    ~~~~~\n\n    Integrated collection of utilities that assist in internationalizing and\n    localizing applications.\n\n    This package is basically composed of two major parts:\n\n     * tools to build and work with ``gettext`` message catalogs\n     * a Python interface to the CLDR (Common Locale Data Repository), providing\n       access to various locale display names, localized number and date\n       formatting, etc.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
-    from babel.core import Locale, UnknownLocaleError, default_locale, get_locale_identifier, negotiate_locale, parse_locale
     __version__ = '2.14.0'
     __all__ = ['Locale', 'UnknownLocaleError', 'default_locale', 'get_locale_identifier', 'negotiate_locale', 'parse_locale']
 
 
 preamble dates:
   source: babel/dates.py
-  body: |
-    '\n    babel.dates\n    ~~~~~~~~~~~\n\n    Locale dependent formatting and parsing of dates and times.\n\n    The default locale for the functions in this module is determined by the\n    following environment variables, in that order:\n\n     * ``LC_TIME``,\n     * ``LC_ALL``, and\n     * ``LANG``\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  imports: |
     from __future__ import annotations
     import re
     import warnings
     from functools import lru_cache
     from typing import TYPE_CHECKING, SupportsInt
-    try:
-        import pytz
-    except ModuleNotFoundError:
-        pytz = None
-        import zoneinfo
     import datetime
     from collections.abc import Iterable
     from babel import localtime
     from babel.core import Locale, default_locale, get_global
     from babel.localedata import LocaleDataDict
+  body: |
+    '\n    babel.dates\n    ~~~~~~~~~~~\n\n    Locale dependent formatting and parsing of dates and times.\n\n    The default locale for the functions in this module is determined by the\n    following environment variables, in that order:\n\n     * ``LC_TIME``,\n     * ``LC_ALL``, and\n     * ``LANG``\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+    try:
+        import pytz
+    except ModuleNotFoundError:
+        pytz = None
+        import zoneinfo
     if TYPE_CHECKING:
         from typing_extensions import Literal, TypeAlias
         _Instant: TypeAlias = datetime.date | datetime.time | float | None
@@ -210,19 +212,20 @@ preamble dates:
 
 preamble languages:
   source: babel/languages.py
-  body: |
+  imports: |
     from __future__ import annotations
     from babel.core import get_global
 
 
 preamble lists:
   source: babel/lists.py
-  body: |
-    '\n    babel.lists\n    ~~~~~~~~~~~\n\n    Locale dependent formatting of lists.\n\n    The default locale for the functions in this module is determined by the\n    following environment variables, in that order:\n\n     * ``LC_ALL``, and\n     * ``LANG``\n\n    :copyright: (c) 2015-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  imports: |
     from __future__ import annotations
     from collections.abc import Sequence
     from typing import TYPE_CHECKING
     from babel.core import Locale, default_locale
+  body: |
+    '\n    babel.lists\n    ~~~~~~~~~~~\n\n    Locale dependent formatting of lists.\n\n    The default locale for the functions in this module is determined by the\n    following environment variables, in that order:\n\n     * ``LC_ALL``, and\n     * ``LANG``\n\n    :copyright: (c) 2015-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     if TYPE_CHECKING:
         from typing_extensions import Literal
     DEFAULT_LOCALE = default_locale()
@@ -230,8 +233,7 @@ preamble lists:
 
 preamble localedata:
   source: babel/localedata.py
-  body: |
-    '\n    babel.localedata\n    ~~~~~~~~~~~~~~~~\n\n    Low-level locale data access.\n\n    :note: The `Locale` class, which uses this module under the hood, provides a\n           more convenient interface for accessing the locale data.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  imports: |
     from __future__ import annotations
     import os
     import pickle
@@ -243,6 +245,8 @@ preamble localedata:
     from functools import lru_cache
     from itertools import chain
     from typing import Any
+  body: |
+    '\n    babel.localedata\n    ~~~~~~~~~~~~~~~~\n\n    Low-level locale data access.\n\n    :note: The `Locale` class, which uses this module under the hood, provides a\n           more convenient interface for accessing the locale data.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     _cache: dict[str, Any] = {}
     _cache_lock = threading.RLock()
     _dirname = os.path.join(os.path.dirname(__file__), 'locale-data')
@@ -310,15 +314,16 @@ preamble localedata:
 
 preamble localtime___init__:
   source: babel/localtime/__init__.py
-  body: |
-    '\n    babel.localtime\n    ~~~~~~~~~~~~~~~\n\n    Babel specific fork of tzlocal to determine the local timezone\n    of the system.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  imports: |
     import datetime
     import sys
+    from babel.localtime._fallback import DSTDIFF, DSTOFFSET, STDOFFSET, ZERO, _FallbackLocalTimezone
+  body: |
+    '\n    babel.localtime\n    ~~~~~~~~~~~~~~~\n\n    Babel specific fork of tzlocal to determine the local timezone\n    of the system.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     if sys.platform == 'win32':
         from babel.localtime._win32 import _get_localzone
     else:
         from babel.localtime._unix import _get_localzone
-    from babel.localtime._fallback import DSTDIFF, DSTOFFSET, STDOFFSET, ZERO, _FallbackLocalTimezone
     try:
         LOCALTZ = get_localzone()
     except LookupError:
@@ -327,10 +332,11 @@ preamble localtime___init__:
 
 preamble localtime__fallback:
   source: babel/localtime/_fallback.py
-  body: |
-    '\n    babel.localtime._fallback\n    ~~~~~~~~~~~~~~~~~~~~~~~~~\n\n    Emulated fallback local timezone when all else fails.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  imports: |
     import datetime
     import time
+  body: |
+    '\n    babel.localtime._fallback\n    ~~~~~~~~~~~~~~~~~~~~~~~~~\n\n    Emulated fallback local timezone when all else fails.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     STDOFFSET = datetime.timedelta(seconds=-time.timezone)
     DSTOFFSET = datetime.timedelta(seconds=-time.altzone) if time.daylight else STDOFFSET
     DSTDIFF = DSTOFFSET - STDOFFSET
@@ -351,7 +357,7 @@ preamble localtime__helpers:
 
 preamble localtime__unix:
   source: babel/localtime/_unix.py
-  body: |
+  imports: |
     import datetime
     import os
     import re
@@ -360,16 +366,17 @@ preamble localtime__unix:
 
 preamble localtime__win32:
   source: babel/localtime/_win32.py
-  body: |
+  imports: |
     from __future__ import annotations
-    try:
-        import winreg
-    except ImportError:
-        winreg = None
     import datetime
     from typing import Any, Dict, cast
     from babel.core import get_global
     from babel.localtime._helpers import _get_tzinfo_or_raise
+  body: |
+    try:
+        import winreg
+    except ImportError:
+        winreg = None
     try:
         tz_names: dict[str, str] = cast(Dict[str, str], get_global('windows_zone_mapping'))
     except RuntimeError:
@@ -378,16 +385,16 @@ preamble localtime__win32:
 
 preamble messages___init__:
   source: babel/messages/__init__.py
+  imports: |
+    from babel.messages.catalog import Catalog, Message, TranslationError
   body: |
     '\n    babel.messages\n    ~~~~~~~~~~~~~~\n\n    Support for ``gettext`` message catalogs.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
-    from babel.messages.catalog import Catalog, Message, TranslationError
     __all__ = ['Catalog', 'Message', 'TranslationError']
 
 
 preamble messages_catalog:
   source: babel/messages/catalog.py
-  body: |
-    '\n    babel.messages.catalog\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    Data structures for message catalogs.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  imports: |
     from __future__ import annotations
     import datetime
     import re
@@ -403,6 +410,8 @@ preamble messages_catalog:
     from babel.dates import format_datetime
     from babel.messages.plurals import get_plural
     from babel.util import LOCALTZ, FixedOffsetTimezone, _cmp, distinct
+  body: |
+    '\n    babel.messages.catalog\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    Data structures for message catalogs.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     if TYPE_CHECKING:
         from typing_extensions import TypeAlias
         _MessageID: TypeAlias = str | tuple[str, ...] | list[str]
@@ -846,19 +855,19 @@ preamble messages_catalog:
 
 preamble messages_checkers:
   source: babel/messages/checkers.py
-  body: |
-    '\n    babel.messages.checkers\n    ~~~~~~~~~~~~~~~~~~~~~~~\n\n    Various routines that help with validation of translations.\n\n    :since: version 0.9\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  imports: |
     from __future__ import annotations
     from collections.abc import Callable
     from babel.messages.catalog import PYTHON_FORMAT, Catalog, Message, TranslationError
+  body: |
+    '\n    babel.messages.checkers\n    ~~~~~~~~~~~~~~~~~~~~~~~\n\n    Various routines that help with validation of translations.\n\n    :since: version 0.9\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     _string_format_compatibilities = [{'i', 'd', 'u'}, {'x', 'X'}, {'f', 'F', 'g', 'G'}]
     checkers: list[Callable[[Catalog | None, Message], object]] = _find_checkers()
 
 
 preamble messages_extract:
   source: babel/messages/extract.py
-  body: |
-    '\n    babel.messages.extract\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    Basic infrastructure for extracting localizable messages from source files.\n\n    This module defines an extensible system for collecting localizable message\n    strings from a variety of sources. A native extractor for Python source\n    files is builtin, extractors for other sources can be added using very\n    simple plugins.\n\n    The main entry points into the extraction functionality are the functions\n    `extract_from_dir` and `extract_from_file`.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  imports: |
     from __future__ import annotations
     import ast
     import io
@@ -871,6 +880,8 @@ preamble messages_extract:
     from tokenize import COMMENT, NAME, OP, STRING, generate_tokens
     from typing import TYPE_CHECKING, Any
     from babel.util import parse_encoding, parse_future_flags, pathmatch
+  body: |
+    '\n    babel.messages.extract\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    Basic infrastructure for extracting localizable messages from source files.\n\n    This module defines an extensible system for collecting localizable message\n    strings from a variety of sources. A native extractor for Python source\n    files is builtin, extractors for other sources can be added using very\n    simple plugins.\n\n    The main entry points into the extraction functionality are the functions\n    `extract_from_dir` and `extract_from_file`.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     if TYPE_CHECKING:
         from typing import IO, Protocol
         from _typeshed import SupportsItems, SupportsRead, SupportsReadline
@@ -903,8 +914,7 @@ preamble messages_extract:
 
 preamble messages_frontend:
   source: babel/messages/frontend.py
-  body: |
-    '\n    babel.messages.frontend\n    ~~~~~~~~~~~~~~~~~~~~~~~\n\n    Frontends for the message extraction functionality.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  imports: |
     from __future__ import annotations
     import datetime
     import fnmatch
@@ -927,6 +937,8 @@ preamble messages_frontend:
     from babel.messages.mofile import write_mo
     from babel.messages.pofile import read_po, write_po
     from babel.util import LOCALTZ
+  body: |
+    '\n    babel.messages.frontend\n    ~~~~~~~~~~~~~~~~~~~~~~~\n\n    Frontends for the message extraction functionality.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     log = logging.getLogger('babel')
     class BaseError(Exception):
         pass
@@ -1001,12 +1013,13 @@ preamble messages_frontend:
 
 preamble messages_jslexer:
   source: babel/messages/jslexer.py
-  body: |
-    '\n    babel.messages.jslexer\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    A simple JavaScript 1.5 lexer which is used for the JavaScript\n    extractor.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  imports: |
     from __future__ import annotations
     import re
     from collections.abc import Generator
     from typing import NamedTuple
+  body: |
+    '\n    babel.messages.jslexer\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    A simple JavaScript 1.5 lexer which is used for the JavaScript\n    extractor.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     operators: list[str] = sorted(['+', '-', '*', '%', '!=', '==', '<', '>', '<=', '>=', '=', '+=', '-=', '*=', '%=', '<<', '>>', '>>>', '<<=', '>>=', '>>>=', '&', '&=', '|', '|=', '&&', '||', '^', '^=', '(', ')', '[', ']', '{', '}', '!', '--', '++', '~', ',', ';', '.', ':'], key=len, reverse=True)
     escapes: dict[str, str] = {'b': '\x08', 'f': '\x0c', 'n': '\n', 'r': '\r', 't': '\t'}
     name_re = re.compile('[\\w$_][\\w\\d$_]*', re.UNICODE)
@@ -1026,13 +1039,14 @@ preamble messages_jslexer:
 
 preamble messages_mofile:
   source: babel/messages/mofile.py
-  body: |
-    '\n    babel.messages.mofile\n    ~~~~~~~~~~~~~~~~~~~~~\n\n    Writing of files in the ``gettext`` MO (machine object) format.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  imports: |
     from __future__ import annotations
     import array
     import struct
     from typing import TYPE_CHECKING
     from babel.messages.catalog import Catalog, Message
+  body: |
+    '\n    babel.messages.mofile\n    ~~~~~~~~~~~~~~~~~~~~~\n\n    Writing of files in the ``gettext`` MO (machine object) format.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     if TYPE_CHECKING:
         from _typeshed import SupportsRead, SupportsWrite
     LE_MAGIC: int = 2500072158
@@ -1041,11 +1055,12 @@ preamble messages_mofile:
 
 preamble messages_plurals:
   source: babel/messages/plurals.py
-  body: |
-    '\n    babel.messages.plurals\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    Plural form definitions.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  imports: |
     from __future__ import annotations
     from operator import itemgetter
     from babel.core import Locale, default_locale
+  body: |
+    '\n    babel.messages.plurals\n    ~~~~~~~~~~~~~~~~~~~~~~\n\n    Plural form definitions.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     LC_CTYPE: str | None = default_locale('LC_CTYPE')
     PLURALS: dict[str, tuple[int, str]] = {'af': (2, '(n != 1)'), 'ar': (6, '(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=0 && n%100<=2 ? 4 : 5)'), 'be': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'bg': (2, '(n != 1)'), 'bn': (2, '(n != 1)'), 'bo': (1, '0'), 'br': (6, '(n==1 ? 0 : n%10==1 && n%100!=11 && n%100!=71 && n%100!=91 ? 1 : n%10==2 && n%100!=12 && n%100!=72 && n%100!=92 ? 2 : (n%10==3 || n%10==4 || n%10==9) && n%100!=13 && n%100!=14 && n%100!=19 && n%100!=73 && n%100!=74 && n%100!=79 && n%100!=93 && n%100!=94 && n%100!=99 ? 3 : n%1000000==0 ? 4 : 5)'), 'bs': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'ca': (2, '(n != 1)'), 'cs': (3, '((n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2)'), 'cv': (1, '0'), 'cy': (5, '(n==1 ? 1 : n==2 ? 2 : n==3 ? 3 : n==6 ? 4 : 0)'), 'da': (2, '(n != 1)'), 'de': (2, '(n != 1)'), 'dz': (1, '0'), 'el': (2, '(n != 1)'), 'en': (2, '(n != 1)'), 'eo': (2, '(n != 1)'), 'es': (2, '(n != 1)'), 'et': (2, '(n != 1)'), 'eu': (2, '(n != 1)'), 'fa': (1, '0'), 'fi': (2, '(n != 1)'), 'fr': (2, '(n > 1)'), 'fur': (2, '(n > 1)'), 'ga': (5, '(n==1 ? 0 : n==2 ? 1 : n>=3 && n<=6 ? 2 : n>=7 && n<=10 ? 3 : 4)'), 'gl': (2, '(n != 1)'), 'ha': (2, '(n != 1)'), 'he': (2, '(n != 1)'), 'hi': (2, '(n != 1)'), 'hr': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'hu': (1, '0'), 'hy': (1, '0'), 'is': (2, '(n%10==1 && n%100!=11 ? 0 : 1)'), 'it': (2, '(n != 1)'), 'ja': (1, '0'), 'ka': (1, '0'), 'kg': (2, '(n != 1)'), 'km': (1, '0'), 'ko': (1, '0'), 'ku': (2, '(n != 1)'), 'lo': (1, '0'), 'lt': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'lv': (3, '(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2)'), 'mt': (4, '(n==1 ? 0 : n==0 || ( n%100>=1 && n%100<=10) ? 1 : (n%100>10 && n%100<20 ) ? 2 : 3)'), 'nb': (2, '(n != 1)'), 'nl': (2, '(n != 1)'), 'nn': (2, '(n != 1)'), 'no': (2, '(n != 1)'), 'pa': (2, '(n != 1)'), 'pl': (3, '(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'pt': (2, '(n != 1)'), 'pt_BR': (2, '(n > 1)'), 'ro': (3, '(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < 20)) ? 1 : 2)'), 'ru': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'sk': (3, '((n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2)'), 'sl': (4, '(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3)'), 'sr': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 'st': (2, '(n != 1)'), 'sv': (2, '(n != 1)'), 'th': (1, '0'), 'tr': (1, '0'), 'uk': (3, '(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)'), 've': (2, '(n != 1)'), 'vi': (1, '0'), 'xh': (2, '(n != 1)'), 'zh': (1, '0')}
     DEFAULT_PLURAL: tuple[int, str] = (2, '(n != 1)')
@@ -1062,8 +1077,7 @@ preamble messages_plurals:
 
 preamble messages_pofile:
   source: babel/messages/pofile.py
-  body: |
-    '\n    babel.messages.pofile\n    ~~~~~~~~~~~~~~~~~~~~~\n\n    Reading and writing of files in the ``gettext`` PO (portable object)\n    format.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  imports: |
     from __future__ import annotations
     import os
     import re
@@ -1072,6 +1086,8 @@ preamble messages_pofile:
     from babel.core import Locale
     from babel.messages.catalog import Catalog, Message
     from babel.util import _cmp, wraptext
+  body: |
+    '\n    babel.messages.pofile\n    ~~~~~~~~~~~~~~~~~~~~~\n\n    Reading and writing of files in the ``gettext`` PO (portable object)\n    format.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     if TYPE_CHECKING:
         from typing import IO, AnyStr
         from _typeshed import SupportsWrite
@@ -1153,9 +1169,10 @@ preamble messages_pofile:
 
 preamble messages_setuptools_frontend:
   source: babel/messages/setuptools_frontend.py
-  body: |
+  imports: |
     from __future__ import annotations
     from babel.messages import frontend
+  body: |
     try:
         from setuptools import Command
         try:
@@ -1230,8 +1247,7 @@ preamble messages_setuptools_frontend:
 
 preamble numbers:
   source: babel/numbers.py
-  body: |
-    '\n    babel.numbers\n    ~~~~~~~~~~~~~\n\n    Locale dependent formatting and parsing of numeric data.\n\n    The default locale for the functions in this module is determined by the\n    following environment variables, in that order:\n\n     * ``LC_NUMERIC``,\n     * ``LC_ALL``, and\n     * ``LANG``\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  imports: |
     from __future__ import annotations
     import datetime
     import decimal
@@ -1240,6 +1256,8 @@ preamble numbers:
     from typing import TYPE_CHECKING, Any, cast, overload
     from babel.core import Locale, default_locale, get_global
     from babel.localedata import LocaleDataDict
+  body: |
+    '\n    babel.numbers\n    ~~~~~~~~~~~~~\n\n    Locale dependent formatting and parsing of numeric data.\n\n    The default locale for the functions in this module is determined by the\n    following environment variables, in that order:\n\n     * ``LC_NUMERIC``,\n     * ``LC_ALL``, and\n     * ``LANG``\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     if TYPE_CHECKING:
         from typing_extensions import Literal
     LC_NUMERIC = default_locale('LC_NUMERIC')
@@ -1335,8 +1353,7 @@ preamble numbers:
 
 preamble support:
   source: babel/support.py
-  body: |
-    '\n    babel.support\n    ~~~~~~~~~~~~~\n\n    Several classes and functions that help with integrating and using Babel\n    in applications.\n\n    .. note: the code in this module is not used by Babel itself\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  imports: |
     from __future__ import annotations
     import decimal
     import gettext
@@ -1347,6 +1364,8 @@ preamble support:
     from babel.core import Locale
     from babel.dates import format_date, format_datetime, format_time, format_timedelta
     from babel.numbers import format_compact_currency, format_compact_decimal, format_currency, format_decimal, format_percent, format_scientific
+  body: |
+    '\n    babel.support\n    ~~~~~~~~~~~~~\n\n    Several classes and functions that help with integrating and using Babel\n    in applications.\n\n    .. note: the code in this module is not used by Babel itself\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     if TYPE_CHECKING:
         from typing_extensions import Literal
         from babel.dates import _PredefinedTimeFormat
@@ -1827,12 +1846,13 @@ preamble support:
 
 preamble units:
   source: babel/units.py
-  body: |
+  imports: |
     from __future__ import annotations
     import decimal
     from typing import TYPE_CHECKING
     from babel.core import Locale
     from babel.numbers import LC_NUMERIC, format_decimal
+  body: |
     if TYPE_CHECKING:
         from typing_extensions import Literal
     class UnknownUnitError(ValueError):
@@ -1843,8 +1863,7 @@ preamble units:
 
 preamble util:
   source: babel/util.py
-  body: |
-    '\n    babel.util\n    ~~~~~~~~~~\n\n    Various utility classes and functions.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
+  imports: |
     from __future__ import annotations
     import codecs
     import collections
@@ -1855,6 +1874,8 @@ preamble util:
     from collections.abc import Generator, Iterable
     from typing import IO, Any, TypeVar
     from babel import dates, localtime
+  body: |
+    '\n    babel.util\n    ~~~~~~~~~~\n\n    Various utility classes and functions.\n\n    :copyright: (c) 2013-2023 by the Babel Team.\n    :license: BSD, see LICENSE for more details.\n'
     missing = object()
     _T = TypeVar('_T')
     PYTHON_MAGIC_COMMENT_re = re.compile(b'[ \\t\\f]* \\# .* coding[=:][ \\t]*([-\\w.]+)', re.VERBOSE)

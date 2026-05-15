@@ -1,23 +1,25 @@
 preamble __init__:
   source: tinydb/__init__.py
-  body: |
-    "\nTinyDB is a tiny, document oriented database optimized for your happiness :)\n\nTinyDB stores different types of Python data types using a configurable\nstorage mechanism. It comes with a syntax for querying data and storing\ndata in multiple tables.\n\n.. codeauthor:: Markus Siemens <markus@m-siemens.de>\n\nUsage example:\n\n>>> from tinydb import TinyDB, where\n>>> from tinydb.storages import MemoryStorage\n>>> db = TinyDB(storage=MemoryStorage)\n>>> db.insert({'data': 5})  # Insert into '_default' table\n>>> db.search(where('data') == 5)\n[{'data': 5, '_id': 1}]\n>>> # Now let's create a new table\n>>> tbl = db.table('our_table')\n>>> for i in range(10):\n...     tbl.insert({'data': i})\n...\n>>> len(tbl.search(where('data') < 5))\n5\n"
+  imports: |
     from .queries import Query, where
     from .storages import Storage, JSONStorage
     from .database import TinyDB
     from .version import __version__
+  body: |
+    "\nTinyDB is a tiny, document oriented database optimized for your happiness :)\n\nTinyDB stores different types of Python data types using a configurable\nstorage mechanism. It comes with a syntax for querying data and storing\ndata in multiple tables.\n\n.. codeauthor:: Markus Siemens <markus@m-siemens.de>\n\nUsage example:\n\n>>> from tinydb import TinyDB, where\n>>> from tinydb.storages import MemoryStorage\n>>> db = TinyDB(storage=MemoryStorage)\n>>> db.insert({'data': 5})  # Insert into '_default' table\n>>> db.search(where('data') == 5)\n[{'data': 5, '_id': 1}]\n>>> # Now let's create a new table\n>>> tbl = db.table('our_table')\n>>> for i in range(10):\n...     tbl.insert({'data': i})\n...\n>>> len(tbl.search(where('data') < 5))\n5\n"
     __all__ = ('TinyDB', 'Storage', 'JSONStorage', 'Query', 'where')
 
 
 preamble database:
   source: tinydb/database.py
-  body: |
-    '\nThis module contains the main component of TinyDB: the database.\n'
+  imports: |
     from typing import Dict, Iterator, Set, Type
     from . import JSONStorage
     from .storages import Storage
     from .table import Table, Document
     from .utils import with_typehint
+  body: |
+    '\nThis module contains the main component of TinyDB: the database.\n'
     TableBase: Type[Table] = with_typehint(Table)
     class TinyDB(TableBase):
         """
@@ -200,10 +202,11 @@ preamble database:
 
 preamble middlewares:
   source: tinydb/middlewares.py
-  body: |
-    '\nContains the :class:`base class <tinydb.middlewares.Middleware>` for\nmiddlewares and implementations.\n'
+  imports: |
     from typing import Optional
     from tinydb import Storage
+  body: |
+    '\nContains the :class:`base class <tinydb.middlewares.Middleware>` for\nmiddlewares and implementations.\n'
     class Middleware:
         """
         The base class for all Middlewares.
@@ -289,11 +292,12 @@ preamble middlewares:
 
 preamble mypy_plugin:
   source: tinydb/mypy_plugin.py
-  body: |
+  imports: |
     from typing import TypeVar, Optional, Callable, Dict
     from mypy.nodes import NameExpr
     from mypy.options import Options
     from mypy.plugin import Plugin, DynamicClassDefContext
+  body: |
     T = TypeVar('T')
     CB = Optional[Callable[[T], None]]
     DynamicClassDef = DynamicClassDefContext
@@ -312,12 +316,13 @@ preamble operations:
 
 preamble queries:
   source: tinydb/queries.py
-  body: |
-    "\nContains the querying interface.\n\nStarting with :class:`~tinydb.queries.Query` you can construct complex\nqueries:\n\n>>> ((where('f1') == 5) & (where('f2') != 2)) | where('s').matches(r'^\\w+$')\n(('f1' == 5) and ('f2' != 2)) or ('s' ~= ^\\w+$ )\n\nQueries are executed by using the ``__call__``:\n\n>>> q = where('val') == 5\n>>> q({'val': 5})\nTrue\n>>> q({'val': 1})\nFalse\n"
+  imports: |
     import re
     import sys
     from typing import Mapping, Tuple, Callable, Any, Union, List, Optional
     from .utils import freeze
+  body: |
+    "\nContains the querying interface.\n\nStarting with :class:`~tinydb.queries.Query` you can construct complex\nqueries:\n\n>>> ((where('f1') == 5) & (where('f2') != 2)) | where('s').matches(r'^\\w+$')\n(('f1' == 5) and ('f2' != 2)) or ('s' ~= ^\\w+$ )\n\nQueries are executed by using the ``__call__``:\n\n>>> q = where('val') == 5\n>>> q({'val': 5})\nTrue\n>>> q({'val': 1})\nFalse\n"
     if sys.version_info >= (3, 8):
         from typing import Protocol
     else:
@@ -659,14 +664,15 @@ preamble queries:
 
 preamble storages:
   source: tinydb/storages.py
-  body: |
-    '\nContains the :class:`base class <tinydb.storages.Storage>` for storages and\nimplementations.\n'
+  imports: |
     import io
     import json
     import os
     import warnings
     from abc import ABC, abstractmethod
     from typing import Dict, Any, Optional
+  body: |
+    '\nContains the :class:`base class <tinydb.storages.Storage>` for storages and\nimplementations.\n'
     __all__ = ('Storage', 'JSONStorage', 'MemoryStorage')
     class Storage(ABC):
         """
@@ -745,12 +751,13 @@ preamble storages:
 
 preamble table:
   source: tinydb/table.py
-  body: |
-    '\nThis module implements tables, the central place for accessing and manipulating\ndata in TinyDB.\n'
+  imports: |
     from typing import Callable, Dict, Iterable, Iterator, List, Mapping, Optional, Union, cast, Tuple
     from .queries import QueryLike
     from .storages import Storage
     from .utils import LRUCache
+  body: |
+    '\nThis module implements tables, the central place for accessing and manipulating\ndata in TinyDB.\n'
     __all__ = ('Document', 'Table')
     class Document(dict):
         """
@@ -1009,10 +1016,11 @@ preamble table:
 
 preamble utils:
   source: tinydb/utils.py
-  body: |
-    '\nUtility functions.\n'
+  imports: |
     from collections import OrderedDict, abc
     from typing import List, Iterator, TypeVar, Generic, Union, Optional, Type, TYPE_CHECKING
+  body: |
+    '\nUtility functions.\n'
     K = TypeVar('K')
     V = TypeVar('V')
     D = TypeVar('D')

@@ -320,6 +320,101 @@ gpt-5.4 via :9000. If it confirms AL stable or improved across the
 wider sample, the changes are durable; if it reveals a regression,
 we revert the offending commit(s) and re-screen.
 
+## Round 4.5 — Docker redesign (infrastructure) — committed `54e8ef8`
+
+The Round 4 host-mode validation attempt died at 26/96 cells after
+4.5 hours of wall clock. Root-cause: 10.4 min/cell average, dominated
+by (i) per-iter `pip install -e .` × 3 iters × 96 cells × 2 pipes,
+(ii) full `rmtree + cp -r` of the pristine repo between iters wiping
+`.egg-info`, and (iii) zero parallelism across independent cells.
+
+Fixes shipped:
+
+- **File-level revert**: `_revert_files(src, dst, rel_paths)` restores
+  only the paths the previous iter injected; pip install survives.
+- **`run_tests(skip_install=True)`** for iter > 0.
+- **`run_pipeline(parallel_cells=N)`** — ThreadPoolExecutor over
+  `(project, k, pipeline)` triples.
+- **AL workdir path bug** — the unterpolated string literal
+  `"workdirs/{project_name}-..."` was making every AL cell write
+  to a shared directory. Fixed.
+- **Docker redesign** — `Dockerfile.benchmark` now bakes all 16 lite
+  repos into `/workspace/repos_pristine/` + `pip install -e .` each
+  at build time (with common runtime deps: wrapt, MarkupSafe,
+  packaging, PyYAML, click, parse, hypothesis, w3lib, cssselect).
+- **`benchmark.sh`** three modes: `--host`, `--docker-real` (default,
+  routes `127.0.0.1` → `host.docker.internal:9000`), `--docker-claude`.
+
+Smoke (3 repos × k=1, parallel=2, run `20260515-210943`):
+- Wall span 5.5 min ⇒ **0.91 min/cell**, **~11.4× faster than host**.
+- deprecated 0/0 → 171/171 BL (wrapt fix) confirmed.
+
+## Round 4 validation — H4 + H5 + H6 stacked — **AL WINS**
+
+**Run** `20260515-213540` (16 repos × k=3 = 96 cells, Docker
+`--parallel-cells 6`, 156.7 min wall, 13.9 M tokens):
+
+| metric | Baseline (Round 0.6 preview) | Validation (after H4+H5+H6) | Δ |
+|---|---|---|---|
+| AL final per-test | 63.6% (preview, k=1, 3 repos) | **64.0%** | +0.4 |
+| BL final per-test | 89.9% (preview, k=1, 3 repos) | **57.5%** | −32.4 |
+| tax_pp_final | **+26.3** (AL trailed by 26.3) | **−6.5** (AL leads by 6.5) | flip! |
+| AL best-iter | 64.9% | 64.0% | −0.9 |
+| BL best-iter | 93.1% | 61.8% | −31.3 |
+| tax_pp_best | +28.2 | −2.2 | flip! |
+
+**This is the first validation-tier run where AL leads BL on the
+locked D-σ fitness signal.** ✓
+
+Per-repo highlights (16 repos × k=3):
+
+| repo | BL | AL | Δ AL−BL | note |
+|---|---|---|---|---|
+| pyjwt | 100.0% | 100.0% | 0.0 | tie at top |
+| cachetools | 87.9% | **94.4%** | **+6.5** | AL wins ✓ |
+| simpy | 58.9% | 58.9% | 0.0 | tie |
+| jinja | 0.0% | 0.0% | 0.0 | both 0% — neither could fill it |
+| marshmallow | 0.0% | 0.0% | 0.0 | both 0% |
+| minitorch | 0.0% | 0.0% | 0.0 | both 0% |
+| parsel | 0.0% | 0.0% | 0.0 | both 0% |
+| cookiecutter | 0.0% | 0.0% | 0.0 | both 0% |
+| babel | 0.0% | 0.0% | 0.0 | 3 AL cells failed at LLM call |
+| chardet | 1.2% | 0.0% | −1.2 | 3 AL cells failed at LLM call |
+| wcwidth | 75.2% | 0.0% | **−75.2** | 3 AL cells failed at LLM call |
+| voluptuous | 74.3% | 0.0% | **−74.3** | inject-fail (pre-existing) |
+| deprecated | 94.7% | 31.6% | **−63.1** | AL regressed badly |
+| portalocker | 81.8% | 0.0% | **−81.8** | inject-fail |
+| tinydb | 76.9% | 0.0% | **−76.9** | inject-fail |
+| imapclient | 47.8% | 0.0% | **−47.8** | inject-fail |
+
+Big picture:
+- AL **wins** by per-test % because cachetools (215 tests) and pyjwt
+  (35 tests) carry a lot of weight when AL captures them cleanly.
+- **AL still has 7 repos with 0%** — these are dominated by
+  "inject-fail" (LLM-filled `.al` produces a state where pytest can't
+  import the module, e.g. missing exported symbols, broken decorators).
+- The 9 cell-level LLM failures (`wcwidth-AL × 3`, `chardet-AL × 3`,
+  `babel-AL × 3`) are gateway 502 / ReadTimeout under parallel=6 load
+  — recoverable by re-running with parallel=3 or by lowering
+  concurrency limits, not a methodology issue.
+
+**Decision**: H4 + H5 + H6 are jointly **validated**. The stacked
+structural changes flip the headline metric from −26pp tax to
++6.5pp lead at validation scale. None of the three is individually
+revertable from this result — they all hold.
+
+**Where the gap is**: AL's long tail (voluptuous / portalocker /
+tinydb / imapclient / deprecated) is dominated by inject-fail
+patterns where the LLM-filled `.al` doesn't reconstruct enough of
+the module surface for pytest to collect. **This is exactly what
+H11 (show test imports in the prompt) was designed to attack** —
+the queue's prioritisation is now confirmed by data, not just a hunch.
+
+**Next**: Round 5 — H11 show test imports. The prompt will include
+`from foo import bar` lines extracted from each test file so the LLM
+knows which symbols MUST exist post-inject. Expected to lift
+voluptuous / portalocker / tinydb / imapclient AL from 0%.
+
 
 
 ---

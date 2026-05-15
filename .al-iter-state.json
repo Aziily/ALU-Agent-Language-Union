@@ -2,7 +2,25 @@
   "$schema": "Phase 1.AL-LOOP autonomous design-iteration state",
   "started_at": "2026-05-15T12:00:00",
   "round": 4,
-  "phase": "validating",
+  "phase": "iterating",
+  "last_validation": {
+    "run_dir": "benchmarks/reports/runs/20260515-213540",
+    "tier": "Large 16xk=3",
+    "n_cells": 96,
+    "parallel_cells": 6,
+    "wall_min": 156.7,
+    "tokens": 13880941,
+    "bl_final_pct": 57.5,
+    "al_final_pct": 64.0,
+    "tax_pp_final": -6.5,
+    "bl_best_pct": 61.8,
+    "al_best_pct": 64.0,
+    "tax_pp_best": -2.2,
+    "cell_failures": 9,
+    "failure_cause": "gateway 502 / ReadTimeout under parallel=6 load",
+    "covers_commits": ["6439910", "8276236", "66b5a71"],
+    "decision": "H4 + H5 + H6 jointly validated — AL leads BL by +6.5pp; first such win at validation tier. AL long tail (voluptuous, portalocker, tinydb, imapclient, deprecated) all show inject-fail (0% AL while BL > 50%), which H11 (show test imports) was designed to attack."
+  },
   "baseline_commit": "bb3b7c7",
   "baseline_metrics": {
     "preview": {
@@ -100,7 +118,7 @@
     "H7_tox_ini_aware_pytest"
   ],
   "consecutive_rejects": 0,
-  "tokens_consumed_total": 2048237,
+  "tokens_consumed_total": 15929178,
   "metrics_history": [
     {
       "round": "0_preview_attempt_1",

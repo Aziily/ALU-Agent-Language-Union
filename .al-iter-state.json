@@ -1,7 +1,7 @@
 {
   "$schema": "Phase 1.AL-LOOP autonomous design-iteration state",
   "started_at": "2026-05-15T12:00:00",
-  "round": 1,
+  "round": 2,
   "phase": "iterating",
   "baseline_commit": "bb3b7c7",
   "baseline_metrics": {
@@ -20,9 +20,25 @@
     },
     "validation": null
   },
-  "staged_commits": [],
+  "staged_commits": [
+    {
+      "name": "H4_imports_keyword",
+      "round": 2,
+      "commit": "6439910",
+      "run_dir": "benchmarks/reports/runs/20260515-141608",
+      "al_final_delta_pp": 1.3,
+      "al_best_delta_pp": 0.0,
+      "tax_pp_final_delta": 3.0,
+      "tax_pp_best_delta": 1.1,
+      "per_repo_delta_pp": {
+        "cachetools": 0.0,
+        "deprecated": 2.9,
+        "voluptuous": 0.0
+      },
+      "decision_rationale": "AL TOTAL Δ +1.3pp ≥ -2pp threshold. No per-repo regression. BL bounced +4.3pp from k=1 variance, widening visual tax_pp gap but the locked fitness signal is AL final-iter pass% (D-σ), which improved. ACCEPT and continue."
+    }
+  ],
   "hypothesis_queue": [
-    "H4_imports_keyword",
     "H5_constant_keyword",
     "H6_class_keyword",
     "H11_show_test_imports",
@@ -47,8 +63,8 @@
     "H3_best_iter_tracking",
     "H7_tox_ini_aware_pytest"
   ],
-  "consecutive_rejects": 1,
-  "tokens_consumed_total": 422348,
+  "consecutive_rejects": 0,
+  "tokens_consumed_total": 968478,
   "metrics_history": [
     {
       "round": "0_preview_attempt_1",
@@ -64,6 +80,25 @@
       "tax_pp_best": 26.4,
       "tokens": 422348,
       "notes": "voluptuous: 0/0 due to ReadTimeout (4 attempts × 120s). Increasing HTTP timeout to 300s and re-running."
+    },
+    {
+      "round": "2_H4_accepted",
+      "kind": "preview_after_change",
+      "run_dir": "benchmarks/reports/runs/20260515-141608",
+      "repos": ["cachetools", "voluptuous", "deprecated"],
+      "k_repeats": 1,
+      "bl_final_pct": 94.2,
+      "al_final_pct": 64.9,
+      "tax_pp_final": 29.3,
+      "bl_best_pct": 94.2,
+      "al_best_pct": 64.9,
+      "tax_pp_best": 29.3,
+      "tokens": 546130,
+      "per_repo": {
+        "cachetools":  {"bl_final": 97.2, "al_final": 83.3, "tax_pp": 13.9},
+        "deprecated":  {"bl_final": 99.4, "al_final": 42.1, "tax_pp": 57.3},
+        "voluptuous":  {"bl_final": 83.9, "al_final":  0.0, "tax_pp": 83.9, "note": "still inject failure: `raises` decorator not produced in schema_builder.py; pre-existing, not caused by H4"}
+      }
     }
   ],
   "halt": false,

@@ -301,35 +301,22 @@ preamble utils:
             self.file_open_kwargs = file_open_kwargs
 
         def acquire(self, timeout: typing.Optional[float]=None, check_interval: typing.Optional[float]=None, fail_when_locked: typing.Optional[bool]=None) -> typing.IO[typing.AnyStr]:
-            """Acquire the locked filehandle"""
-            pass
+            ...
 
         def __enter__(self) -> typing.IO[typing.AnyStr]:
             return self.acquire()
 
         def release(self):
-            """Releases the currently locked file handle"""
-            pass
+            ...
 
         def _get_fh(self) -> typing.IO:
-            """Get a new filehandle"""
-            pass
+            ...
 
         def _get_lock(self, fh: typing.IO) -> typing.IO:
-            """
-            Try to lock the given filehandle
-
-            returns LockException if it fails"""
-            pass
+            ...
 
         def _prepare_fh(self, fh: typing.IO) -> typing.IO:
-            """
-            Prepare the filehandle for usage
-
-            If truncate is a number, the file will be truncated to that amount of
-            bytes
-            """
-            pass
+            ...
     class RLock(Lock):
         """
         A reentrant lock, functions in a similar way to threading.RLock in that it

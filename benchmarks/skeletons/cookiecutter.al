@@ -87,12 +87,7 @@ preamble environment:
                 raise UnknownExtension(f'Unable to load extension: {err}') from err
 
         def _read_extensions(self, context):
-            """Return list of extensions as str to be passed on to the Jinja2 env.
-
-            If context does not contain the relevant info, return an empty
-            list instead.
-            """
-            pass
+            ...
     class StrictEnvironment(ExtensionLoaderMixin, Environment):
         """Create strict Jinja2 environment.
 
@@ -303,8 +298,7 @@ preamble extensions:
             environment.extend(datetime_format='%Y-%m-%d')
 
         def parse(self, parser):
-            """Parse datetime template and add datetime value."""
-            pass
+            ...
 
 
 preamble find:
@@ -436,8 +430,7 @@ preamble prompt:
         no_choices = ['0', 'false', 'f', 'no', 'n', 'off']
 
         def process_response(self, value: str) -> bool:
-            """Convert choices to a bool."""
-            pass
+            ...
     class JsonPrompt(PromptBase[dict]):
         """A prompt that returns a dict from JSON string."""
         default = None
@@ -445,8 +438,7 @@ preamble prompt:
         validate_error_message = '[prompt.invalid]  Please enter a valid JSON string'
 
         def process_response(self, value: str) -> dict:
-            """Convert choices to a dict."""
-            pass
+            ...
 
 
 preamble replay:

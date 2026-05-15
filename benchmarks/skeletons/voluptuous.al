@@ -210,33 +210,7 @@ preamble schema_builder:
 
         @classmethod
         def infer(cls, data, **kwargs) -> Schema:
-            """Create a Schema from concrete data (e.g. an API response).
-
-            For example, this will take a dict like:
-
-            {
-                'foo': 1,
-                'bar': {
-                    'a': True,
-                    'b': False
-                },
-                'baz': ['purple', 'monkey', 'dishwasher']
-            }
-
-            And return a Schema:
-
-            {
-                'foo': int,
-                'bar': {
-                    'a': bool,
-                    'b': bool
-                },
-                'baz': [str]
-            }
-
-            Note: only very basic inference is supported.
-            """
-            pass
+            ...
 
         def __eq__(self, other):
             if not isinstance(other, Schema):
@@ -262,181 +236,28 @@ preamble schema_builder:
                 raise er.MultipleInvalid([e])
 
         def _compile_mapping(self, schema, invalid_msg=None):
-            """Create validator for given mapping."""
-            pass
+            ...
 
         def _compile_object(self, schema):
-            """Validate an object.
-
-            Has the same behavior as dictionary validator but work with object
-            attributes.
-
-            For example:
-
-                >>> class Structure(object):
-                ...     def __init__(self, one=None, three=None):
-                ...         self.one = one
-                ...         self.three = three
-                ...
-                >>> validate = Schema(Object({'one': 'two', 'three': 'four'}, cls=Structure))
-                >>> with raises(er.MultipleInvalid, "not a valid value for object value @ data['one']"):
-                ...   validate(Structure(one='three'))
-
-            """
-            pass
+            ...
 
         def _compile_dict(self, schema):
-            """Validate a dictionary.
-
-            A dictionary schema can contain a set of values, or at most one
-            validator function/type.
-
-            A dictionary schema will only validate a dictionary:
-
-                >>> validate = Schema({})
-                >>> with raises(er.MultipleInvalid, 'expected a dictionary'):
-                ...   validate([])
-
-            An invalid dictionary value:
-
-                >>> validate = Schema({'one': 'two', 'three': 'four'})
-                >>> with raises(er.MultipleInvalid, "not a valid value for dictionary value @ data['one']"):
-                ...   validate({'one': 'three'})
-
-            An invalid key:
-
-                >>> with raises(er.MultipleInvalid, "extra keys not allowed @ data['two']"):
-                ...   validate({'two': 'three'})
-
-
-            Validation function, in this case the "int" type:
-
-                >>> validate = Schema({'one': 'two', 'three': 'four', int: str})
-
-            Valid integer input:
-
-                >>> validate({10: 'twenty'})
-                {10: 'twenty'}
-
-            By default, a "type" in the schema (in this case "int") will be used
-            purely to validate that the corresponding value is of that type. It
-            will not Coerce the value:
-
-                >>> with raises(er.MultipleInvalid, "extra keys not allowed @ data['10']"):
-                ...   validate({'10': 'twenty'})
-
-            Wrap them in the Coerce() function to achieve this:
-                >>> from voluptuous import Coerce
-                >>> validate = Schema({'one': 'two', 'three': 'four',
-                ...                    Coerce(int): str})
-                >>> validate({'10': 'twenty'})
-                {10: 'twenty'}
-
-            Custom message for required key
-
-                >>> validate = Schema({Required('one', 'required'): 'two'})
-                >>> with raises(er.MultipleInvalid, "required @ data['one']"):
-                ...   validate({})
-
-            (This is to avoid unexpected surprises.)
-
-            Multiple errors for nested field in a dict:
-
-            >>> validate = Schema({
-            ...     'adict': {
-            ...         'strfield': str,
-            ...         'intfield': int
-            ...     }
-            ... })
-            >>> try:
-            ...     validate({
-            ...         'adict': {
-            ...             'strfield': 123,
-            ...             'intfield': 'one'
-            ...         }
-            ...     })
-            ... except er.MultipleInvalid as e:
-            ...     print(sorted(str(i) for i in e.errors)) # doctest: +NORMALIZE_WHITESPACE
-            ["expected int for dictionary value @ data['adict']['intfield']",
-             "expected str for dictionary value @ data['adict']['strfield']"]
-
-            """
-            pass
+            ...
 
         def _compile_sequence(self, schema, seq_type):
-            """Validate a sequence type.
-
-            This is a sequence of valid values or validators tried in order.
-
-            >>> validator = Schema(['one', 'two', int])
-            >>> validator(['one'])
-            ['one']
-            >>> with raises(er.MultipleInvalid, 'expected int @ data[0]'):
-            ...   validator([3.5])
-            >>> validator([1])
-            [1]
-            """
-            pass
+            ...
 
         def _compile_tuple(self, schema):
-            """Validate a tuple.
-
-            A tuple is a sequence of valid values or validators tried in order.
-
-            >>> validator = Schema(('one', 'two', int))
-            >>> validator(('one',))
-            ('one',)
-            >>> with raises(er.MultipleInvalid, 'expected int @ data[0]'):
-            ...   validator((3.5,))
-            >>> validator((1,))
-            (1,)
-            """
-            pass
+            ...
 
         def _compile_list(self, schema):
-            """Validate a list.
-
-            A list is a sequence of valid values or validators tried in order.
-
-            >>> validator = Schema(['one', 'two', int])
-            >>> validator(['one'])
-            ['one']
-            >>> with raises(er.MultipleInvalid, 'expected int @ data[0]'):
-            ...   validator([3.5])
-            >>> validator([1])
-            [1]
-            """
-            pass
+            ...
 
         def _compile_set(self, schema):
-            """Validate a set.
-
-            A set is an unordered collection of unique elements.
-
-            >>> validator = Schema({int})
-            >>> validator(set([42])) == set([42])
-            True
-            >>> with raises(er.Invalid, 'expected a set'):
-            ...   validator(42)
-            >>> with raises(er.MultipleInvalid, 'invalid value in set'):
-            ...   validator(set(['a']))
-            """
-            pass
+            ...
 
         def extend(self, schema: Schemable, required: typing.Optional[bool]=None, extra: typing.Optional[int]=None) -> Schema:
-            """Create a new `Schema` by merging this and the provided `schema`.
-
-            Neither this `Schema` nor the provided `schema` are modified. The
-            resulting `Schema` inherits the `required` and `extra` parameters of
-            this, unless overridden.
-
-            Both schemas must be dictionary-based.
-
-            :param schema: dictionary to extend this `Schema` with
-            :param required: if set, overrides `required` of this `Schema`
-            :param extra: if set, overrides `extra` of this `Schema`
-            """
-            pass
+            ...
     class Msg(object):
         """Report a user-friendly message if a schema fails to validate.
 
@@ -1386,11 +1207,7 @@ preamble validators:
             return 'Number(precision=%s, scale=%s, msg=%s)' % (self.precision, self.scale, self.msg)
 
         def _get_precision_scale(self, number) -> typing.Tuple[int, int, Decimal]:
-            """
-            :param number:
-            :return: tuple(precision, scale, decimal_number)
-            """
-            pass
+            ...
     class SomeOf(_WithSubValidators):
         """Value must pass at least some validations, determined by the given parameter.
         Optionally, number of passed validations can be capped.

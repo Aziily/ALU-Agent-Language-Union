@@ -41,8 +41,7 @@ preamble autodiff:
         saved_values: Tuple[Any, ...] = ()
 
         def save_for_backward(self, *values: Any) -> None:
-            """Store the given `values` if they need to be used during backpropagation."""
-            pass
+            ...
 
 
 preamble cuda_ops:
@@ -68,8 +67,7 @@ preamble cuda_ops:
 
         @staticmethod
         def map(fn: Callable[[float], float]) -> MapProto:
-            """See `tensor_ops.py`"""
-            pass
+            ...
 
 
 preamble datasets:
@@ -112,34 +110,12 @@ preamble fast_conv:
 
         @staticmethod
         def forward(ctx: Context, input: Tensor, weight: Tensor) -> Tensor:
-            """
-            Compute a 1D Convolution
-
-            Args:
-                ctx : Context
-                input : batch x in_channel x h x w
-                weight : out_channel x in_channel x kh x kw
-
-            Returns:
-                batch x out_channel x h x w
-            """
-            pass
+            ...
     class Conv2dFun(Function):
 
         @staticmethod
         def forward(ctx: Context, input: Tensor, weight: Tensor) -> Tensor:
-            """
-            Compute a 2D Convolution
-
-            Args:
-                ctx : Context
-                input : batch x in_channel x h x w
-                weight  : out_channel x in_channel x kh x kw
-
-            Returns:
-                (:class:`Tensor`) : batch x out_channel x h x w
-            """
-            pass
+            ...
 
 
 preamble fast_ops:
@@ -165,44 +141,19 @@ preamble fast_ops:
 
         @staticmethod
         def map(fn: Callable[[float], float]) -> MapProto:
-            """See `tensor_ops.py`"""
-            pass
+            ...
 
         @staticmethod
         def zip(fn: Callable[[float, float], float]) -> Callable[[Tensor, Tensor], Tensor]:
-            """See `tensor_ops.py`"""
-            pass
+            ...
 
         @staticmethod
         def reduce(fn: Callable[[float, float], float], start: float=0.0) -> Callable[[Tensor, int], Tensor]:
-            """See `tensor_ops.py`"""
-            pass
+            ...
 
         @staticmethod
         def matrix_multiply(a: Tensor, b: Tensor) -> Tensor:
-            """
-            Batched tensor matrix multiply ::
-
-                for n:
-                  for i:
-                    for j:
-                      for k:
-                        out[n, i, j] += a[n, i, k] * b[n, k, j]
-
-            Where n indicates an optional broadcasted batched dimension.
-
-            Should work for tensor shapes of 3 dims ::
-
-                assert a.shape[-1] == b.shape[-2]
-
-            Args:
-                a : tensor data a
-                b : tensor data b
-
-            Returns:
-                New tensor data
-            """
-            pass
+            ...
 
 
 preamble module:
@@ -232,43 +183,22 @@ preamble module:
             self.training = True
 
         def modules(self) -> Sequence[Module]:
-            """Return the direct child modules of this module."""
-            pass
+            ...
 
         def train(self) -> None:
-            """Set the mode of this module and all descendent modules to `train`."""
-            pass
+            ...
 
         def eval(self) -> None:
-            """Set the mode of this module and all descendent modules to `eval`."""
-            pass
+            ...
 
         def named_parameters(self) -> Sequence[Tuple[str, Parameter]]:
-            """
-            Collect all the parameters of this module and its descendents.
-
-
-            Returns:
-                The name and `Parameter` of each ancestor parameter.
-            """
-            pass
+            ...
 
         def parameters(self) -> Sequence[Parameter]:
-            """Enumerate over all the parameters of this module and its descendents."""
-            pass
+            ...
 
         def add_parameter(self, k: str, v: Any) -> Parameter:
-            """
-            Manually add a parameter. Useful helper for scalar parameters.
-
-            Args:
-                k: Local name of the parameter.
-                v: Value for the parameter.
-
-            Returns:
-                Newly created parameter.
-            """
-            pass
+            ...
 
         def __setattr__(self, key: str, val: Parameter) -> None:
             if isinstance(val, Parameter):
@@ -327,8 +257,7 @@ preamble module:
                     self.value.name = self.name
 
         def update(self, x: Any) -> None:
-            """Update the parameter value."""
-            pass
+            ...
 
         def __repr__(self) -> str:
             return repr(self.value)
@@ -353,13 +282,11 @@ preamble nn:
 
         @staticmethod
         def forward(ctx: Context, input: Tensor, dim: Tensor) -> Tensor:
-            """Forward of max should be max reduction"""
-            pass
+            ...
 
         @staticmethod
         def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
-            """Backward of max should be argmax (see above)"""
-            pass
+            ...
 
 
 preamble operators:
@@ -485,28 +412,13 @@ preamble scalar:
             return self * b
 
         def accumulate_derivative(self, x: Any) -> None:
-            """
-            Add `val` to the the derivative accumulated on this variable.
-            Should only be called during autodifferentiation on leaf variables.
-
-            Args:
-                x: value to be accumulated
-            """
-            pass
+            ...
 
         def is_leaf(self) -> bool:
-            """True if this variable created by the user (no `last_fn`)"""
-            pass
+            ...
 
         def backward(self, d_output: Optional[float]=None) -> None:
-            """
-            Calls autodiff to fill in the derivatives for the history of this object.
-
-            Args:
-                d_output (number, opt): starting derivative to backpropagate through the model
-                                       (typically left out, and assumed to be 1.0).
-            """
-            pass
+            ...
 
 
 preamble scalar_functions:
@@ -611,39 +523,22 @@ preamble tensor:
             self.f = backend
 
         def to_numpy(self) -> npt.NDArray[np.float64]:
-            """
-            Returns:
-                 Converted to numpy array
-            """
-            pass
+            ...
 
         @property
         def shape(self) -> UserShape:
-            """
-            Returns:
-                 shape of the tensor
-            """
-            pass
+            ...
 
         @property
         def size(self) -> int:
-            """
-            Returns:
-                 int : size of the tensor
-            """
-            pass
+            ...
 
         @property
         def dims(self) -> int:
-            """
-            Returns:
-                 int : dimensionality of the tensor
-            """
-            pass
+            ...
 
         def _ensure_tensor(self, b: TensorLike) -> Tensor:
-            """Turns a python number into a tensor with the same backend."""
-            pass
+            ...
 
         def __add__(self, b: TensorLike) -> Tensor:
             return Add.apply(self, self._ensure_tensor(b))
@@ -683,24 +578,19 @@ preamble tensor:
             return self * b
 
         def sum(self, dim: Optional[int]=None) -> Tensor:
-            """Compute the sum over dimension `dim`"""
-            pass
+            ...
 
         def mean(self, dim: Optional[int]=None) -> Tensor:
-            """Compute the mean over dimension `dim`"""
-            pass
+            ...
 
         def permute(self, *order: int) -> Tensor:
-            """Permute tensor dimensions to *order"""
-            pass
+            ...
 
         def view(self, *shape: int) -> Tensor:
-            """Change the shape of the tensor to a new shape with the same size"""
-            pass
+            ...
 
         def contiguous(self) -> Tensor:
-            """Return a contiguous tensor with the same data"""
-            pass
+            ...
 
         def __repr__(self) -> str:
             return self._tensor.to_string()
@@ -715,44 +605,19 @@ preamble tensor:
 
         @staticmethod
         def make(storage: Union[Storage, List[float]], shape: UserShape, strides: Optional[UserStrides]=None, backend: Optional[TensorBackend]=None) -> Tensor:
-            """Create a new tensor from data"""
-            pass
+            ...
 
         def expand(self, other: Tensor) -> Tensor:
-            """
-            Method used to allow for backprop over broadcasting.
-            This method is called when the output of `backward`
-            is a different size than the input of `forward`.
-
-
-            Parameters:
-                other : backward tensor (must broadcast with self)
-
-            Returns:
-                Expanded version of `other` with the right derivatives
-
-            """
-            pass
+            ...
 
         def accumulate_derivative(self, x: Any) -> None:
-            """
-            Add `val` to the the derivative accumulated on this variable.
-            Should only be called during autodifferentiation on leaf variables.
-
-            Args:
-                x : value to be accumulated
-            """
-            pass
+            ...
 
         def is_leaf(self) -> bool:
-            """True if this variable created by the user (no `last_fn`)"""
-            pass
+            ...
 
         def zero_grad_(self) -> None:
-            """
-            Reset the derivative on this variable.
-            """
-            pass
+            ...
 
 
 preamble tensor_data:
@@ -809,25 +674,10 @@ preamble tensor_data:
             assert len(self._storage) == self.size
 
         def is_contiguous(self) -> bool:
-            """
-            Check that the layout is contiguous, i.e. outer dimensions have bigger strides than inner dimensions.
-
-            Returns:
-                bool : True if contiguous
-            """
-            pass
+            ...
 
         def permute(self, *order: int) -> TensorData:
-            """
-            Permute the dimensions of the tensor.
-
-            Args:
-                *order: a permutation of the dimensions
-
-            Returns:
-                New `TensorData` with the same storage and a new dimension order.
-            """
-            pass
+            ...
 
 
 preamble tensor_functions:
@@ -945,92 +795,15 @@ preamble tensor_ops:
 
         @staticmethod
         def map(fn: Callable[[float], float]) -> MapProto:
-            """
-            Higher-order tensor map function ::
-
-              fn_map = map(fn)
-              fn_map(a, out)
-              out
-
-            Simple version::
-
-                for i:
-                    for j:
-                        out[i, j] = fn(a[i, j])
-
-            Broadcasted version (`a` might be smaller than `out`) ::
-
-                for i:
-                    for j:
-                        out[i, j] = fn(a[i, 0])
-
-            Args:
-                fn: function from float-to-float to apply.
-                a (:class:`TensorData`): tensor to map over
-                out (:class:`TensorData`): optional, tensor data to fill in,
-                       should broadcast with `a`
-
-            Returns:
-                new tensor data
-            """
-            pass
+            ...
 
         @staticmethod
         def zip(fn: Callable[[float, float], float]) -> Callable[['Tensor', 'Tensor'], 'Tensor']:
-            """
-            Higher-order tensor zip function ::
-
-              fn_zip = zip(fn)
-              out = fn_zip(a, b)
-
-            Simple version ::
-
-                for i:
-                    for j:
-                        out[i, j] = fn(a[i, j], b[i, j])
-
-            Broadcasted version (`a` and `b` might be smaller than `out`) ::
-
-                for i:
-                    for j:
-                        out[i, j] = fn(a[i, 0], b[0, j])
-
-
-            Args:
-                fn: function from two floats-to-float to apply
-                a (:class:`TensorData`): tensor to zip over
-                b (:class:`TensorData`): tensor to zip over
-
-            Returns:
-                :class:`TensorData` : new tensor data
-            """
-            pass
+            ...
 
         @staticmethod
         def reduce(fn: Callable[[float, float], float], start: float=0.0) -> Callable[['Tensor', int], 'Tensor']:
-            """
-            Higher-order tensor reduce function. ::
-
-              fn_reduce = reduce(fn)
-              out = fn_reduce(a, dim)
-
-            Simple version ::
-
-                for j:
-                    out[1, j] = start
-                    for i:
-                        out[1, j] = fn(out[1, j], a[i, j])
-
-
-            Args:
-                fn: function from two floats-to-float to apply
-                a (:class:`TensorData`): tensor to reduce over
-                dim (int): int of dim to reduce
-
-            Returns:
-                :class:`TensorData` : new tensor
-            """
-            pass
+            ...
         is_cuda = False
 
 
@@ -1046,85 +819,67 @@ preamble testing:
 
         @staticmethod
         def neg(a: A) -> A:
-            """Negate the argument"""
-            pass
+            ...
 
         @staticmethod
         def addConstant(a: A) -> A:
-            """Add contant to the argument"""
-            pass
+            ...
 
         @staticmethod
         def square(a: A) -> A:
-            """Manual square"""
-            pass
+            ...
 
         @staticmethod
         def cube(a: A) -> A:
-            """Manual cube"""
-            pass
+            ...
 
         @staticmethod
         def subConstant(a: A) -> A:
-            """Subtract a constant from the argument"""
-            pass
+            ...
 
         @staticmethod
         def multConstant(a: A) -> A:
-            """Multiply a constant to the argument"""
-            pass
+            ...
 
         @staticmethod
         def div(a: A) -> A:
-            """Divide by a constant"""
-            pass
+            ...
 
         @staticmethod
         def inv(a: A) -> A:
-            """Invert after adding"""
-            pass
+            ...
 
         @staticmethod
         def sig(a: A) -> A:
-            """Apply sigmoid"""
-            pass
+            ...
 
         @staticmethod
         def log(a: A) -> A:
-            """Apply log to a large value"""
-            pass
+            ...
 
         @staticmethod
         def relu(a: A) -> A:
-            """Apply relu"""
-            pass
+            ...
 
         @staticmethod
         def exp(a: A) -> A:
-            """Apply exp to a smaller value"""
-            pass
+            ...
 
         @staticmethod
         def add2(a: A, b: A) -> A:
-            """Add two arguments"""
-            pass
+            ...
 
         @staticmethod
         def mul2(a: A, b: A) -> A:
-            """Mul two arguments"""
-            pass
+            ...
 
         @staticmethod
         def div2(a: A, b: A) -> A:
-            """Divide two arguments"""
-            pass
+            ...
 
         @classmethod
         def _tests(cls) -> Tuple[Tuple[str, Callable[[A], A]], Tuple[str, Callable[[A, A], A]], Tuple[str, Callable[[Iterable[A]], A]]]:
-            """
-            Returns a list of all the math tests.
-            """
-            pass
+            ...
     class MathTestVariable(MathTest):
         pass
 

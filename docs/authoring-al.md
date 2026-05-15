@@ -107,12 +107,24 @@ LLM 写 `hashkey` body 时能直接引用 `_HashedTuple` / `_kwmark`，因为它
 preamble 里可见。同样，`imports:` 块里的 `collections` 等也是 module-level 已经在 scope 内的——
 LLM 写 code body 时无需在 body 里再重复 `import collections`。
 
-> **`imports:` vs `body:` 在 preamble 里如何分**：所有以 `import X` 或
-> `from X import Y` 开头的语句 → `imports:`；其余 module-level Python
-> （class 定义、常量、`__all__`、module docstring、类型别名）→ `body:`。
-> 即使是 `try: from X import Y\nexcept ImportError: from Z import Y` 这种
-> "条件性导入"块，只要里面**全是** import 语句，也归入 `imports:`。
+> **`imports:` / `constants:` / `body:` 在 preamble 里如何分**：
+> 1. 所有 `import X` 或 `from X import Y` 行 → `imports:`（即使被
+>    `try: ... except ImportError: ...` 包住，只要 try 块里**全是**
+>    import 语句也算）。
+> 2. 简单名字模块级赋值（`__all__ = (...)`, `PI = 3.14`,
+>    `X: int = 1`）→ `constants:`。
+> 3. 其它 module-level Python（module docstring、class 定义、复杂赋值
+>    如 `a, b = 1, 2`、AugAssign、非 import 的 `try:` 块）→ `body:`。
+>
 > 这条规则由 `benchmarks/skeletons/_autogen.py` 自动执行。
+>
+> **类骨架里的 stripped 方法**（H6, Round 4）：preamble.body 的 class
+> 定义中，那些 body 只是 `pass`（可能前面有 docstring）的方法——它们
+> 是要 LLM 在对应的 `code <Class>__<method>` 节点里实现的——
+> autogen 会**自动改写成 `def method(args): ...`** 一行（去掉
+> docstring + pass，换成 ellipsis 字面量）。docstring 保留在对应的
+> `code` 节点里，避免重复。看到 `...` 的方法签名就知道："这里只是
+> 结构占位；不要在 preamble 里改它，去对应的 code 节点写"。
 
 **何时该写 preamble**：源文件除了"被 strip 成 `pass` 的函数"以外还含有
 以下任何一项时，就该写：

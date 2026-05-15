@@ -118,16 +118,7 @@ preamble classic:
             super(ClassicAdapter, self).__init__()
 
         def get_deprecated_msg(self, wrapped, instance):
-            """
-            Get the deprecation warning message for the user.
-
-            :param wrapped: Wrapped class or function.
-
-            :param instance: The object to which the wrapped function was bound when it was called.
-
-            :return: The warning message.
-            """
-            pass
+            ...
 
         def __call__(self, wrapped):
             """
@@ -257,20 +248,7 @@ preamble sphinx:
             return super(SphinxAdapter, self).__call__(wrapped)
 
         def get_deprecated_msg(self, wrapped, instance):
-            """
-            Get the deprecation warning message (without Sphinx cross-referencing syntax) for the user.
-
-            :param wrapped: Wrapped class or function.
-
-            :param instance: The object to which the wrapped function was bound when it was called.
-
-            :return: The warning message.
-
-            .. versionadded:: 1.2.12
-               Strip Sphinx cross-referencing syntax from warning message.
-
-            """
-            pass
+            ...
 
 
 flow deprecated_lib:

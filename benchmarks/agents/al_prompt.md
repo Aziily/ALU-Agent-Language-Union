@@ -130,6 +130,15 @@ flow my_lib: ...
 
 If a node is named `<Class>__<method>` (e.g. `Lock__acquire`, `Schema___compile_dict`), the body's Python is a method definition — keep the `def <method>(self, ...):` signature WITHOUT the `Class.` prefix. The runner's inject step uses the dunder convention to find the class in the original repo.
 
+**Stub marker in class skeletons**: inside a preamble's class definition, stripped methods appear with `...` (ellipsis) as their body, e.g.
+
+```python
+class Schema:
+    def _compile_dict(self, schema): ...
+```
+
+That is the signal "this method is filled by the matching `code Schema___compile_dict` node below — do NOT edit it in the preamble". Each `code <Class>__<method>` node carries the docstring + the body you must write. The preamble's class skeleton is structural-only: signatures + non-stripped helper method bodies.
+
 ## Decorator pattern (e.g. `@deprecated`, `@wrapt.decorator`)
 
 For decorator implementations, the body may use `@wrapt.decorator` for transparent argument forwarding. Pattern:

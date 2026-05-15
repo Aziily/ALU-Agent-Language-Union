@@ -55,18 +55,13 @@ preamble csstranslator:
         """
 
         def xpath_pseudo_element(self, xpath: OriginalXPathExpr, pseudo_element: PseudoElement) -> OriginalXPathExpr:
-            """
-            Dispatch method that transforms XPath to support pseudo-element
-            """
-            pass
+            ...
 
         def xpath_attr_functional_pseudo_element(self, xpath: OriginalXPathExpr, function: FunctionalPseudoElement) -> XPathExpr:
-            """Support selecting attribute values using ::attr() pseudo-element"""
-            pass
+            ...
 
         def xpath_text_simple_pseudo_element(self, xpath: OriginalXPathExpr) -> XPathExpr:
-            """Support selecting text nodes using ::text pseudo-element"""
-            pass
+            ...
     class GenericTranslator(TranslatorMixin, OriginalGenericTranslator):
         pass
     class HTMLTranslator(TranslatorMixin, OriginalHTMLTranslator):
@@ -121,11 +116,11 @@ preamble selector:
 
         @typing.overload
         def __getitem__(self, pos: 'SupportsIndex') -> _SelectorType:
-            pass
+            ...
 
         @typing.overload
         def __getitem__(self, pos: slice) -> 'SelectorList[_SelectorType]':
-            pass
+            ...
 
         def __getitem__(self, pos: Union['SupportsIndex', slice]) -> Union[_SelectorType, 'SelectorList[_SelectorType]']:
             o = super().__getitem__(pos)
@@ -138,107 +133,37 @@ preamble selector:
             raise TypeError("can't pickle SelectorList objects")
 
         def jmespath(self, query: str, **kwargs: Any) -> 'SelectorList[_SelectorType]':
-            """
-            Call the ``.jmespath()`` method for each element in this list and return
-            their results flattened as another :class:`SelectorList`.
-
-            ``query`` is the same argument as the one in :meth:`Selector.jmespath`.
-
-            Any additional named arguments are passed to the underlying
-            ``jmespath.search`` call, e.g.::
-
-                selector.jmespath('author.name', options=jmespath.Options(dict_cls=collections.OrderedDict))
-            """
-            pass
+            ...
 
         def xpath(self, xpath: str, namespaces: Optional[Mapping[str, str]]=None, **kwargs: Any) -> 'SelectorList[_SelectorType]':
-            """
-            Call the ``.xpath()`` method for each element in this list and return
-            their results flattened as another :class:`SelectorList`.
-
-            ``xpath`` is the same argument as the one in :meth:`Selector.xpath`
-
-            ``namespaces`` is an optional ``prefix: namespace-uri`` mapping (dict)
-            for additional prefixes to those registered with ``register_namespace(prefix, uri)``.
-            Contrary to ``register_namespace()``, these prefixes are not
-            saved for future calls.
-
-            Any additional named arguments can be used to pass values for XPath
-            variables in the XPath expression, e.g.::
-
-                selector.xpath('//a[href=$url]', url="http://www.example.com")
-            """
-            pass
+            ...
 
         def css(self, query: str) -> 'SelectorList[_SelectorType]':
-            """
-            Call the ``.css()`` method for each element in this list and return
-            their results flattened as another :class:`SelectorList`.
-
-            ``query`` is the same argument as the one in :meth:`Selector.css`
-            """
-            pass
+            ...
 
         def re(self, regex: Union[str, Pattern[str]], replace_entities: bool=True) -> List[str]:
-            """
-            Call the ``.re()`` method for each element in this list and return
-            their results flattened, as a list of strings.
-
-            By default, character entity references are replaced by their
-            corresponding character (except for ``&amp;`` and ``&lt;``.
-            Passing ``replace_entities`` as ``False`` switches off these
-            replacements.
-            """
-            pass
+            ...
 
         def re_first(self, regex: Union[str, Pattern[str]], default: Optional[str]=None, replace_entities: bool=True) -> Optional[str]:
-            """
-            Call the ``.re()`` method for the first element in this list and
-            return the result in an string. If the list is empty or the
-            regex doesn't match anything, return the default value (``None`` if
-            the argument is not provided).
-
-            By default, character entity references are replaced by their
-            corresponding character (except for ``&amp;`` and ``&lt;``.
-            Passing ``replace_entities`` as ``False`` switches off these
-            replacements.
-            """
-            pass
+            ...
 
         def getall(self) -> List[str]:
-            """
-            Call the ``.get()`` method for each element is this list and return
-            their results flattened, as a list of strings.
-            """
-            pass
+            ...
         extract = getall
 
         def get(self, default: Optional[str]=None) -> Any:
-            """
-            Return the result of ``.get()`` for the first element in this list.
-            If the list is empty, return the default value.
-            """
-            pass
+            ...
         extract_first = get
 
         @property
         def attrib(self) -> Mapping[str, str]:
-            """Return the attributes dictionary for the first element.
-            If the list is empty, return an empty dict.
-            """
-            pass
+            ...
 
         def remove(self) -> None:
-            """
-            Remove matched nodes from the parent for each element in this list.
-            """
-            pass
+            ...
 
         def drop(self) -> None:
-            """
-            Drop matched nodes from the parent for each element in this list.
-            """
-            pass
+            ...
     class Selector:
         """Wrapper for input data in HTML, JSON, or XML format, that allows
         selecting parts of it using selection expressions.
@@ -311,129 +236,42 @@ preamble selector:
             raise TypeError("can't pickle Selector objects")
 
         def jmespath(self: _SelectorType, query: str, **kwargs: Any) -> SelectorList[_SelectorType]:
-            """
-            Find objects matching the JMESPath ``query`` and return the result as a
-            :class:`SelectorList` instance with all elements flattened. List
-            elements implement :class:`Selector` interface too.
-
-            ``query`` is a string containing the `JMESPath
-            <https://jmespath.org/>`_ query to apply.
-
-            Any additional named arguments are passed to the underlying
-            ``jmespath.search`` call, e.g.::
-
-                selector.jmespath('author.name', options=jmespath.Options(dict_cls=collections.OrderedDict))
-            """
-            pass
+            ...
 
         def xpath(self: _SelectorType, query: str, namespaces: Optional[Mapping[str, str]]=None, **kwargs: Any) -> SelectorList[_SelectorType]:
-            """
-            Find nodes matching the xpath ``query`` and return the result as a
-            :class:`SelectorList` instance with all elements flattened. List
-            elements implement :class:`Selector` interface too.
-
-            ``query`` is a string containing the XPATH query to apply.
-
-            ``namespaces`` is an optional ``prefix: namespace-uri`` mapping (dict)
-            for additional prefixes to those registered with ``register_namespace(prefix, uri)``.
-            Contrary to ``register_namespace()``, these prefixes are not
-            saved for future calls.
-
-            Any additional named arguments can be used to pass values for XPath
-            variables in the XPath expression, e.g.::
-
-                selector.xpath('//a[href=$url]', url="http://www.example.com")
-            """
-            pass
+            ...
 
         def css(self: _SelectorType, query: str) -> SelectorList[_SelectorType]:
-            """
-            Apply the given CSS selector and return a :class:`SelectorList` instance.
-
-            ``query`` is a string containing the CSS selector to apply.
-
-            In the background, CSS queries are translated into XPath queries using
-            `cssselect`_ library and run ``.xpath()`` method.
-
-            .. _cssselect: https://pypi.python.org/pypi/cssselect/
-            """
-            pass
+            ...
 
         def re(self, regex: Union[str, Pattern[str]], replace_entities: bool=True) -> List[str]:
-            """
-            Apply the given regex and return a list of strings with the
-            matches.
-
-            ``regex`` can be either a compiled regular expression or a string which
-            will be compiled to a regular expression using ``re.compile(regex)``.
-
-            By default, character entity references are replaced by their
-            corresponding character (except for ``&amp;`` and ``&lt;``).
-            Passing ``replace_entities`` as ``False`` switches off these
-            replacements.
-            """
-            pass
+            ...
 
         def re_first(self, regex: Union[str, Pattern[str]], default: Optional[str]=None, replace_entities: bool=True) -> Optional[str]:
-            """
-            Apply the given regex and return the first string which matches. If
-            there is no match, return the default value (``None`` if the argument
-            is not provided).
-
-            By default, character entity references are replaced by their
-            corresponding character (except for ``&amp;`` and ``&lt;``).
-            Passing ``replace_entities`` as ``False`` switches off these
-            replacements.
-            """
-            pass
+            ...
 
         def get(self) -> Any:
-            """
-            Serialize and return the matched nodes.
-
-            For HTML and XML, the result is always a string, and percent-encoded
-            content is unquoted.
-            """
-            pass
+            ...
         extract = get
 
         def getall(self) -> List[str]:
-            """
-            Serialize and return the matched node in a 1-element list of strings.
-            """
-            pass
+            ...
 
         def register_namespace(self, prefix: str, uri: str) -> None:
-            """
-            Register the given namespace to be used in this :class:`Selector`.
-            Without registering namespaces you can't select or extract data from
-            non-standard namespaces. See :ref:`selector-examples-xml`.
-            """
-            pass
+            ...
 
         def remove_namespaces(self) -> None:
-            """
-            Remove all namespaces, allowing to traverse the document using
-            namespace-less xpaths. See :ref:`removing-namespaces`.
-            """
-            pass
+            ...
 
         def remove(self) -> None:
-            """
-            Remove matched nodes from the parent element.
-            """
-            pass
+            ...
 
         def drop(self) -> None:
-            """
-            Drop matched nodes from the parent element.
-            """
-            pass
+            ...
 
         @property
         def attrib(self) -> Dict[str, str]:
-            """Return the attributes dictionary for underlying element."""
-            pass
+            ...
 
         def __bool__(self) -> bool:
             """

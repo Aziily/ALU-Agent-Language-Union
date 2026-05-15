@@ -102,24 +102,19 @@ preamble bccache:
             self.reset()
 
         def reset(self) -> None:
-            """Resets the bucket (unloads the bytecode)."""
-            pass
+            ...
 
         def load_bytecode(self, f: t.BinaryIO) -> None:
-            """Loads bytecode from a file or file like object."""
-            pass
+            ...
 
         def write_bytecode(self, f: t.IO[bytes]) -> None:
-            """Dump the bytecode into the file or file like object passed."""
-            pass
+            ...
 
         def bytecode_from_string(self, string: bytes) -> None:
-            """Load bytecode from bytes."""
-            pass
+            ...
 
         def bytecode_to_string(self) -> bytes:
-            """Return the bytecode as bytes."""
-            pass
+            ...
     class BytecodeCache:
         """To implement your own bytecode cache you have to subclass this class
         and override :meth:`load_bytecode` and :meth:`dump_bytecode`.  Both of
@@ -150,43 +145,25 @@ preamble bccache:
         """
 
         def load_bytecode(self, bucket: Bucket) -> None:
-            """Subclasses have to override this method to load bytecode into a
-            bucket.  If they are not able to find code in the cache for the
-            bucket, it must not do anything.
-            """
-            pass
+            ...
 
         def dump_bytecode(self, bucket: Bucket) -> None:
-            """Subclasses have to override this method to write the bytecode
-            from a bucket back to the cache.  If it unable to do so it must not
-            fail silently but raise an exception.
-            """
-            pass
+            ...
 
         def clear(self) -> None:
-            """Clears the cache.  This method is not used by Jinja but should be
-            implemented to allow applications to clear the bytecode cache used
-            by a particular environment.
-            """
-            pass
+            ...
 
         def get_cache_key(self, name: str, filename: t.Optional[t.Union[str]]=None) -> str:
-            """Returns the unique hash key for this template name."""
-            pass
+            ...
 
         def get_source_checksum(self, source: str) -> str:
-            """Returns a checksum for the source."""
-            pass
+            ...
 
         def get_bucket(self, environment: 'Environment', name: str, filename: t.Optional[str], source: str) -> Bucket:
-            """Return a cache bucket for the given template.  All arguments are
-            mandatory but filename may be `None`.
-            """
-            pass
+            ...
 
         def set_bucket(self, bucket: Bucket) -> None:
-            """Put the bucket into the cache."""
-            pass
+            ...
     class FileSystemBytecodeCache(BytecodeCache):
         """A bytecode cache that stores bytecode on the filesystem.  It accepts
         two arguments: The directory where the cache items are stored and a
@@ -323,22 +300,13 @@ preamble compiler:
             self.soft_frame = False
 
         def copy(self) -> 'Frame':
-            """Create a copy of the current one."""
-            pass
+            ...
 
         def inner(self, isolated: bool=False) -> 'Frame':
-            """Return an inner frame."""
-            pass
+            ...
 
         def soft(self) -> 'Frame':
-            """Return a soft frame.  A soft frame may not be modified as
-            standalone thing as it shares the resources with the frame it
-            was created of, but it's not a rootlevel frame any longer.
-
-            This is only used to implement if-statements and conditional
-            expressions.
-            """
-            pass
+            ...
         __copy__ = copy
     class VisitorExit(RuntimeError):
         """Exception used by the `UndeclaredNameVisitor` to signal a stop."""
@@ -350,8 +318,7 @@ preamble compiler:
             self.tests: t.Set[str] = set()
 
         def visit_Block(self, node: nodes.Block) -> None:
-            """Stop visiting at blocks."""
-            pass
+            ...
     class UndeclaredNameVisitor(NodeVisitor):
         """A visitor that checks if a name is accessed without being
         declared.  This is different from the frame visitor as it will
@@ -363,8 +330,7 @@ preamble compiler:
             self.undeclared: t.Set[str] = set()
 
         def visit_Block(self, node: nodes.Block) -> None:
-            """Stop visiting a blocks."""
-            pass
+            ...
     class CompilerExit(Exception):
         """Raised if the compiler encountered a situation where it just
         doesn't make sense to further process the code.  Any block that
@@ -403,152 +369,94 @@ preamble compiler:
             self._context_reference_stack = ['context']
 
         def fail(self, msg: str, lineno: int) -> 'te.NoReturn':
-            """Fail with a :exc:`TemplateAssertionError`."""
-            pass
+            ...
 
         def temporary_identifier(self) -> str:
-            """Get a new unique identifier."""
-            pass
+            ...
 
         def buffer(self, frame: Frame) -> None:
-            """Enable buffering for the frame from that point onwards."""
-            pass
+            ...
 
         def return_buffer_contents(self, frame: Frame, force_unescaped: bool=False) -> None:
-            """Return the buffer contents of the frame."""
-            pass
+            ...
 
         def indent(self) -> None:
-            """Indent by one."""
-            pass
+            ...
 
         def outdent(self, step: int=1) -> None:
-            """Outdent by step."""
-            pass
+            ...
 
         def start_write(self, frame: Frame, node: t.Optional[nodes.Node]=None) -> None:
-            """Yield or write into the frame buffer."""
-            pass
+            ...
 
         def end_write(self, frame: Frame) -> None:
-            """End the writing process started by `start_write`."""
-            pass
+            ...
 
         def simple_write(self, s: str, frame: Frame, node: t.Optional[nodes.Node]=None) -> None:
-            """Simple shortcut for start_write + write + end_write."""
-            pass
+            ...
 
         def blockvisit(self, nodes: t.Iterable[nodes.Node], frame: Frame) -> None:
-            """Visit a list of nodes as block in a frame.  If the current frame
-            is no buffer a dummy ``if 0: yield None`` is written automatically.
-            """
-            pass
+            ...
 
         def write(self, x: str) -> None:
-            """Write a string into the output stream."""
-            pass
+            ...
 
         def writeline(self, x: str, node: t.Optional[nodes.Node]=None, extra: int=0) -> None:
-            """Combination of newline and write."""
-            pass
+            ...
 
         def newline(self, node: t.Optional[nodes.Node]=None, extra: int=0) -> None:
-            """Add one or more newlines before the next write."""
-            pass
+            ...
 
         def signature(self, node: t.Union[nodes.Call, nodes.Filter, nodes.Test], frame: Frame, extra_kwargs: t.Optional[t.Mapping[str, t.Any]]=None) -> None:
-            """Writes a function call to the stream for the current node.
-            A leading comma is added automatically.  The extra keyword
-            arguments may not include python keywords otherwise a syntax
-            error could occur.  The extra keyword arguments should be given
-            as python dict.
-            """
-            pass
+            ...
 
         def pull_dependencies(self, nodes: t.Iterable[nodes.Node]) -> None:
-            """Find all filter and test names used in the template and
-            assign them to variables in the compiled namespace. Checking
-            that the names are registered with the environment is done when
-            compiling the Filter and Test nodes. If the node is in an If or
-            CondExpr node, the check is done at runtime instead.
-
-            .. versionchanged:: 3.0
-                Filters and tests in If and CondExpr nodes are checked at
-                runtime instead of compile time.
-            """
-            pass
+            ...
 
         def macro_body(self, node: t.Union[nodes.Macro, nodes.CallBlock], frame: Frame) -> t.Tuple[Frame, MacroRef]:
-            """Dump the function def of a macro or call block."""
-            pass
+            ...
 
         def macro_def(self, macro_ref: MacroRef, frame: Frame) -> None:
-            """Dump the macro definition for the def created by macro_body."""
-            pass
+            ...
 
         def position(self, node: nodes.Node) -> str:
-            """Return a human readable position for the node."""
-            pass
+            ...
 
         def write_commons(self) -> None:
-            """Writes a common preamble that is used by root and block functions.
-            Primarily this sets up common local helpers and enforces a generator
-            through a dead branch.
-            """
-            pass
+            ...
 
         def push_parameter_definitions(self, frame: Frame) -> None:
-            """Pushes all parameter targets from the given frame into a local
-            stack that permits tracking of yet to be assigned parameters.  In
-            particular this enables the optimization from `visit_Name` to skip
-            undefined expressions for parameters in macros as macros can reference
-            otherwise unbound parameters.
-            """
-            pass
+            ...
 
         def pop_parameter_definitions(self) -> None:
-            """Pops the current parameter definitions set."""
-            pass
+            ...
 
         def mark_parameter_stored(self, target: str) -> None:
-            """Marks a parameter in the current parameter definitions as stored.
-            This will skip the enforced undefined checks.
-            """
-            pass
+            ...
 
         def parameter_is_undeclared(self, target: str) -> bool:
-            """Checks if a given target is an undeclared parameter."""
-            pass
+            ...
 
         def push_assign_tracking(self) -> None:
-            """Pushes a new layer for assignment tracking."""
-            pass
+            ...
 
         def pop_assign_tracking(self, frame: Frame) -> None:
-            """Pops the topmost level for assignment tracking and updates the
-            context variables if necessary.
-            """
-            pass
+            ...
 
         def visit_Block(self, node: nodes.Block, frame: Frame) -> None:
-            """Call a block and register it for the template."""
-            pass
+            ...
 
         def visit_Extends(self, node: nodes.Extends, frame: Frame) -> None:
-            """Calls the extender."""
-            pass
+            ...
 
         def visit_Include(self, node: nodes.Include, frame: Frame) -> None:
-            """Handles includes."""
-            pass
+            ...
 
         def visit_Import(self, node: nodes.Import, frame: Frame) -> None:
-            """Visit regular imports."""
-            pass
+            ...
 
         def visit_FromImport(self, node: nodes.FromImport, frame: Frame) -> None:
-            """Visit named imports."""
-            pass
+            ...
 
         class _FinalizeInfo(t.NamedTuple):
             const: t.Optional[t.Callable[..., str]]
@@ -556,56 +464,23 @@ preamble compiler:
 
         @staticmethod
         def _default_finalize(value: t.Any) -> t.Any:
-            """The default finalize function if the environment isn't
-            configured with one. Or, if the environment has one, this is
-            called on that function's output for constants.
-            """
-            pass
+            ...
         _finalize: t.Optional[_FinalizeInfo] = None
 
         def _make_finalize(self) -> _FinalizeInfo:
-            """Build the finalize function to be used on constants and at
-            runtime. Cached so it's only created once for all output nodes.
-
-            Returns a ``namedtuple`` with the following attributes:
-
-            ``const``
-                A function to finalize constant data at compile time.
-
-            ``src``
-                Source code to output around nodes to be evaluated at
-                runtime.
-            """
-            pass
+            ...
 
         def _output_const_repr(self, group: t.Iterable[t.Any]) -> str:
-            """Given a group of constant values converted from ``Output``
-            child nodes, produce a string to write to the template module
-            source.
-            """
-            pass
+            ...
 
         def _output_child_to_const(self, node: nodes.Expr, frame: Frame, finalize: _FinalizeInfo) -> str:
-            """Try to optimize a child of an ``Output`` node by trying to
-            convert it to constant, finalized data at compile time.
-
-            If :exc:`Impossible` is raised, the node is not constant and
-            will be evaluated at runtime. Any other exception will also be
-            evaluated at runtime for easier debugging.
-            """
-            pass
+            ...
 
         def _output_child_pre(self, node: nodes.Expr, frame: Frame, finalize: _FinalizeInfo) -> None:
-            """Output extra source code before visiting a child of an
-            ``Output`` node.
-            """
-            pass
+            ...
 
         def _output_child_post(self, node: nodes.Expr, frame: Frame, finalize: _FinalizeInfo) -> None:
-            """Output extra source code after visiting a child of an
-            ``Output`` node.
-            """
-            pass
+            ...
         visit_Add = _make_binop('+')
         visit_Sub = _make_binop('-')
         visit_Mul = _make_binop('*')
@@ -892,346 +767,91 @@ preamble environment:
             _environment_config_check(self)
 
         def add_extension(self, extension: t.Union[str, t.Type['Extension']]) -> None:
-            """Adds an extension after the environment was created.
-
-            .. versionadded:: 2.5
-            """
-            pass
+            ...
 
         def extend(self, **attributes: t.Any) -> None:
-            """Add the items to the instance of the environment if they do not exist
-            yet.  This is used by :ref:`extensions <writing-extensions>` to register
-            callbacks and configuration values without breaking inheritance.
-            """
-            pass
+            ...
 
         def overlay(self, block_start_string: str=missing, block_end_string: str=missing, variable_start_string: str=missing, variable_end_string: str=missing, comment_start_string: str=missing, comment_end_string: str=missing, line_statement_prefix: t.Optional[str]=missing, line_comment_prefix: t.Optional[str]=missing, trim_blocks: bool=missing, lstrip_blocks: bool=missing, newline_sequence: "te.Literal['\\n', '\\r\\n', '\\r']"=missing, keep_trailing_newline: bool=missing, extensions: t.Sequence[t.Union[str, t.Type['Extension']]]=missing, optimized: bool=missing, undefined: t.Type[Undefined]=missing, finalize: t.Optional[t.Callable[..., t.Any]]=missing, autoescape: t.Union[bool, t.Callable[[t.Optional[str]], bool]]=missing, loader: t.Optional['BaseLoader']=missing, cache_size: int=missing, auto_reload: bool=missing, bytecode_cache: t.Optional['BytecodeCache']=missing, enable_async: bool=False) -> 'Environment':
-            """Create a new overlay environment that shares all the data with the
-            current environment except for cache and the overridden attributes.
-            Extensions cannot be removed for an overlayed environment.  An overlayed
-            environment automatically gets all the extensions of the environment it
-            is linked to plus optional extra extensions.
-
-            Creating overlays should happen after the initial environment was set
-            up completely.  Not all attributes are truly linked, some are just
-            copied over so modifications on the original environment may not shine
-            through.
-
-            .. versionchanged:: 3.1.2
-                Added the ``newline_sequence``,, ``keep_trailing_newline``,
-                and ``enable_async`` parameters to match ``__init__``.
-            """
-            pass
+            ...
 
         @property
         def lexer(self) -> Lexer:
-            """The lexer for this environment."""
-            pass
+            ...
 
         def iter_extensions(self) -> t.Iterator['Extension']:
-            """Iterates over the extensions by priority."""
-            pass
+            ...
 
         def getitem(self, obj: t.Any, argument: t.Union[str, t.Any]) -> t.Union[t.Any, Undefined]:
-            """Get an item or attribute of an object but prefer the item."""
-            pass
+            ...
 
         def getattr(self, obj: t.Any, attribute: str) -> t.Any:
-            """Get an item or attribute of an object but prefer the attribute.
-            Unlike :meth:`getitem` the attribute *must* be a string.
-            """
-            pass
+            ...
 
         def call_filter(self, name: str, value: t.Any, args: t.Optional[t.Sequence[t.Any]]=None, kwargs: t.Optional[t.Mapping[str, t.Any]]=None, context: t.Optional[Context]=None, eval_ctx: t.Optional[EvalContext]=None) -> t.Any:
-            """Invoke a filter on a value the same way the compiler does.
-
-            This might return a coroutine if the filter is running from an
-            environment in async mode and the filter supports async
-            execution. It's your responsibility to await this if needed.
-
-            .. versionadded:: 2.7
-            """
-            pass
+            ...
 
         def call_test(self, name: str, value: t.Any, args: t.Optional[t.Sequence[t.Any]]=None, kwargs: t.Optional[t.Mapping[str, t.Any]]=None, context: t.Optional[Context]=None, eval_ctx: t.Optional[EvalContext]=None) -> t.Any:
-            """Invoke a test on a value the same way the compiler does.
-
-            This might return a coroutine if the test is running from an
-            environment in async mode and the test supports async execution.
-            It's your responsibility to await this if needed.
-
-            .. versionchanged:: 3.0
-                Tests support ``@pass_context``, etc. decorators. Added
-                the ``context`` and ``eval_ctx`` parameters.
-
-            .. versionadded:: 2.7
-            """
-            pass
+            ...
 
         @internalcode
         def parse(self, source: str, name: t.Optional[str]=None, filename: t.Optional[str]=None) -> nodes.Template:
-            """Parse the sourcecode and return the abstract syntax tree.  This
-            tree of nodes is used by the compiler to convert the template into
-            executable source- or bytecode.  This is useful for debugging or to
-            extract information from templates.
-
-            If you are :ref:`developing Jinja extensions <writing-extensions>`
-            this gives you a good overview of the node tree generated.
-            """
-            pass
+            ...
 
         def _parse(self, source: str, name: t.Optional[str], filename: t.Optional[str]) -> nodes.Template:
-            """Internal parsing function used by `parse` and `compile`."""
-            pass
+            ...
 
         def lex(self, source: str, name: t.Optional[str]=None, filename: t.Optional[str]=None) -> t.Iterator[t.Tuple[int, str, str]]:
-            """Lex the given sourcecode and return a generator that yields
-            tokens as tuples in the form ``(lineno, token_type, value)``.
-            This can be useful for :ref:`extension development <writing-extensions>`
-            and debugging templates.
-
-            This does not perform preprocessing.  If you want the preprocessing
-            of the extensions to be applied you have to filter source through
-            the :meth:`preprocess` method.
-            """
-            pass
+            ...
 
         def preprocess(self, source: str, name: t.Optional[str]=None, filename: t.Optional[str]=None) -> str:
-            """Preprocesses the source with all extensions.  This is automatically
-            called for all parsing and compiling methods but *not* for :meth:`lex`
-            because there you usually only want the actual source tokenized.
-            """
-            pass
+            ...
 
         def _tokenize(self, source: str, name: t.Optional[str], filename: t.Optional[str]=None, state: t.Optional[str]=None) -> TokenStream:
-            """Called by the parser to do the preprocessing and filtering
-            for all the extensions.  Returns a :class:`~jinja2.lexer.TokenStream`.
-            """
-            pass
+            ...
 
         def _generate(self, source: nodes.Template, name: t.Optional[str], filename: t.Optional[str], defer_init: bool=False) -> str:
-            """Internal hook that can be overridden to hook a different generate
-            method in.
-
-            .. versionadded:: 2.5
-            """
-            pass
+            ...
 
         def _compile(self, source: str, filename: str) -> CodeType:
-            """Internal hook that can be overridden to hook a different compile
-            method in.
-
-            .. versionadded:: 2.5
-            """
-            pass
+            ...
 
         @internalcode
         def compile(self, source: t.Union[str, nodes.Template], name: t.Optional[str]=None, filename: t.Optional[str]=None, raw: bool=False, defer_init: bool=False) -> t.Union[str, CodeType]:
-            """Compile a node or template source code.  The `name` parameter is
-            the load name of the template after it was joined using
-            :meth:`join_path` if necessary, not the filename on the file system.
-            the `filename` parameter is the estimated filename of the template on
-            the file system.  If the template came from a database or memory this
-            can be omitted.
-
-            The return value of this method is a python code object.  If the `raw`
-            parameter is `True` the return value will be a string with python
-            code equivalent to the bytecode returned otherwise.  This method is
-            mainly used internally.
-
-            `defer_init` is use internally to aid the module code generator.  This
-            causes the generated code to be able to import without the global
-            environment variable to be set.
-
-            .. versionadded:: 2.4
-               `defer_init` parameter added.
-            """
-            pass
+            ...
 
         def compile_expression(self, source: str, undefined_to_none: bool=True) -> 'TemplateExpression':
-            """A handy helper method that returns a callable that accepts keyword
-            arguments that appear as variables in the expression.  If called it
-            returns the result of the expression.
-
-            This is useful if applications want to use the same rules as Jinja
-            in template "configuration files" or similar situations.
-
-            Example usage:
-
-            >>> env = Environment()
-            >>> expr = env.compile_expression('foo == 42')
-            >>> expr(foo=23)
-            False
-            >>> expr(foo=42)
-            True
-
-            Per default the return value is converted to `None` if the
-            expression returns an undefined value.  This can be changed
-            by setting `undefined_to_none` to `False`.
-
-            >>> env.compile_expression('var')() is None
-            True
-            >>> env.compile_expression('var', undefined_to_none=False)()
-            Undefined
-
-            .. versionadded:: 2.1
-            """
-            pass
+            ...
 
         def compile_templates(self, target: t.Union[str, 'os.PathLike[str]'], extensions: t.Optional[t.Collection[str]]=None, filter_func: t.Optional[t.Callable[[str], bool]]=None, zip: t.Optional[str]='deflated', log_function: t.Optional[t.Callable[[str], None]]=None, ignore_errors: bool=True) -> None:
-            """Finds all the templates the loader can find, compiles them
-            and stores them in `target`.  If `zip` is `None`, instead of in a
-            zipfile, the templates will be stored in a directory.
-            By default a deflate zip algorithm is used. To switch to
-            the stored algorithm, `zip` can be set to ``'stored'``.
-
-            `extensions` and `filter_func` are passed to :meth:`list_templates`.
-            Each template returned will be compiled to the target folder or
-            zipfile.
-
-            By default template compilation errors are ignored.  In case a
-            log function is provided, errors are logged.  If you want template
-            syntax errors to abort the compilation you can set `ignore_errors`
-            to `False` and you will get an exception on syntax errors.
-
-            .. versionadded:: 2.4
-            """
-            pass
+            ...
 
         def list_templates(self, extensions: t.Optional[t.Collection[str]]=None, filter_func: t.Optional[t.Callable[[str], bool]]=None) -> t.List[str]:
-            """Returns a list of templates for this environment.  This requires
-            that the loader supports the loader's
-            :meth:`~BaseLoader.list_templates` method.
-
-            If there are other files in the template folder besides the
-            actual templates, the returned list can be filtered.  There are two
-            ways: either `extensions` is set to a list of file extensions for
-            templates, or a `filter_func` can be provided which is a callable that
-            is passed a template name and should return `True` if it should end up
-            in the result list.
-
-            If the loader does not support that, a :exc:`TypeError` is raised.
-
-            .. versionadded:: 2.4
-            """
-            pass
+            ...
 
         def handle_exception(self, source: t.Optional[str]=None) -> 'te.NoReturn':
-            """Exception handling helper.  This is used internally to either raise
-            rewritten exceptions or return a rendered traceback for the template.
-            """
-            pass
+            ...
 
         def join_path(self, template: str, parent: str) -> str:
-            """Join a template with the parent.  By default all the lookups are
-            relative to the loader root so this method returns the `template`
-            parameter unchanged, but if the paths should be relative to the
-            parent template, this function can be used to calculate the real
-            template name.
-
-            Subclasses may override this method and implement template path
-            joining here.
-            """
-            pass
+            ...
 
         @internalcode
         def get_template(self, name: t.Union[str, 'Template'], parent: t.Optional[str]=None, globals: t.Optional[t.MutableMapping[str, t.Any]]=None) -> 'Template':
-            """Load a template by name with :attr:`loader` and return a
-            :class:`Template`. If the template does not exist a
-            :exc:`TemplateNotFound` exception is raised.
-
-            :param name: Name of the template to load. When loading
-                templates from the filesystem, "/" is used as the path
-                separator, even on Windows.
-            :param parent: The name of the parent template importing this
-                template. :meth:`join_path` can be used to implement name
-                transformations with this.
-            :param globals: Extend the environment :attr:`globals` with
-                these extra variables available for all renders of this
-                template. If the template has already been loaded and
-                cached, its globals are updated with any new items.
-
-            .. versionchanged:: 3.0
-                If a template is loaded from cache, ``globals`` will update
-                the template's globals instead of ignoring the new values.
-
-            .. versionchanged:: 2.4
-                If ``name`` is a :class:`Template` object it is returned
-                unchanged.
-            """
-            pass
+            ...
 
         @internalcode
         def select_template(self, names: t.Iterable[t.Union[str, 'Template']], parent: t.Optional[str]=None, globals: t.Optional[t.MutableMapping[str, t.Any]]=None) -> 'Template':
-            """Like :meth:`get_template`, but tries loading multiple names.
-            If none of the names can be loaded a :exc:`TemplatesNotFound`
-            exception is raised.
-
-            :param names: List of template names to try loading in order.
-            :param parent: The name of the parent template importing this
-                template. :meth:`join_path` can be used to implement name
-                transformations with this.
-            :param globals: Extend the environment :attr:`globals` with
-                these extra variables available for all renders of this
-                template. If the template has already been loaded and
-                cached, its globals are updated with any new items.
-
-            .. versionchanged:: 3.0
-                If a template is loaded from cache, ``globals`` will update
-                the template's globals instead of ignoring the new values.
-
-            .. versionchanged:: 2.11
-                If ``names`` is :class:`Undefined`, an :exc:`UndefinedError`
-                is raised instead. If no templates were found and ``names``
-                contains :class:`Undefined`, the message is more helpful.
-
-            .. versionchanged:: 2.4
-                If ``names`` contains a :class:`Template` object it is
-                returned unchanged.
-
-            .. versionadded:: 2.3
-            """
-            pass
+            ...
 
         @internalcode
         def get_or_select_template(self, template_name_or_list: t.Union[str, 'Template', t.List[t.Union[str, 'Template']]], parent: t.Optional[str]=None, globals: t.Optional[t.MutableMapping[str, t.Any]]=None) -> 'Template':
-            """Use :meth:`select_template` if an iterable of template names
-            is given, or :meth:`get_template` if one name is given.
-
-            .. versionadded:: 2.3
-            """
-            pass
+            ...
 
         def from_string(self, source: t.Union[str, nodes.Template], globals: t.Optional[t.MutableMapping[str, t.Any]]=None, template_class: t.Optional[t.Type['Template']]=None) -> 'Template':
-            """Load a template from a source string without using
-            :attr:`loader`.
-
-            :param source: Jinja source to compile into a template.
-            :param globals: Extend the environment :attr:`globals` with
-                these extra variables available for all renders of this
-                template. If the template has already been loaded and
-                cached, its globals are updated with any new items.
-            :param template_class: Return an instance of this
-                :class:`Template` class.
-            """
-            pass
+            ...
 
         def make_globals(self, d: t.Optional[t.MutableMapping[str, t.Any]]) -> t.MutableMapping[str, t.Any]:
-            """Make the globals map for a template. Any given template
-            globals overlay the environment :attr:`globals`.
-
-            Returns a :class:`collections.ChainMap`. This allows any changes
-            to a template's globals to only affect that template, while
-            changes to the environment's globals are still reflected.
-            However, avoid modifying any globals after a template is loaded.
-
-            :param d: Dict of template-specific globals.
-
-            .. versionchanged:: 3.0
-                Use :class:`collections.ChainMap` to always prevent mutating
-                environment globals.
-            """
-            pass
+            ...
     class Template:
         """A compiled template that can be rendered.
 
@@ -1265,138 +885,54 @@ preamble environment:
 
         @classmethod
         def from_code(cls, environment: Environment, code: CodeType, globals: t.MutableMapping[str, t.Any], uptodate: t.Optional[t.Callable[[], bool]]=None) -> 'Template':
-            """Creates a template object from compiled code and the globals.  This
-            is used by the loaders and environment to create a template object.
-            """
-            pass
+            ...
 
         @classmethod
         def from_module_dict(cls, environment: Environment, module_dict: t.MutableMapping[str, t.Any], globals: t.MutableMapping[str, t.Any]) -> 'Template':
-            """Creates a template object from a module.  This is used by the
-            module loader to create a template object.
-
-            .. versionadded:: 2.4
-            """
-            pass
+            ...
 
         def render(self, *args: t.Any, **kwargs: t.Any) -> str:
-            """This method accepts the same arguments as the `dict` constructor:
-            A dict, a dict subclass or some keyword arguments.  If no arguments
-            are given the context will be empty.  These two calls do the same::
-
-                template.render(knights='that say nih')
-                template.render({'knights': 'that say nih'})
-
-            This will return the rendered template as a string.
-            """
-            pass
+            ...
 
         async def render_async(self, *args: t.Any, **kwargs: t.Any) -> str:
-            """This works similar to :meth:`render` but returns a coroutine
-            that when awaited returns the entire rendered template string.  This
-            requires the async feature to be enabled.
-
-            Example usage::
-
-                await template.render_async(knights='that say nih; asynchronously')
-            """
-            pass
+            ...
 
         def stream(self, *args: t.Any, **kwargs: t.Any) -> 'TemplateStream':
-            """Works exactly like :meth:`generate` but returns a
-            :class:`TemplateStream`.
-            """
-            pass
+            ...
 
         def generate(self, *args: t.Any, **kwargs: t.Any) -> t.Iterator[str]:
-            """For very large templates it can be useful to not render the whole
-            template at once but evaluate each statement after another and yield
-            piece for piece.  This method basically does exactly that and returns
-            a generator that yields one item after another as strings.
-
-            It accepts the same arguments as :meth:`render`.
-            """
-            pass
+            ...
 
         async def generate_async(self, *args: t.Any, **kwargs: t.Any) -> t.AsyncIterator[str]:
-            """An async version of :meth:`generate`.  Works very similarly but
-            returns an async iterator instead.
-            """
-            pass
+            ...
 
         def new_context(self, vars: t.Optional[t.Dict[str, t.Any]]=None, shared: bool=False, locals: t.Optional[t.Mapping[str, t.Any]]=None) -> Context:
-            """Create a new :class:`Context` for this template.  The vars
-            provided will be passed to the template.  Per default the globals
-            are added to the context.  If shared is set to `True` the data
-            is passed as is to the context without adding the globals.
-
-            `locals` can be a dict of local variables for internal usage.
-            """
-            pass
+            ...
 
         def make_module(self, vars: t.Optional[t.Dict[str, t.Any]]=None, shared: bool=False, locals: t.Optional[t.Mapping[str, t.Any]]=None) -> 'TemplateModule':
-            """This method works like the :attr:`module` attribute when called
-            without arguments but it will evaluate the template on every call
-            rather than caching it.  It's also possible to provide
-            a dict which is then used as context.  The arguments are the same
-            as for the :meth:`new_context` method.
-            """
-            pass
+            ...
 
         async def make_module_async(self, vars: t.Optional[t.Dict[str, t.Any]]=None, shared: bool=False, locals: t.Optional[t.Mapping[str, t.Any]]=None) -> 'TemplateModule':
-            """As template module creation can invoke template code for
-            asynchronous executions this method must be used instead of the
-            normal :meth:`make_module` one.  Likewise the module attribute
-            becomes unavailable in async mode.
-            """
-            pass
+            ...
 
         @internalcode
         def _get_default_module(self, ctx: t.Optional[Context]=None) -> 'TemplateModule':
-            """If a context is passed in, this means that the template was
-            imported. Imported templates have access to the current
-            template's globals by default, but they can only be accessed via
-            the context during runtime.
-
-            If there are new globals, we need to create a new module because
-            the cached module is already rendered and will not have access
-            to globals from the current context. This new module is not
-            cached because the template can be imported elsewhere, and it
-            should have access to only the current template's globals.
-            """
-            pass
+            ...
 
         @property
         def module(self) -> 'TemplateModule':
-            """The template as module.  This is used for imports in the
-            template runtime but is also useful if one wants to access
-            exported template variables from the Python layer:
-
-            >>> t = Template('{% macro foo() %}42{% endmacro %}23')
-            >>> str(t.module)
-            '23'
-            >>> t.module.foo() == u'42'
-            True
-
-            This attribute is not available if async mode is enabled.
-            """
-            pass
+            ...
 
         def get_corresponding_lineno(self, lineno: int) -> int:
-            """Return the source line number of a line number in the
-            generated bytecode as they are not in sync.
-            """
-            pass
+            ...
 
         @property
         def is_up_to_date(self) -> bool:
-            """If this variable is `False` there is a newer version available."""
-            pass
+            ...
 
         @property
         def debug_info(self) -> t.List[t.Tuple[int, int]]:
-            """The debug info mapping."""
-            pass
+            ...
 
         def __repr__(self) -> str:
             if self.name is None:
@@ -1464,23 +1000,13 @@ preamble environment:
             self.disable_buffering()
 
         def dump(self, fp: t.Union[str, t.IO[bytes]], encoding: t.Optional[str]=None, errors: t.Optional[str]='strict') -> None:
-            """Dump the complete stream into a file or file-like object.
-            Per default strings are written, if you want to encode
-            before writing specify an `encoding`.
-
-            Example usage::
-
-                Template('Hello {{ name }}!').stream(name='foo').dump('hello.html')
-            """
-            pass
+            ...
 
         def disable_buffering(self) -> None:
-            """Disable the output buffering."""
-            pass
+            ...
 
         def enable_buffering(self, size: int=5) -> None:
-            """Enable buffering.  Buffer `size` items before yielding them."""
-            pass
+            ...
 
         def __iter__(self) -> 'TemplateStream':
             return self
@@ -1668,47 +1194,22 @@ preamble ext:
             self.environment = environment
 
         def bind(self, environment: Environment) -> 'Extension':
-            """Create a copy of this extension bound to another environment."""
-            pass
+            ...
 
         def preprocess(self, source: str, name: t.Optional[str], filename: t.Optional[str]=None) -> str:
-            """This method is called before the actual lexing and can be used to
-            preprocess the source.  The `filename` is optional.  The return value
-            must be the preprocessed source.
-            """
-            pass
+            ...
 
         def filter_stream(self, stream: 'TokenStream') -> t.Union['TokenStream', t.Iterable['Token']]:
-            """It's passed a :class:`~jinja2.lexer.TokenStream` that can be used
-            to filter tokens returned.  This method has to return an iterable of
-            :class:`~jinja2.lexer.Token`\\s, but it doesn't have to return a
-            :class:`~jinja2.lexer.TokenStream`.
-            """
-            pass
+            ...
 
         def parse(self, parser: 'Parser') -> t.Union[nodes.Node, t.List[nodes.Node]]:
-            """If any of the :attr:`tags` matched this method is called with the
-            parser as first argument.  The token the parser stream is pointing at
-            is the name token that matched.  This method has to return one or a
-            list of multiple nodes.
-            """
-            pass
+            ...
 
         def attr(self, name: str, lineno: t.Optional[int]=None) -> nodes.ExtensionAttribute:
-            """Return an attribute node for the current extension.  This is useful
-            to pass constants on extensions to generated template code.
-
-            ::
-
-                self.attr('_my_attribute', lineno=lineno)
-            """
-            pass
+            ...
 
         def call_method(self, name: str, args: t.Optional[t.List[nodes.Expr]]=None, kwargs: t.Optional[t.List[nodes.Keyword]]=None, dyn_args: t.Optional[nodes.Expr]=None, dyn_kwargs: t.Optional[nodes.Expr]=None, lineno: t.Optional[int]=None) -> nodes.Call:
-            """Call a method of the extension.  This is a shortcut for
-            :meth:`attr` + :class:`jinja2.nodes.Call`.
-            """
-            pass
+            ...
     class InternationalizationExtension(Extension):
         """This extension adds gettext support to Jinja."""
         tags = {'trans'}
@@ -1719,16 +1220,13 @@ preamble ext:
             environment.extend(install_gettext_translations=self._install, install_null_translations=self._install_null, install_gettext_callables=self._install_callables, uninstall_gettext_translations=self._uninstall, extract_translations=self._extract, newstyle_gettext=False)
 
         def parse(self, parser: 'Parser') -> t.Union[nodes.Node, t.List[nodes.Node]]:
-            """Parse a translatable tag."""
-            pass
+            ...
 
         def _parse_block(self, parser: 'Parser', allow_pluralize: bool) -> t.Tuple[t.List[str], str]:
-            """Parse until the next block tag with a given name."""
-            pass
+            ...
 
         def _make_node(self, singular: str, plural: t.Optional[str], context: t.Optional[str], variables: t.Dict[str, nodes.Expr], plural_expr: t.Optional[nodes.Expr], vars_referenced: bool, num_called_num: bool) -> nodes.Output:
-            """Generates a useful node from the data provided."""
-            pass
+            ...
     class ExprStmtExtension(Extension):
         """Adds a `do` tag to Jinja that works like the print statement just
         that it doesn't print the return value.
@@ -1875,34 +1373,25 @@ preamble idtracking:
             self.symbols = symbols
 
         def visit_Name(self, node: nodes.Name, store_as_param: bool=False, **kwargs: t.Any) -> None:
-            """All assignments to names go through this function."""
-            pass
+            ...
 
         def visit_Assign(self, node: nodes.Assign, **kwargs: t.Any) -> None:
-            """Visit assignments in the correct order."""
-            pass
+            ...
 
         def visit_For(self, node: nodes.For, **kwargs: t.Any) -> None:
-            """Visiting stops at for blocks.  However the block sequence
-            is visited as part of the outer scope.
-            """
-            pass
+            ...
 
         def visit_AssignBlock(self, node: nodes.AssignBlock, **kwargs: t.Any) -> None:
-            """Stop visiting at block assigns."""
-            pass
+            ...
 
         def visit_Scope(self, node: nodes.Scope, **kwargs: t.Any) -> None:
-            """Stop visiting at scopes."""
-            pass
+            ...
 
         def visit_Block(self, node: nodes.Block, **kwargs: t.Any) -> None:
-            """Stop visiting at blocks."""
-            pass
+            ...
 
         def visit_OverlayScope(self, node: nodes.OverlayScope, **kwargs: t.Any) -> None:
-            """Do not visit into overlay scopes."""
-            pass
+            ...
 
 
 preamble loaders:
@@ -1955,40 +1444,14 @@ preamble loaders:
         has_source_access = True
 
         def get_source(self, environment: 'Environment', template: str) -> t.Tuple[str, t.Optional[str], t.Optional[t.Callable[[], bool]]]:
-            """Get the template source, filename and reload helper for a template.
-            It's passed the environment and template name and has to return a
-            tuple in the form ``(source, filename, uptodate)`` or raise a
-            `TemplateNotFound` error if it can't locate the template.
-
-            The source part of the returned tuple must be the source of the
-            template as a string. The filename should be the name of the
-            file on the filesystem if it was loaded from there, otherwise
-            ``None``. The filename is used by Python for the tracebacks
-            if no loader extension is used.
-
-            The last item in the tuple is the `uptodate` function.  If auto
-            reloading is enabled it's always called to check if the template
-            changed.  No arguments are passed so the function must store the
-            old state somewhere (for example in a closure).  If it returns `False`
-            the template will be reloaded.
-            """
-            pass
+            ...
 
         def list_templates(self) -> t.List[str]:
-            """Iterates over all templates.  If the loader does not support that
-            it should raise a :exc:`TypeError` which is the default behavior.
-            """
-            pass
+            ...
 
         @internalcode
         def load(self, environment: 'Environment', name: str, globals: t.Optional[t.MutableMapping[str, t.Any]]=None) -> 'Template':
-            """Loads a template.  This method looks up the template in the cache
-            or loads one by calling :meth:`get_source`.  Subclasses should not
-            override this method as loaders working on collections of other
-            loaders (such as :class:`PrefixLoader` or :class:`ChoiceLoader`)
-            will not call this method but `get_source` directly.
-            """
-            pass
+            ...
     class FileSystemLoader(BaseLoader):
         """Load templates from a directory in the file system.
 
@@ -2204,12 +1667,10 @@ preamble meta:
             self.undeclared_identifiers: t.Set[str] = set()
 
         def write(self, x: str) -> None:
-            """Don't write."""
-            pass
+            ...
 
         def enter_frame(self, frame: Frame) -> None:
-            """Remember all undeclared identifiers."""
-            pass
+            ...
 
 
 preamble nativetypes:
@@ -2240,13 +1701,7 @@ preamble nativetypes:
         environment_class = NativeEnvironment
 
         def render(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
-            """Render the template to produce a native Python type. If the
-            result is a single node, its value is returned. Otherwise, the
-            nodes are concatenated as strings. If the result can be parsed
-            with :func:`ast.literal_eval`, the parsed value is returned.
-            Otherwise, the string is returned.
-            """
-            pass
+            ...
     NativeEnvironment.template_class = NativeTemplate
 
 
@@ -2307,101 +1762,46 @@ preamble parser:
             self._end_token_stack: t.List[t.Tuple[str, ...]] = []
 
         def fail(self, msg: str, lineno: t.Optional[int]=None, exc: t.Type[TemplateSyntaxError]=TemplateSyntaxError) -> 'te.NoReturn':
-            """Convenience method that raises `exc` with the message, passed
-            line number or last line number as well as the current name and
-            filename.
-            """
-            pass
+            ...
 
         def fail_unknown_tag(self, name: str, lineno: t.Optional[int]=None) -> 'te.NoReturn':
-            """Called if the parser encounters an unknown tag.  Tries to fail
-            with a human readable error message that could help to identify
-            the problem.
-            """
-            pass
+            ...
 
         def fail_eof(self, end_tokens: t.Optional[t.Tuple[str, ...]]=None, lineno: t.Optional[int]=None) -> 'te.NoReturn':
-            """Like fail_unknown_tag but for end of template situations."""
-            pass
+            ...
 
         def is_tuple_end(self, extra_end_rules: t.Optional[t.Tuple[str, ...]]=None) -> bool:
-            """Are we at the end of a tuple?"""
-            pass
+            ...
 
         def free_identifier(self, lineno: t.Optional[int]=None) -> nodes.InternalName:
-            """Return a new free identifier as :class:`~jinja2.nodes.InternalName`."""
-            pass
+            ...
 
         def parse_statement(self) -> t.Union[nodes.Node, t.List[nodes.Node]]:
-            """Parse a single statement."""
-            pass
+            ...
 
         def parse_statements(self, end_tokens: t.Tuple[str, ...], drop_needle: bool=False) -> t.List[nodes.Node]:
-            """Parse multiple statements into a list until one of the end tokens
-            is reached.  This is used to parse the body of statements as it also
-            parses template data if appropriate.  The parser checks first if the
-            current token is a colon and skips it if there is one.  Then it checks
-            for the block end and parses until if one of the `end_tokens` is
-            reached.  Per default the active token in the stream at the end of
-            the call is the matched end token.  If this is not wanted `drop_needle`
-            can be set to `True` and the end token is removed.
-            """
-            pass
+            ...
 
         def parse_set(self) -> t.Union[nodes.Assign, nodes.AssignBlock]:
-            """Parse an assign statement."""
-            pass
+            ...
 
         def parse_for(self) -> nodes.For:
-            """Parse a for loop."""
-            pass
+            ...
 
         def parse_if(self) -> nodes.If:
-            """Parse an if construct."""
-            pass
+            ...
 
         def parse_assign_target(self, with_tuple: bool=True, name_only: bool=False, extra_end_rules: t.Optional[t.Tuple[str, ...]]=None, with_namespace: bool=False) -> t.Union[nodes.NSRef, nodes.Name, nodes.Tuple]:
-            """Parse an assignment target.  As Jinja allows assignments to
-            tuples, this function can parse all allowed assignment targets.  Per
-            default assignments to tuples are parsed, that can be disable however
-            by setting `with_tuple` to `False`.  If only assignments to names are
-            wanted `name_only` can be set to `True`.  The `extra_end_rules`
-            parameter is forwarded to the tuple parsing function.  If
-            `with_namespace` is enabled, a namespace assignment may be parsed.
-            """
-            pass
+            ...
 
         def parse_expression(self, with_condexpr: bool=True) -> nodes.Expr:
-            """Parse an expression.  Per default all expressions are parsed, if
-            the optional `with_condexpr` parameter is set to `False` conditional
-            expressions are not parsed.
-            """
-            pass
+            ...
 
         def parse_tuple(self, simplified: bool=False, with_condexpr: bool=True, extra_end_rules: t.Optional[t.Tuple[str, ...]]=None, explicit_parentheses: bool=False) -> t.Union[nodes.Tuple, nodes.Expr]:
-            """Works like `parse_expression` but if multiple expressions are
-            delimited by a comma a :class:`~jinja2.nodes.Tuple` node is created.
-            This method could also return a regular expression instead of a tuple
-            if no commas where found.
-
-            The default parsing mode is a full tuple.  If `simplified` is `True`
-            only names and literals are parsed.  The `no_condexpr` parameter is
-            forwarded to :meth:`parse_expression`.
-
-            Because tuples do not require delimiters and may end in a bogus comma
-            an extra hint is needed that marks the end of a tuple.  For example
-            for loops support tuples between `for` and `in`.  In that case the
-            `extra_end_rules` is set to ``['name:in']``.
-
-            `explicit_parentheses` is true if the parsing was triggered by an
-            expression in parentheses.  This is used to figure out if an empty
-            tuple is a valid expression or not.
-            """
-            pass
+            ...
 
         def parse(self) -> nodes.Template:
-            """Parse the whole template into a `Template` node."""
-            pass
+            ...
 
 
 preamble runtime:
@@ -2488,68 +1888,29 @@ preamble runtime:
             self.blocks = {k: [v] for k, v in blocks.items()}
 
         def super(self, name: str, current: t.Callable[['Context'], t.Iterator[str]]) -> t.Union['BlockReference', 'Undefined']:
-            """Render a parent block."""
-            pass
+            ...
 
         def get(self, key: str, default: t.Any=None) -> t.Any:
-            """Look up a variable by name, or return a default if the key is
-            not found.
-
-            :param key: The variable name to look up.
-            :param default: The value to return if the key is not found.
-            """
-            pass
+            ...
 
         def resolve(self, key: str) -> t.Union[t.Any, 'Undefined']:
-            """Look up a variable by name, or return an :class:`Undefined`
-            object if the key is not found.
-
-            If you need to add custom behavior, override
-            :meth:`resolve_or_missing`, not this method. The various lookup
-            functions use that method, not this one.
-
-            :param key: The variable name to look up.
-            """
-            pass
+            ...
 
         def resolve_or_missing(self, key: str) -> t.Any:
-            """Look up a variable by name, or return a ``missing`` sentinel
-            if the key is not found.
-
-            Override this method to add custom lookup behavior.
-            :meth:`resolve`, :meth:`get`, and :meth:`__getitem__` use this
-            method. Don't call this method directly.
-
-            :param key: The variable name to look up.
-            """
-            pass
+            ...
 
         def get_exported(self) -> t.Dict[str, t.Any]:
-            """Get a new dict with the exported variables."""
-            pass
+            ...
 
         def get_all(self) -> t.Dict[str, t.Any]:
-            """Return the complete context as dict including the exported
-            variables.  For optimizations reasons this might not return an
-            actual copy so be careful with using it.
-            """
-            pass
+            ...
 
         @internalcode
         def call(__self, __obj: t.Callable[..., t.Any], *args: t.Any, **kwargs: t.Any) -> t.Union[t.Any, 'Undefined']:
-            """Call the callable with the arguments and keyword arguments
-            provided but inject the active context or environment as first
-            argument if the callable has :func:`pass_context` or
-            :func:`pass_environment`.
-            """
-            pass
+            ...
 
         def derived(self, locals: t.Optional[t.Dict[str, t.Any]]=None) -> 'Context':
-            """Internal helper function to create a derived context.  This is
-            used in situations where the system needs a new context in the same
-            template that is independent.
-            """
-            pass
+            ...
         keys = _dict_method_all(dict.keys)
         values = _dict_method_all(dict.values)
         items = _dict_method_all(dict.items)
@@ -2579,8 +1940,7 @@ preamble runtime:
 
         @property
         def super(self) -> t.Union['BlockReference', 'Undefined']:
-            """Super the block."""
-            pass
+            ...
 
         @internalcode
         def __call__(self) -> str:
@@ -2618,98 +1978,51 @@ preamble runtime:
 
         @property
         def length(self) -> int:
-            """Length of the iterable.
-
-            If the iterable is a generator or otherwise does not have a
-            size, it is eagerly evaluated to get a size.
-            """
-            pass
+            ...
 
         def __len__(self) -> int:
             return self.length
 
         @property
         def depth(self) -> int:
-            """How many levels deep a recursive loop currently is, starting at 1."""
-            pass
+            ...
 
         @property
         def index(self) -> int:
-            """Current iteration of the loop, starting at 1."""
-            pass
+            ...
 
         @property
         def revindex0(self) -> int:
-            """Number of iterations from the end of the loop, ending at 0.
-
-            Requires calculating :attr:`length`.
-            """
-            pass
+            ...
 
         @property
         def revindex(self) -> int:
-            """Number of iterations from the end of the loop, ending at 1.
-
-            Requires calculating :attr:`length`.
-            """
-            pass
+            ...
 
         @property
         def first(self) -> bool:
-            """Whether this is the first iteration of the loop."""
-            pass
+            ...
 
         def _peek_next(self) -> t.Any:
-            """Return the next element in the iterable, or :data:`missing`
-            if the iterable is exhausted. Only peeks one item ahead, caching
-            the result in :attr:`_last` for use in subsequent checks. The
-            cache is reset when :meth:`__next__` is called.
-            """
-            pass
+            ...
 
         @property
         def last(self) -> bool:
-            """Whether this is the last iteration of the loop.
-
-            Causes the iterable to advance early. See
-            :func:`itertools.groupby` for issues this can cause.
-            The :func:`groupby` filter avoids that issue.
-            """
-            pass
+            ...
 
         @property
         def previtem(self) -> t.Union[t.Any, 'Undefined']:
-            """The item in the previous iteration. Undefined during the
-            first iteration.
-            """
-            pass
+            ...
 
         @property
         def nextitem(self) -> t.Union[t.Any, 'Undefined']:
-            """The item in the next iteration. Undefined during the last
-            iteration.
-
-            Causes the iterable to advance early. See
-            :func:`itertools.groupby` for issues this can cause.
-            The :func:`jinja-filters.groupby` filter avoids that issue.
-            """
-            pass
+            ...
 
         def cycle(self, *args: V) -> V:
-            """Return a value from the given args, cycling through based on
-            the current :attr:`index0`.
-
-            :param args: One or more values to cycle through.
-            """
-            pass
+            ...
 
         def changed(self, *value: t.Any) -> bool:
-            """Return ``True`` if previously called with a different value
-            (including when called for the first time).
-
-            :param value: One or more values to compare to the last call.
-            """
-            pass
+            ...
 
         def __iter__(self) -> 'LoopContext':
             return self
@@ -2840,17 +2153,11 @@ preamble runtime:
 
         @property
         def _undefined_message(self) -> str:
-            """Build a message about the undefined value based on how it was
-            accessed.
-            """
-            pass
+            ...
 
         @internalcode
         def _fail_with_undefined_error(self, *args: t.Any, **kwargs: t.Any) -> 'te.NoReturn':
-            """Raise an :exc:`UndefinedError` when operations are performed
-            on the undefined value.
-            """
-            pass
+            ...
 
         @internalcode
         def __getattr__(self, name: str) -> t.Any:
@@ -3016,64 +2323,31 @@ preamble sandbox:
             self.unop_table = self.default_unop_table.copy()
 
         def is_safe_attribute(self, obj: t.Any, attr: str, value: t.Any) -> bool:
-            """The sandboxed environment will call this method to check if the
-            attribute of an object is safe to access.  Per default all attributes
-            starting with an underscore are considered private as well as the
-            special attributes of internal python objects as returned by the
-            :func:`is_internal_attribute` function.
-            """
-            pass
+            ...
 
         def is_safe_callable(self, obj: t.Any) -> bool:
-            """Check if an object is safely callable. By default callables
-            are considered safe unless decorated with :func:`unsafe`.
-
-            This also recognizes the Django convention of setting
-            ``func.alters_data = True``.
-            """
-            pass
+            ...
 
         def call_binop(self, context: Context, operator: str, left: t.Any, right: t.Any) -> t.Any:
-            """For intercepted binary operator calls (:meth:`intercepted_binops`)
-            this function is executed instead of the builtin operator.  This can
-            be used to fine tune the behavior of certain operators.
-
-            .. versionadded:: 2.6
-            """
-            pass
+            ...
 
         def call_unop(self, context: Context, operator: str, arg: t.Any) -> t.Any:
-            """For intercepted unary operator calls (:meth:`intercepted_unops`)
-            this function is executed instead of the builtin operator.  This can
-            be used to fine tune the behavior of certain operators.
-
-            .. versionadded:: 2.6
-            """
-            pass
+            ...
 
         def getitem(self, obj: t.Any, argument: t.Union[str, t.Any]) -> t.Union[t.Any, Undefined]:
-            """Subscribe an object from sandboxed code."""
-            pass
+            ...
 
         def getattr(self, obj: t.Any, attribute: str) -> t.Union[t.Any, Undefined]:
-            """Subscribe an object from sandboxed code and prefer the
-            attribute.  The attribute passed *must* be a bytestring.
-            """
-            pass
+            ...
 
         def unsafe_undefined(self, obj: t.Any, attribute: str) -> Undefined:
-            """Return an undefined object for unsafe attributes."""
-            pass
+            ...
 
         def format_string(self, s: str, args: t.Tuple[t.Any, ...], kwargs: t.Dict[str, t.Any], format_func: t.Optional[t.Callable[..., t.Any]]=None) -> str:
-            """If a format call is detected, then this is routed through this
-            method so that our safety sandbox can be used for it.
-            """
-            pass
+            ...
 
         def call(__self, __context: Context, __obj: t.Any, *args: t.Any, **kwargs: t.Any) -> t.Any:
-            """Call an object from sandboxed code."""
-            pass
+            ...
     class ImmutableSandboxedEnvironment(SandboxedEnvironment):
         """Works exactly like the regular `SandboxedEnvironment` but does not
         permit modifications on the builtin mutable objects `list`, `set`, and
@@ -3156,22 +2430,16 @@ preamble utils:
             return (self.capacity,)
 
         def copy(self) -> 'LRUCache':
-            """Return a shallow copy of the instance."""
-            pass
+            ...
 
         def get(self, key: t.Any, default: t.Any=None) -> t.Any:
-            """Return an item from the cache dict or `default`"""
-            pass
+            ...
 
         def setdefault(self, key: t.Any, default: t.Any=None) -> t.Any:
-            """Set `default` if the key is not in the cache otherwise
-            leave unchanged. Return the value of this key.
-            """
-            pass
+            ...
 
         def clear(self) -> None:
-            """Clear the cache."""
-            pass
+            ...
 
         def __contains__(self, key: t.Any) -> bool:
             """Check if a key exists in this cache."""
@@ -3224,16 +2492,13 @@ preamble utils:
                     pass
 
         def items(self) -> t.Iterable[t.Tuple[t.Any, t.Any]]:
-            """Return a list of items."""
-            pass
+            ...
 
         def values(self) -> t.Iterable[t.Any]:
-            """Return a list of all values."""
-            pass
+            ...
 
         def keys(self) -> t.Iterable[t.Any]:
-            """Return a list of all keys ordered by most recent usage."""
-            pass
+            ...
 
         def __iter__(self) -> t.Iterator[t.Any]:
             return reversed(tuple(self._queue))
@@ -3277,21 +2542,14 @@ preamble utils:
             self.pos = 0
 
         def reset(self) -> None:
-            """Resets the current item to the first item."""
-            pass
+            ...
 
         @property
         def current(self) -> t.Any:
-            """Return the current item. Equivalent to the item that will be
-            returned next time :meth:`next` is called.
-            """
-            pass
+            ...
 
         def next(self) -> t.Any:
-            """Return the current item, then advance :attr:`current` to the
-            next item.
-            """
-            pass
+            ...
         __next__ = next
     class Joiner:
         """A joining helper for templates."""
@@ -3355,19 +2613,13 @@ preamble visitor:
         """
 
         def get_visitor(self, node: Node) -> 't.Optional[VisitCallable]':
-            """Return the visitor function for this node or `None` if no visitor
-            exists for this node.  In that case the generic visit function is
-            used instead.
-            """
-            pass
+            ...
 
         def visit(self, node: Node, *args: t.Any, **kwargs: t.Any) -> t.Any:
-            """Visit a node."""
-            pass
+            ...
 
         def generic_visit(self, node: Node, *args: t.Any, **kwargs: t.Any) -> t.Any:
-            """Called if no explicit visitor function exists for a node."""
-            pass
+            ...
     class NodeTransformer(NodeVisitor):
         """Walks the abstract syntax tree and allows modifications of nodes.
 
@@ -3380,10 +2632,7 @@ preamble visitor:
         """
 
         def visit_list(self, node: Node, *args: t.Any, **kwargs: t.Any) -> t.List[Node]:
-            """As transformers may return lists in some places this method
-            can be used to enforce a list as return value.
-            """
-            pass
+            ...
 
 
 flow jinja_lib:

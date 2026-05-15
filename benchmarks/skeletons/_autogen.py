@@ -119,6 +119,51 @@ def _is_import_only_try(node: ast.AST) -> bool:
     return True
 
 
+def _compress_stripped_class_methods(cls_def: ast.ClassDef) -> ast.ClassDef:
+    """H6 (Round 4) — compress stripped methods inside a class definition.
+
+    In the preamble's class body, methods whose implementation has been
+    stripped to ``pass`` (the ones that get filled by separate
+    ``code <Class>__<method>`` nodes downstream) are rewritten to a
+    single-line ``def m(args): ...`` form. The docstring is dropped —
+    it's preserved verbatim on the matching code node, so removing it
+    here de-duplicates without information loss.
+
+    Methods with real bodies (helpers, ``__init__``, etc. — not
+    stripped) are left untouched: the LLM needs to see what they do
+    to reason about the class.
+
+    Returns a NEW ``ast.ClassDef`` so the caller's tree isn't mutated.
+    """
+    new_body: list[ast.stmt] = []
+    for member in cls_def.body:
+        if isinstance(member, (ast.FunctionDef, ast.AsyncFunctionDef)) \
+                and _is_stripped(member):
+            ctor = type(member)  # FunctionDef vs AsyncFunctionDef
+            stub = ctor(
+                name=member.name,
+                args=member.args,
+                body=[ast.Expr(value=ast.Constant(value=...))],
+                decorator_list=member.decorator_list,
+                returns=member.returns,
+                type_comment=getattr(member, "type_comment", None),
+            )
+            ast.copy_location(stub, member)
+            new_body.append(stub)
+        else:
+            new_body.append(member)
+    new_cls = ast.ClassDef(
+        name=cls_def.name,
+        bases=cls_def.bases,
+        keywords=cls_def.keywords,
+        body=new_body,
+        decorator_list=cls_def.decorator_list,
+    )
+    ast.copy_location(new_cls, cls_def)
+    # Preserve module-level decorators on the class (rare but possible)
+    return new_cls
+
+
 def _is_simple_constant_assign(node: ast.AST) -> bool:
     """True if ``node`` is a module-level value assignment whose target is
     a simple ``Name`` (H5 Round 3 — hoist into ``constants:``).
@@ -195,7 +240,11 @@ def _collect_preambles(src_dir: Path) -> dict[str, tuple[str, str, str, str]]:
             elif _is_simple_constant_assign(node):
                 constant_nodes.append(node)
             elif isinstance(node, ast.ClassDef):
-                body_nodes.append(node)
+                # H6 (Round 4): compress stripped methods inside the class
+                # to ``def m(args): ...`` so the preamble's class skeleton
+                # is structural only — docstring + body live in the
+                # matching ``code <Class>__<method>`` node.
+                body_nodes.append(_compress_stripped_class_methods(node))
             elif isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
                 # Complex assignments (tuple unpack, attr / subscript targets,
                 # AugAssign) stay in body — often state mutation, not pure

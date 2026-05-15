@@ -59,16 +59,13 @@ preamble chardistribution:
             self.reset()
 
         def reset(self):
-            """reset analyser, clear any state"""
-            pass
+            ...
 
         def feed(self, char, char_len):
-            """feed a character with known length"""
-            pass
+            ...
 
         def get_confidence(self):
-            """return confidence based on existing data"""
-            pass
+            ...
     class EUCTWDistributionAnalysis(CharDistributionAnalysis):
 
         def __init__(self):
@@ -154,29 +151,11 @@ preamble charsetprober:
 
         @staticmethod
         def filter_international_words(buf):
-            """
-            We define three types of bytes:
-            alphabet: english alphabets [a-zA-Z]
-            international: international characters [\x80-ÿ]
-            marker: everything else [^a-zA-Z\x80-ÿ]
-            The input buffer can be thought to contain a series of words delimited
-            by markers. This function works to filter all words that contain at
-            least one international character. All contiguous sequences of markers
-            are replaced by a single space ascii character.
-            This filter applies to all scripts which do not use English characters.
-            """
-            pass
+            ...
 
         @staticmethod
         def remove_xml_tags(buf):
-            """
-            Returns a copy of ``buf`` that retains only the sequences of English
-            alphabet and high byte characters that are not between <> characters.
-            This filter can be applied to all scripts which contain both English
-            characters and extended ASCII characters, but is currently only used by
-            ``Latin1Prober``.
-            """
-            pass
+            ...
 
 
 preamble cli_chardetect:
@@ -296,8 +275,7 @@ preamble enums:
 
         @classmethod
         def get_num_categories(cls):
-            """:returns: The number of likelihood categories in the enum."""
-            pass
+            ...
     class CharacterCategory:
         """
         This enum represents the different categories language models for
@@ -935,38 +913,13 @@ preamble universaldetector:
             self.reset()
 
         def reset(self):
-            """
-            Reset the UniversalDetector and all of its probers back to their
-            initial states.  This is called by ``__init__``, so you only need to
-            call this directly in between analyses of different documents.
-            """
-            pass
+            ...
 
         def feed(self, byte_str):
-            """
-            Takes a chunk of a document and feeds it through all of the relevant
-            charset probers.
-
-            After calling ``feed``, you can check the value of the ``done``
-            attribute to see if you need to continue feeding the
-            ``UniversalDetector`` more data, or if it has made a prediction
-            (in the ``result`` attribute).
-
-            .. note::
-               You should always call ``close`` when you're done feeding in your
-               document if ``done`` is not already ``True``.
-            """
-            pass
+            ...
 
         def close(self):
-            """
-            Stop analyzing the current document and come up with a final
-            prediction.
-
-            :returns:  The ``result`` attribute, a ``dict`` with the keys
-                       `encoding`, `confidence`, and `language`.
-            """
-            pass
+            ...
 
 
 preamble utf1632prober:
@@ -1002,27 +955,10 @@ preamble utf1632prober:
             self.reset()
 
         def validate_utf32_characters(self, quad):
-            """
-            Validate if the quad of bytes is valid UTF-32.
-
-            UTF-32 is valid in the range 0x00000000 - 0x0010FFFF
-            excluding 0x0000D800 - 0x0000DFFF
-
-            https://en.wikipedia.org/wiki/UTF-32
-            """
-            pass
+            ...
 
         def validate_utf16_characters(self, pair):
-            """
-            Validate if the pair of bytes is  valid UTF-16.
-
-            UTF-16 is valid in the range 0x0000 - 0xFFFF excluding 0xD800 - 0xFFFF
-            with an exception for surrogate pairs, which must be in the range
-            0xD800-0xDBFF followed by 0xDC00-0xDFFF
-
-            https://en.wikipedia.org/wiki/UTF-16
-            """
-            pass
+            ...
 
 
 preamble utf8prober:

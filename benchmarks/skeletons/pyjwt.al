@@ -66,52 +66,29 @@ preamble algorithms:
         """
 
         def compute_hash_digest(self, bytestr: bytes) -> bytes:
-            """
-            Compute a hash digest using the specified algorithm's hash algorithm.
-
-            If there is no hash algorithm, raises a NotImplementedError.
-            """
-            pass
+            ...
 
         @abstractmethod
         def prepare_key(self, key: Any) -> Any:
-            """
-            Performs necessary validation and conversions on the key and returns
-            the key value in the proper format for sign() and verify().
-            """
-            pass
+            ...
 
         @abstractmethod
         def sign(self, msg: bytes, key: Any) -> bytes:
-            """
-            Returns a digital signature for the specified message
-            using the specified key value.
-            """
-            pass
+            ...
 
         @abstractmethod
         def verify(self, msg: bytes, key: Any, sig: bytes) -> bool:
-            """
-            Verifies that the specified digital signature is valid
-            for the specified message and key values.
-            """
-            pass
+            ...
 
         @staticmethod
         @abstractmethod
         def to_jwk(key_obj, as_dict: bool=False) -> Union[JWKDict, str]:
-            """
-            Serializes a given key into a JWK
-            """
-            pass
+            ...
 
         @staticmethod
         @abstractmethod
         def from_jwk(jwk: str | JWKDict) -> Any:
-            """
-            Deserializes a given key from JWK back into a key object
-            """
-            pass
+            ...
     class NoneAlgorithm(Algorithm):
         """
         Placeholder for use when no signing or verification
@@ -311,41 +288,19 @@ preamble api_jws:
             self.options = {**self._get_default_options(), **options}
 
         def register_algorithm(self, alg_id: str, alg_obj: Algorithm) -> None:
-            """
-            Registers a new Algorithm for use when creating and verifying tokens.
-            """
-            pass
+            ...
 
         def unregister_algorithm(self, alg_id: str) -> None:
-            """
-            Unregisters an Algorithm for use when creating and verifying tokens
-            Throws KeyError if algorithm is not registered.
-            """
-            pass
+            ...
 
         def get_algorithms(self) -> list[str]:
-            """
-            Returns a list of supported values for the 'alg' parameter.
-            """
-            pass
+            ...
 
         def get_algorithm_by_name(self, alg_name: str) -> Algorithm:
-            """
-            For a given string name, return the matching Algorithm object.
-
-            Example usage:
-
-            >>> jws_obj.get_algorithm_by_name("RS256")
-            """
-            pass
+            ...
 
         def get_unverified_header(self, jwt: str | bytes) -> dict[str, Any]:
-            """Returns back the JWT header parameters as a dict()
-
-            Note: The signature is not verified so the header parameters
-            should not be fully trusted until signature verification is complete
-            """
-            pass
+            ...
 
 
 preamble api_jwt:
@@ -377,23 +332,10 @@ preamble api_jwt:
             self.options: dict[str, Any] = {**self._get_default_options(), **options}
 
         def _encode_payload(self, payload: dict[str, Any], headers: dict[str, Any] | None=None, json_encoder: type[json.JSONEncoder] | None=None) -> bytes:
-            """
-            Encode a given payload to the bytes to be signed.
-
-            This method is intended to be overridden by subclasses that need to
-            encode the payload in a different way, e.g. compress the payload.
-            """
-            pass
+            ...
 
         def _decode_payload(self, decoded: dict[str, Any]) -> Any:
-            """
-            Decode the payload from a JWS dictionary (payload, signature, header).
-
-            This method is intended to be overridden by subclasses that need to
-            decode the payload in a different way, e.g. decompress compressed
-            payloads.
-            """
-            pass
+            ...
 
 
 preamble exceptions:

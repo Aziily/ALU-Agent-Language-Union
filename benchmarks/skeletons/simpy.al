@@ -59,9 +59,7 @@ preamble core:
 
         @staticmethod
         def bind_early(instance: object) -> None:
-            """Bind all :class:`BoundClass` attributes of the *instance's* class
-            to the instance itself to increase performance."""
-            pass
+            ...
     class EmptySchedule(Exception):
         """Thrown by an :class:`Environment` if there are no further events to be
         processed."""
@@ -70,9 +68,7 @@ preamble core:
 
         @classmethod
         def callback(cls, event: Event) -> None:
-            """Used as callback in :meth:`Environment.run()` to stop the simulation
-            when the *until* event occurred."""
-            pass
+            ...
     class Environment:
         """Execution environment for an event-based simulation. The passing of time
         is simulated by stepping from event to event.
@@ -94,13 +90,11 @@ preamble core:
 
         @property
         def now(self) -> SimTime:
-            """The current simulation time."""
-            pass
+            ...
 
         @property
         def active_process(self) -> Optional[Process]:
-            """The currently active process of the environment."""
-            pass
+            ...
         if TYPE_CHECKING:
 
             def process(self, generator: ProcessGenerator) -> Process:
@@ -136,38 +130,16 @@ preamble core:
             any_of = BoundClass(AnyOf)
 
         def schedule(self, event: Event, priority: EventPriority=NORMAL, delay: SimTime=0) -> None:
-            """Schedule an *event* with a given *priority* and a *delay*."""
-            pass
+            ...
 
         def peek(self) -> SimTime:
-            """Get the time of the next scheduled event. Return
-            :data:`~simpy.core.Infinity` if there is no further event."""
-            pass
+            ...
 
         def step(self) -> None:
-            """Process the next event.
-
-            Raise an :exc:`EmptySchedule` if no further events are available.
-
-            """
-            pass
+            ...
 
         def run(self, until: Optional[Union[SimTime, Event]]=None) -> Optional[Any]:
-            """Executes :meth:`step()` until the given criterion *until* is met.
-
-            - If it is ``None`` (which is the default), this method will return
-              when there are no further events to be processed.
-
-            - If it is an :class:`~simpy.events.Event`, the method will continue
-              stepping until this event has been triggered and will return its
-              value.  Raises a :exc:`RuntimeError` if there are no further events
-              to be processed and the *until* event was not triggered.
-
-            - If it is a number, the method will continue stepping
-              until the environment's time reaches *until*.
-
-            """
-            pass
+            ...
 
 
 preamble events:
@@ -236,89 +208,36 @@ preamble events:
             return f'<{self._desc()} object at {id(self):#x}>'
 
         def _desc(self) -> str:
-            """Return a string *Event()*."""
-            pass
+            ...
 
         @property
         def triggered(self) -> bool:
-            """Becomes ``True`` if the event has been triggered and its callbacks
-            are about to be invoked."""
-            pass
+            ...
 
         @property
         def processed(self) -> bool:
-            """Becomes ``True`` if the event has been processed (e.g., its
-            callbacks have been invoked)."""
-            pass
+            ...
 
         @property
         def ok(self) -> bool:
-            """Becomes ``True`` when the event has been triggered successfully.
-
-            A "successful" event is one triggered with :meth:`succeed()`.
-
-            :raises AttributeError: if accessed before the event is triggered.
-
-            """
-            pass
+            ...
 
         @property
         def defused(self) -> bool:
-            """Becomes ``True`` when the failed event's exception is "defused".
-
-            When an event fails (i.e. with :meth:`fail()`), the failed event's
-            `value` is an exception that will be re-raised when the
-            :class:`~simpy.core.Environment` processes the event (i.e. in
-            :meth:`~simpy.core.Environment.step()`).
-
-            It is also possible for the failed event's exception to be defused by
-            setting :attr:`defused` to ``True`` from an event callback. Doing so
-            prevents the event's exception from being re-raised when the event is
-            processed by the :class:`~simpy.core.Environment`.
-
-            """
-            pass
+            ...
 
         @property
         def value(self) -> Optional[Any]:
-            """The value of the event if it is available.
-
-            The value is available when the event has been triggered.
-
-            Raises :exc:`AttributeError` if the value is not yet available.
-
-            """
-            pass
+            ...
 
         def trigger(self, event: Event) -> None:
-            """Trigger the event with the state and value of the provided *event*.
-            Return *self* (this event instance).
-
-            This method can be used directly as a callback function to trigger
-            chain reactions.
-
-            """
-            pass
+            ...
 
         def succeed(self, value: Optional[Any]=None) -> Event:
-            """Set the event's value, mark it as successful and schedule it for
-            processing by the environment. Returns the event instance.
-
-            Raises :exc:`RuntimeError` if this event has already been triggerd.
-
-            """
-            pass
+            ...
 
         def fail(self, exception: Exception) -> Event:
-            """Set *exception* as the events value, mark it as failed and schedule
-            it for processing by the environment. Returns the event instance.
-
-            Raises :exc:`TypeError` if *exception* is not an :exc:`Exception`.
-
-            Raises :exc:`RuntimeError` if this event has already been triggered.
-
-            """
-            pass
+            ...
 
         def __and__(self, other: Event) -> Condition:
             """Return a :class:`~simpy.events.Condition` that will be triggered if
@@ -350,8 +269,7 @@ preamble events:
             env.schedule(self, NORMAL, delay)
 
         def _desc(self) -> str:
-            """Return a string *Timeout(delay[, value=value])*."""
-            pass
+            ...
     class Initialize(Event):
         """Initializes a process. Only used internally by :class:`Process`.
 
@@ -410,44 +328,25 @@ preamble events:
             self._target: Event = Initialize(env, self)
 
         def _desc(self) -> str:
-            """Return a string *Process(process_func_name)*."""
-            pass
+            ...
 
         @property
         def target(self) -> Event:
-            """The event that the process is currently waiting for.
-
-            Returns ``None`` if the process is dead, or it is currently being
-            interrupted.
-
-            """
-            pass
+            ...
 
         @property
         def name(self) -> str:
-            """Name of the function used to start the process."""
-            pass
+            ...
 
         @property
         def is_alive(self) -> bool:
-            """``True`` until the process generator exits."""
-            pass
+            ...
 
         def interrupt(self, cause: Optional[Any]=None) -> None:
-            """Interrupt this process optionally providing a *cause*.
-
-            A process cannot be interrupted if it already terminated. A process can
-            also not interrupt itself. Raise a :exc:`RuntimeError` in these
-            cases.
-
-            """
-            pass
+            ...
 
         def _resume(self, event: Event) -> None:
-            """Resumes the execution of the process with the value of *event*. If
-            the process generator exits, the process itself will get triggered with
-            the return value or the exception of the generator."""
-            pass
+            ...
     class ConditionValue:
         """Result of a :class:`~simpy.events.Condition`. It supports convenient
         dict-like access to the triggered events and their values. The events are
@@ -519,45 +418,27 @@ preamble events:
             self.callbacks.append(self._build_value)
 
         def _desc(self) -> str:
-            """Return a string *Condition(evaluate, [events])*."""
-            pass
+            ...
 
         def _populate_value(self, value: ConditionValue) -> None:
-            """Populate the *value* by recursively visiting all nested
-            conditions."""
-            pass
+            ...
 
         def _build_value(self, event: Event) -> None:
-            """Build the value of this condition."""
-            pass
+            ...
 
         def _remove_check_callbacks(self) -> None:
-            """Remove _check() callbacks from events recursively.
-
-            Once the condition has triggered, the condition's events no longer need
-            to have _check() callbacks. Removing the _check() callbacks is
-            important to break circular references between the condition and
-            untriggered events.
-
-            """
-            pass
+            ...
 
         def _check(self, event: Event) -> None:
-            """Check if the condition was already met and schedule the *event* if
-            so."""
-            pass
+            ...
 
         @staticmethod
         def all_events(events: Tuple[Event, ...], count: int) -> bool:
-            """An evaluation function that returns ``True`` if all *events* have
-            been triggered."""
-            pass
+            ...
 
         @staticmethod
         def any_events(events: Tuple[Event, ...], count: int) -> bool:
-            """An evaluation function that returns ``True`` if at least one of
-            *events* has been triggered."""
-            pass
+            ...
     class AllOf(Condition):
         """A :class:`~simpy.events.Condition` event that is triggered if all of
         a list of *events* have been successfully triggered. Fails immediately if
@@ -607,8 +488,7 @@ preamble exceptions:
 
         @property
         def cause(self) -> Optional[Any]:
-            """The cause of the interrupt or ``None`` if no cause was provided."""
-            pass
+            ...
 
 
 preamble resources___init__:
@@ -663,17 +543,7 @@ preamble resources_base:
             return None
 
         def cancel(self) -> None:
-            """Cancel this put request.
-
-            This method has to be called if the put request must be aborted, for
-            example if a process needs to handle an exception like an
-            :class:`~simpy.exceptions.Interrupt`.
-
-            If the put request was created in a :keyword:`with` statement, this
-            method is called automatically.
-
-            """
-            pass
+            ...
     class Get(Event, ContextManager['Get'], Generic[ResourceType]):
         """Generic event for requesting to get something from the *resource*.
 
@@ -705,17 +575,7 @@ preamble resources_base:
             return None
 
         def cancel(self) -> None:
-            """Cancel this get request.
-
-            This method has to be called if the get request must be aborted, for
-            example if a process needs to handle an exception like an
-            :class:`~simpy.exceptions.Interrupt`.
-
-            If the get request was created in a :keyword:`with` statement, this
-            method is called automatically.
-
-            """
-            pass
+            ...
     class BaseResource(Generic[PutType, GetType]):
         """Abstract base class for a shared resource.
 
@@ -750,8 +610,7 @@ preamble resources_base:
 
         @property
         def capacity(self) -> Union[float, int]:
-            """Maximum capacity of the resource."""
-            pass
+            ...
         if TYPE_CHECKING:
 
             def put(self) -> Put:
@@ -770,52 +629,16 @@ preamble resources_base:
             get = BoundClass(Get)
 
         def _do_put(self, event: PutType) -> Optional[bool]:
-            """Perform the *put* operation.
-
-            This method needs to be implemented by subclasses. If the conditions
-            for the put *event* are met, the method must trigger the event (e.g.
-            call :meth:`Event.succeed()` with an appropriate value).
-
-            This method is called by :meth:`_trigger_put` for every event in the
-            :attr:`put_queue`, as long as the return value does not evaluate
-            ``False``.
-            """
-            pass
+            ...
 
         def _trigger_put(self, get_event: Optional[GetType]) -> None:
-            """This method is called once a new put event has been created or a get
-            event has been processed.
-
-            The method iterates over all put events in the :attr:`put_queue` and
-            calls :meth:`_do_put` to check if the conditions for the event are met.
-            If :meth:`_do_put` returns ``False``, the iteration is stopped early.
-            """
-            pass
+            ...
 
         def _do_get(self, event: GetType) -> Optional[bool]:
-            """Perform the *get* operation.
-
-            This method needs to be implemented by subclasses. If the conditions
-            for the get *event* are met, the method must trigger the event (e.g.
-            call :meth:`Event.succeed()` with an appropriate value).
-
-            This method is called by :meth:`_trigger_get` for every event in the
-            :attr:`get_queue`, as long as the return value does not evaluate
-            ``False``.
-            """
-            pass
+            ...
 
         def _trigger_get(self, put_event: Optional[PutType]) -> None:
-            """Trigger get events.
-
-            This method is called once a new get event has been created or a put
-            event has been processed.
-
-            The method iterates over all get events in the :attr:`get_queue` and
-            calls :meth:`_do_get` to check if the conditions for the event are met.
-            If :meth:`_do_get` returns ``False``, the iteration is stopped early.
-            """
-            pass
+            ...
 
 
 preamble resources_container:
@@ -886,8 +709,7 @@ preamble resources_container:
 
         @property
         def level(self) -> ContainerAmount:
-            """The current amount of the matter in the container."""
-            pass
+            ...
         if TYPE_CHECKING:
 
             def put(self, amount: ContainerAmount) -> ContainerPut:
@@ -992,12 +814,7 @@ preamble resources_resource:
             'Maximum length of the queue.'
 
         def append(self, item: Any) -> None:
-            """Sort *item* into the queue.
-
-            Raise a :exc:`RuntimeError` if the queue is full.
-
-            """
-            pass
+            ...
     class Resource(base.BaseResource):
         """Resource with *capacity* of usage slots that can be requested by
         processes.
@@ -1021,8 +838,7 @@ preamble resources_resource:
 
         @property
         def count(self) -> int:
-            """Number of users currently using the resource."""
-            pass
+            ...
         if TYPE_CHECKING:
 
             def request(self) -> Request:
@@ -1227,36 +1043,17 @@ preamble rt:
 
         @property
         def factor(self) -> float:
-            """Scaling factor of the real-time."""
-            pass
+            ...
 
         @property
         def strict(self) -> bool:
-            """Running mode of the environment. :meth:`step()` will raise a
-            :exc:`RuntimeError` if this is set to ``True`` and the processing of
-            events takes too long."""
-            pass
+            ...
 
         def sync(self) -> None:
-            """Synchronize the internal time with the current wall-clock time.
-
-            This can be useful to prevent :meth:`step()` from raising an error if
-            a lot of time passes between creating the RealtimeEnvironment and
-            calling :meth:`run()` or :meth:`step()`.
-
-            """
-            pass
+            ...
 
         def step(self) -> None:
-            """Process the next event after enough real-time has passed for the
-            event to happen.
-
-            The delay is scaled according to the real-time :attr:`factor`. With
-            :attr:`strict` mode enabled, a :exc:`RuntimeError` will be raised, if
-            the event is processed too slowly.
-
-            """
-            pass
+            ...
 
 
 preamble util:

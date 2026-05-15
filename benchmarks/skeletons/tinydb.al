@@ -95,70 +95,23 @@ preamble database:
             return '<{} {}>'.format(type(self).__name__, ', '.join(args))
 
         def table(self, name: str, **kwargs) -> Table:
-            """
-            Get access to a specific table.
-
-            If the table hasn't been accessed yet, a new table instance will be
-            created using the :attr:`~tinydb.database.TinyDB.table_class` class.
-            Otherwise, the previously created table instance will be returned.
-
-            All further options besides the name are passed to the table class which
-            by default is :class:`~tinydb.table.Table`. Check its documentation
-            for further parameters you can pass.
-
-            :param name: The name of the table.
-            :param kwargs: Keyword arguments to pass to the table class constructor
-            """
-            pass
+            ...
 
         def tables(self) -> Set[str]:
-            """
-            Get the names of all tables in the database.
-
-            :returns: a set of table names
-            """
-            pass
+            ...
 
         def drop_tables(self) -> None:
-            """
-            Drop all tables from the database. **CANNOT BE REVERSED!**
-            """
-            pass
+            ...
 
         def drop_table(self, name: str) -> None:
-            """
-            Drop a specific table from the database. **CANNOT BE REVERSED!**
-
-            :param name: The name of the table to drop.
-            """
-            pass
+            ...
 
         @property
         def storage(self) -> Storage:
-            """
-            Get the storage instance used for this TinyDB instance.
-
-            :return: This instance's storage
-            :rtype: Storage
-            """
-            pass
+            ...
 
         def close(self) -> None:
-            """
-            Close the database.
-
-            This may be needed if the storage instance used for this database
-            needs to perform cleanup operations like closing file handles.
-
-            To ensure this method is called, the TinyDB instance can be used as a
-            context manager::
-
-                with TinyDB('data.json') as db:
-                    db.insert({'foo': 'bar'})
-
-            Upon leaving this context, the ``close`` method will be called.
-            """
-            pass
+            ...
 
         def __enter__(self):
             """
@@ -286,10 +239,7 @@ preamble middlewares:
             self._cache_modified_count = 0
 
         def flush(self):
-            """
-            Flush all unwritten data to disk.
-            """
-            pass
+            ...
 
 
 preamble mypy_plugin:
@@ -471,15 +421,7 @@ preamble queries:
             return self.__getattr__(item)
 
         def _generate_test(self, test: Callable[[Any], bool], hashval: Tuple, allow_empty_path: bool=False) -> QueryInstance:
-            """
-            Generate a query based on a test function that first resolves the query
-            path.
-
-            :param test: The test the query executes.
-            :param hashval: The hash of the query.
-            :return: A :class:`~tinydb.queries.QueryInstance` object
-            """
-            pass
+            ...
 
         def __eq__(self, rhs: Any):
             """
@@ -542,128 +484,31 @@ preamble queries:
             return self._generate_test(lambda value: value >= rhs, ('>=', self._path, rhs))
 
         def exists(self) -> QueryInstance:
-            """
-            Test for a dict where a provided key exists.
-
-            >>> Query().f1.exists()
-            """
-            pass
+            ...
 
         def matches(self, regex: str, flags: int=0) -> QueryInstance:
-            """
-            Run a regex test against a dict value (whole string has to match).
-
-            >>> Query().f1.matches(r'^\\w+$')
-
-            :param regex: The regular expression to use for matching
-            :param flags: regex flags to pass to ``re.match``
-            """
-            pass
+            ...
 
         def search(self, regex: str, flags: int=0) -> QueryInstance:
-            """
-            Run a regex test against a dict value (only substring string has to
-            match).
-
-            >>> Query().f1.search(r'^\\w+$')
-
-            :param regex: The regular expression to use for matching
-            :param flags: regex flags to pass to ``re.match``
-            """
-            pass
+            ...
 
         def test(self, func: Callable[[Mapping], bool], *args) -> QueryInstance:
-            """
-            Run a user-defined test function against a dict value.
-
-            >>> def test_func(val):
-            ...     return val == 42
             ...
-            >>> Query().f1.test(test_func)
-
-            .. warning::
-
-                The test function provided needs to be deterministic (returning the
-                same value when provided with the same arguments), otherwise this
-                may mess up the query cache that :class:`~tinydb.table.Table`
-                implements.
-
-            :param func: The function to call, passing the dict as the first
-                         argument
-            :param args: Additional arguments to pass to the test function
-            """
-            pass
 
         def any(self, cond: Union[QueryInstance, List[Any]]) -> QueryInstance:
-            """
-            Check if a condition is met by any document in a list,
-            where a condition can also be a sequence (e.g. list).
-
-            >>> Query().f1.any(Query().f2 == 1)
-
-            Matches::
-
-                {'f1': [{'f2': 1}, {'f2': 0}]}
-
-            >>> Query().f1.any([1, 2, 3])
-
-            Matches::
-
-                {'f1': [1, 2]}
-                {'f1': [3, 4, 5]}
-
-            :param cond: Either a query that at least one document has to match or
-                         a list of which at least one document has to be contained
-                         in the tested document.
-            """
-            pass
+            ...
 
         def all(self, cond: Union['QueryInstance', List[Any]]) -> QueryInstance:
-            """
-            Check if a condition is met by all documents in a list,
-            where a condition can also be a sequence (e.g. list).
-
-            >>> Query().f1.all(Query().f2 == 1)
-
-            Matches::
-
-                {'f1': [{'f2': 1}, {'f2': 1}]}
-
-            >>> Query().f1.all([1, 2, 3])
-
-            Matches::
-
-                {'f1': [1, 2, 3, 4, 5]}
-
-            :param cond: Either a query that all documents have to match or a list
-                         which has to be contained in the tested document.
-            """
-            pass
+            ...
 
         def one_of(self, items: List[Any]) -> QueryInstance:
-            """
-            Check if the value is contained in a list or generator.
-
-            >>> Query().f1.one_of(['value 1', 'value 2'])
-
-            :param items: The list of items to check with
-            """
-            pass
+            ...
 
         def noop(self) -> QueryInstance:
-            """
-            Always evaluate to ``True``.
-
-            Useful for having a base value when composing queries dynamically.
-            """
-            pass
+            ...
 
         def map(self, fn: Callable[[Any], Any]) -> 'Query':
-            """
-            Add a function to the query path. Similar to __getattr__ but for
-            arbitrary functions.
-            """
-            pass
+            ...
 
 
 preamble storages:
@@ -689,31 +534,14 @@ preamble storages:
 
         @abstractmethod
         def read(self) -> Optional[Dict[str, Dict[str, Any]]]:
-            """
-            Read the current state.
-
-            Any kind of deserialization should go here.
-
-            Return ``None`` here to indicate that the storage is empty.
-            """
-            pass
+            ...
 
         @abstractmethod
         def write(self, data: Dict[str, Dict[str, Any]]) -> None:
-            """
-            Write the current state of the database to the storage.
-
-            Any kind of serialization should go here.
-
-            :param data: The current state of the database.
-            """
-            pass
+            ...
 
         def close(self) -> None:
-            """
-            Optional: Close open file handles, etc.
-            """
-            pass
+            ...
     class JSONStorage(Storage):
         """
         Store the data in a JSON file.
@@ -833,145 +661,50 @@ preamble table:
 
         @property
         def name(self) -> str:
-            """
-            Get the table name.
-            """
-            pass
+            ...
 
         @property
         def storage(self) -> Storage:
-            """
-            Get the table storage instance.
-            """
-            pass
+            ...
 
         def insert(self, document: Mapping) -> int:
-            """
-            Insert a new document into the table.
-
-            :param document: the document to insert
-            :returns: the inserted document's ID
-            """
-            pass
+            ...
 
         def insert_multiple(self, documents: Iterable[Mapping]) -> List[int]:
-            """
-            Insert multiple documents into the table.
-
-            :param documents: an Iterable of documents to insert
-            :returns: a list containing the inserted documents' IDs
-            """
-            pass
+            ...
 
         def all(self) -> List[Document]:
-            """
-            Get all documents stored in the table.
-
-            :returns: a list with all documents.
-            """
-            pass
+            ...
 
         def search(self, cond: QueryLike) -> List[Document]:
-            """
-            Search for all documents matching a 'where' cond.
-
-            :param cond: the condition to check against
-            :returns: list of matching documents
-            """
-            pass
+            ...
 
         def get(self, cond: Optional[QueryLike]=None, doc_id: Optional[int]=None, doc_ids: Optional[List]=None) -> Optional[Union[Document, List[Document]]]:
-            """
-            Get exactly one document specified by a query or a document ID.
-            However, if multiple document IDs are given then returns all
-            documents in a list.
-            
-            Returns ``None`` if the document doesn't exist.
-
-            :param cond: the condition to check against
-            :param doc_id: the document's ID
-            :param doc_ids: the document's IDs(multiple)
-
-            :returns: the document(s) or ``None``
-            """
-            pass
+            ...
 
         def contains(self, cond: Optional[QueryLike]=None, doc_id: Optional[int]=None) -> bool:
-            """
-            Check whether the database contains a document matching a query or
-            an ID.
-
-            If ``doc_id`` is set, it checks if the db contains the specified ID.
-
-            :param cond: the condition use
-            :param doc_id: the document ID to look for
-            """
-            pass
+            ...
 
         def update(self, fields: Union[Mapping, Callable[[Mapping], None]], cond: Optional[QueryLike]=None, doc_ids: Optional[Iterable[int]]=None) -> List[int]:
-            """
-            Update all matching documents to have a given set of fields.
-
-            :param fields: the fields that the matching documents will have
-                           or a method that will update the documents
-            :param cond: which documents to update
-            :param doc_ids: a list of document IDs
-            :returns: a list containing the updated document's ID
-            """
-            pass
+            ...
 
         def update_multiple(self, updates: Iterable[Tuple[Union[Mapping, Callable[[Mapping], None]], QueryLike]]) -> List[int]:
-            """
-            Update all matching documents to have a given set of fields.
-
-            :returns: a list containing the updated document's ID
-            """
-            pass
+            ...
 
         def upsert(self, document: Mapping, cond: Optional[QueryLike]=None) -> List[int]:
-            """
-            Update documents, if they exist, insert them otherwise.
-
-            Note: This will update *all* documents matching the query. Document
-            argument can be a tinydb.table.Document object if you want to specify a
-            doc_id.
-
-            :param document: the document to insert or the fields to update
-            :param cond: which document to look for, optional if you've passed a
-            Document with a doc_id
-            :returns: a list containing the updated documents' IDs
-            """
-            pass
+            ...
 
         def remove(self, cond: Optional[QueryLike]=None, doc_ids: Optional[Iterable[int]]=None) -> List[int]:
-            """
-            Remove all matching documents.
-
-            :param cond: the condition to check against
-            :param doc_ids: a list of document IDs
-            :returns: a list containing the removed documents' ID
-            """
-            pass
+            ...
 
         def truncate(self) -> None:
-            """
-            Truncate the table by removing all documents.
-            """
-            pass
+            ...
 
         def count(self, cond: QueryLike) -> int:
-            """
-            Count the documents matching a query.
-
-            :param cond: the condition use
-            """
-            pass
+            ...
 
         def clear_cache(self) -> None:
-            """
-            Clear the query cache.
-            """
-            pass
+            ...
 
         def __len__(self):
             """
@@ -989,35 +722,13 @@ preamble table:
                 yield self.document_class(doc, self.document_id_class(doc_id))
 
         def _get_next_id(self):
-            """
-            Return the ID for a newly inserted document.
-            """
-            pass
+            ...
 
         def _read_table(self) -> Dict[str, Mapping]:
-            """
-            Read the table data from the underlying storage.
-
-            Documents and doc_ids are NOT yet transformed, as 
-            we may not want to convert *all* documents when returning
-            only one document for example.
-            """
-            pass
+            ...
 
         def _update_table(self, updater: Callable[[Dict[int, Mapping]], None]):
-            """
-            Perform a table update operation.
-
-            The storage interface used by TinyDB only allows to read/write the
-            complete database data, but not modifying only portions of it. Thus,
-            to only update portions of the table data, we first perform a read
-            operation, perform the update on the table data and then write
-            the updated data back to the storage.
-
-            As a further optimization, we don't convert the documents into the
-            document class, as the table data will *not* be returned to the user.
-            """
-            pass
+            ...
 
 
 preamble utils:

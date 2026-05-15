@@ -123,93 +123,16 @@ preamble dates:
                 raise KeyError(f'Unsupported date/time field {char!r}')
 
         def format_weekday(self, char: str='E', num: int=4) -> str:
-            """
-            Return weekday from parsed datetime according to format pattern.
-
-            >>> from datetime import date
-            >>> format = DateTimeFormat(date(2016, 2, 28), Locale.parse('en_US'))
-            >>> format.format_weekday()
-            u'Sunday'
-
-            'E': Day of week - Use one through three letters for the abbreviated day name, four for the full (wide) name,
-                 five for the narrow name, or six for the short name.
-            >>> format.format_weekday('E',2)
-            u'Sun'
-
-            'e': Local day of week. Same as E except adds a numeric value that will depend on the local starting day of the
-                 week, using one or two letters. For this example, Monday is the first day of the week.
-            >>> format.format_weekday('e',2)
-            '01'
-
-            'c': Stand-Alone local day of week - Use one letter for the local numeric value (same as 'e'), three for the
-                 abbreviated day name, four for the full (wide) name, five for the narrow name, or six for the short name.
-            >>> format.format_weekday('c',1)
-            '1'
-
-            :param char: pattern format character ('e','E','c')
-            :param num: count of format character
-
-            """
-            pass
+            ...
 
         def format_period(self, char: str, num: int) -> str:
-            """
-            Return period from parsed datetime according to format pattern.
-
-            >>> from datetime import datetime, time
-            >>> format = DateTimeFormat(time(13, 42), 'fi_FI')
-            >>> format.format_period('a', 1)
-            u'ip.'
-            >>> format.format_period('b', 1)
-            u'iltap.'
-            >>> format.format_period('b', 4)
-            u'iltapäivä'
-            >>> format.format_period('B', 4)
-            u'iltapäivällä'
-            >>> format.format_period('B', 5)
-            u'ip.'
-
-            >>> format = DateTimeFormat(datetime(2022, 4, 28, 6, 27), 'zh_Hant')
-            >>> format.format_period('a', 1)
-            u'上午'
-            >>> format.format_period('b', 1)
-            u'清晨'
-            >>> format.format_period('B', 1)
-            u'清晨'
-
-            :param char: pattern format character ('a', 'b', 'B')
-            :param num: count of format character
-
-            """
-            pass
+            ...
 
         def format_frac_seconds(self, num: int) -> str:
-            """ Return fractional seconds.
-
-            Rounds the time's microseconds to the precision given by the number         of digits passed in.
-            """
-            pass
+            ...
 
         def get_week_number(self, day_of_period: int, day_of_week: int | None=None) -> int:
-            """Return the number of the week of a day within a period. This may be
-            the week number in a year or the week number in a month.
-
-            Usually this will return a value equal to or greater than 1, but if the
-            first week of the period is so short that it actually counts as the last
-            week of the previous period, this function will return 0.
-
-            >>> date = datetime.date(2006, 1, 8)
-            >>> DateTimeFormat(date, 'de_DE').get_week_number(6)
-            1
-            >>> DateTimeFormat(date, 'en_US').get_week_number(6)
-            2
-
-            :param day_of_period: the number of the day in the period (usually
-                                  either the day of month or the day of year)
-            :param day_of_week: the week day; if omitted, the week day of the
-                                current date is assumed
-            """
-            pass
+            ...
 
 
 preamble languages:
@@ -269,15 +192,7 @@ preamble localedata:
             return f'<{type(self).__name__} {self.keys!r}>'
 
         def resolve(self, data: Mapping[str | int | None, Any]) -> Mapping[str | int | None, Any]:
-            """Resolve the alias based on the given data.
-
-            This is done recursively, so if one alias resolves to a second alias,
-            that second alias will also be resolved.
-
-            :param data: the locale data
-            :type data: `dict`
-            """
-            pass
+            ...
     class LocaleDataDict(abc.MutableMapping):
         """Dictionary wrapper that automatically resolves aliases to the actual
         values.
@@ -495,61 +410,22 @@ preamble messages_catalog:
             return self.__cmp__(other) != 0
 
         def is_identical(self, other: Message) -> bool:
-            """Checks whether messages are identical, taking into account all
-            properties.
-            """
-            pass
+            ...
 
         def check(self, catalog: Catalog | None=None) -> list[TranslationError]:
-            """Run various validation checks on the message.  Some validations
-            are only performed if the catalog is provided.  This method returns
-            a sequence of `TranslationError` objects.
-
-            :rtype: ``iterator``
-            :param catalog: A catalog instance that is passed to the checkers
-            :see: `Catalog.check` for a way to perform checks for all messages
-                  in a catalog.
-            """
-            pass
+            ...
 
         @property
         def fuzzy(self) -> bool:
-            """Whether the translation is fuzzy.
-
-            >>> Message('foo').fuzzy
-            False
-            >>> msg = Message('foo', 'foo', flags=['fuzzy'])
-            >>> msg.fuzzy
-            True
-            >>> msg
-            <Message 'foo' (flags: ['fuzzy'])>
-
-            :type:  `bool`"""
-            pass
+            ...
 
         @property
         def pluralizable(self) -> bool:
-            """Whether the message is plurizable.
-
-            >>> Message('foo').pluralizable
-            False
-            >>> Message(('foo', 'bar')).pluralizable
-            True
-
-            :type:  `bool`"""
-            pass
+            ...
 
         @property
         def python_format(self) -> bool:
-            """Whether the message contains Python-style parameters.
-
-            >>> Message('foo %(name)s bar').python_format
-            True
-            >>> Message(('foo %(name)s', 'foo %(name)s')).python_format
-            True
-
-            :type:  `bool`"""
-            pass
+            ...
     class TranslationError(Exception):
         """Exception thrown by translation checkers when invalid message
         translations are encountered."""
@@ -611,41 +487,15 @@ preamble messages_catalog:
 
         @property
         def num_plurals(self) -> int:
-            """The number of plurals used by the catalog or locale.
-
-            >>> Catalog(locale='en').num_plurals
-            2
-            >>> Catalog(locale='ga').num_plurals
-            5
-
-            :type: `int`"""
-            pass
+            ...
 
         @property
         def plural_expr(self) -> str:
-            """The plural expression used by the catalog or locale.
-
-            >>> Catalog(locale='en').plural_expr
-            '(n != 1)'
-            >>> Catalog(locale='ga').plural_expr
-            '(n==1 ? 0 : n==2 ? 1 : n>=3 && n<=6 ? 2 : n>=7 && n<=10 ? 3 : 4)'
-            >>> Catalog(locale='ding').plural_expr  # unknown locale
-            '(n != 1)'
-
-            :type: `str`"""
-            pass
+            ...
 
         @property
         def plural_forms(self) -> str:
-            """Return the plural forms declaration for the locale.
-
-            >>> Catalog(locale='en').plural_forms
-            'nplurals=2; plural=(n != 1);'
-            >>> Catalog(locale='pt_BR').plural_forms
-            'nplurals=2; plural=(n > 1);'
-
-            :type: `str`"""
-            pass
+            ...
 
         def __contains__(self, id: _MessageID) -> bool:
             """Return whether the catalog has a message with the specified ID."""
@@ -733,131 +583,28 @@ preamble messages_catalog:
                 self._messages[key] = message
 
         def add(self, id: _MessageID, string: _MessageID | None=None, locations: Iterable[tuple[str, int]]=(), flags: Iterable[str]=(), auto_comments: Iterable[str]=(), user_comments: Iterable[str]=(), previous_id: _MessageID=(), lineno: int | None=None, context: str | None=None) -> Message:
-            """Add or update the message with the specified ID.
-
-            >>> catalog = Catalog()
-            >>> catalog.add(u'foo')
-            <Message ...>
-            >>> catalog[u'foo']
-            <Message u'foo' (flags: [])>
-
-            This method simply constructs a `Message` object with the given
-            arguments and invokes `__setitem__` with that object.
-
-            :param id: the message ID, or a ``(singular, plural)`` tuple for
-                       pluralizable messages
-            :param string: the translated message string, or a
-                           ``(singular, plural)`` tuple for pluralizable messages
-            :param locations: a sequence of ``(filename, lineno)`` tuples
-            :param flags: a set or sequence of flags
-            :param auto_comments: a sequence of automatic comments
-            :param user_comments: a sequence of user comments
-            :param previous_id: the previous message ID, or a ``(singular, plural)``
-                                tuple for pluralizable messages
-            :param lineno: the line number on which the msgid line was found in the
-                           PO file, if any
-            :param context: the message context
-            """
-            pass
+            ...
 
         def check(self) -> Iterable[tuple[Message, list[TranslationError]]]:
-            """Run various validation checks on the translations in the catalog.
-
-            For every message which fails validation, this method yield a
-            ``(message, errors)`` tuple, where ``message`` is the `Message` object
-            and ``errors`` is a sequence of `TranslationError` objects.
-
-            :rtype: ``generator`` of ``(message, errors)``
-            """
-            pass
+            ...
 
         def get(self, id: _MessageID, context: str | None=None) -> Message | None:
-            """Return the message with the specified ID and context.
-
-            :param id: the message ID
-            :param context: the message context, or ``None`` for no context
-            """
-            pass
+            ...
 
         def delete(self, id: _MessageID, context: str | None=None) -> None:
-            """Delete the message with the specified ID and context.
-
-            :param id: the message ID
-            :param context: the message context, or ``None`` for no context
-            """
-            pass
+            ...
 
         def update(self, template: Catalog, no_fuzzy_matching: bool=False, update_header_comment: bool=False, keep_user_comments: bool=True, update_creation_date: bool=True) -> None:
-            """Update the catalog based on the given template catalog.
-
-            >>> from babel.messages import Catalog
-            >>> template = Catalog()
-            >>> template.add('green', locations=[('main.py', 99)])
-            <Message ...>
-            >>> template.add('blue', locations=[('main.py', 100)])
-            <Message ...>
-            >>> template.add(('salad', 'salads'), locations=[('util.py', 42)])
-            <Message ...>
-            >>> catalog = Catalog(locale='de_DE')
-            >>> catalog.add('blue', u'blau', locations=[('main.py', 98)])
-            <Message ...>
-            >>> catalog.add('head', u'Kopf', locations=[('util.py', 33)])
-            <Message ...>
-            >>> catalog.add(('salad', 'salads'), (u'Salat', u'Salate'),
-            ...             locations=[('util.py', 38)])
-            <Message ...>
-
-            >>> catalog.update(template)
-            >>> len(catalog)
-            3
-
-            >>> msg1 = catalog['green']
-            >>> msg1.string
-            >>> msg1.locations
-            [('main.py', 99)]
-
-            >>> msg2 = catalog['blue']
-            >>> msg2.string
-            u'blau'
-            >>> msg2.locations
-            [('main.py', 100)]
-
-            >>> msg3 = catalog['salad']
-            >>> msg3.string
-            (u'Salat', u'Salate')
-            >>> msg3.locations
-            [('util.py', 42)]
-
-            Messages that are in the catalog but not in the template are removed
-            from the main collection, but can still be accessed via the `obsolete`
-            member:
-
-            >>> 'head' in catalog
-            False
-            >>> list(catalog.obsolete.values())
-            [<Message 'head' (flags: [])>]
-
-            :param template: the reference catalog, usually read from a POT file
-            :param no_fuzzy_matching: whether to use fuzzy matching of message IDs
-            """
-            pass
+            ...
 
         def _to_fuzzy_match_key(self, key: tuple[str, str] | str) -> str:
-            """Converts a message key to a string suitable for fuzzy matching."""
-            pass
+            ...
 
         def _key_for(self, id: _MessageID, context: str | None=None) -> tuple[str, str] | str:
-            """The key for a message is just the singular ID even for pluralizable
-            messages, but is a ``(msgid, msgctxt)`` tuple for context-specific
-            messages.
-            """
-            pass
+            ...
 
         def is_identical(self, other: Catalog) -> bool:
-            """Checks if catalogs are identical, taking into account messages and
-            headers.
-            """
-            pass
+            ...
 
 
 preamble messages_checkers:
@@ -1005,18 +752,10 @@ preamble messages_frontend:
         log = None
 
         def run(self, argv=None):
-            """Main entry point of the command-line interface.
-
-            :param argv: list of arguments passed on the command-line
-            """
-            pass
+            ...
 
         def _configure_command(self, cmdname, argv):
-            """
-            :type cmdname: str
-            :type argv: list[str]
-            """
-            pass
+            ...
     if __name__ == '__main__':
         main()
 
@@ -1167,18 +906,10 @@ preamble messages_pofile:
             self._reset_message_state()
 
         def _add_message(self) -> None:
-            """
-            Add a message to the catalog based on the current parser state and
-            clear the state ready to process the next message.
-            """
-            pass
+            ...
 
         def parse(self, fileobj: IO[AnyStr]) -> None:
-            """
-            Reads from the file-like object `fileobj` and adds any po file
-            units found in it to the `Catalog` supplied to the constructor.
-            """
-            pass
+            ...
 
 
 preamble messages_setuptools_frontend:
@@ -1322,49 +1053,13 @@ preamble numbers:
             return f'<{type(self).__name__} {self.pattern!r}>'
 
         def compute_scale(self) -> Literal[0, 2, 3]:
-            """Return the scaling factor to apply to the number before rendering.
-
-            Auto-set to a factor of 2 or 3 if presence of a ``%`` or ``‰`` sign is
-            detected in the prefix or suffix of the pattern. Default is to not mess
-            with the scale at all and keep it to 0.
-            """
-            pass
+            ...
 
         def scientific_notation_elements(self, value: decimal.Decimal, locale: Locale | str | None, *, numbering_system: Literal['default'] | str='latn') -> tuple[decimal.Decimal, int, str]:
-            """ Returns normalized scientific notation components of a value.
-            """
-            pass
+            ...
 
         def apply(self, value: float | decimal.Decimal | str, locale: Locale | str | None, currency: str | None=None, currency_digits: bool=True, decimal_quantization: bool=True, force_frac: tuple[int, int] | None=None, group_separator: bool=True, *, numbering_system: Literal['default'] | str='latn'):
-            """Renders into a string a number following the defined pattern.
-
-            Forced decimal quantization is active by default so we'll produce a
-            number string that is strictly following CLDR pattern definitions.
-
-            :param value: The value to format. If this is not a Decimal object,
-                          it will be cast to one.
-            :type value: decimal.Decimal|float|int
-            :param locale: The locale to use for formatting.
-            :type locale: str|babel.core.Locale
-            :param currency: Which currency, if any, to format as.
-            :type currency: str|None
-            :param currency_digits: Whether or not to use the currency's precision.
-                                    If false, the pattern's precision is used.
-            :type currency_digits: bool
-            :param decimal_quantization: Whether decimal numbers should be forcibly
-                                         quantized to produce a formatted output
-                                         strictly matching the CLDR definition for
-                                         the locale.
-            :type decimal_quantization: bool
-            :param force_frac: DEPRECATED - a forced override for `self.frac_prec`
-                               for a single formatting invocation.
-            :param numbering_system: The numbering system used for formatting number symbols. Defaults to "latn".
-                                     The special value "default" will use the default numbering system of the locale.
-            :return: Formatted decimal string.
-            :rtype: str
-            :raise UnsupportedNumberingSystemError: If the numbering system is not supported by the locale.
-            """
-            pass
+            ...
 
 
 preamble support:
@@ -1411,103 +1106,37 @@ preamble support:
             self.numbering_system = numbering_system
 
         def date(self, date: datetime.date | None=None, format: _PredefinedTimeFormat | str='medium') -> str:
-            """Return a date formatted according to the given pattern.
-
-            >>> from datetime import date
-            >>> fmt = Format('en_US')
-            >>> fmt.date(date(2007, 4, 1))
-            u'Apr 1, 2007'
-            """
-            pass
+            ...
 
         def datetime(self, datetime: datetime.date | None=None, format: _PredefinedTimeFormat | str='medium') -> str:
-            """Return a date and time formatted according to the given pattern.
-
-            >>> from datetime import datetime
-            >>> from babel.dates import get_timezone
-            >>> fmt = Format('en_US', tzinfo=get_timezone('US/Eastern'))
-            >>> fmt.datetime(datetime(2007, 4, 1, 15, 30))
-            u'Apr 1, 2007, 11:30:00\u202fAM'
-            """
-            pass
+            ...
 
         def time(self, time: datetime.time | datetime.datetime | None=None, format: _PredefinedTimeFormat | str='medium') -> str:
-            """Return a time formatted according to the given pattern.
-
-            >>> from datetime import datetime
-            >>> from babel.dates import get_timezone
-            >>> fmt = Format('en_US', tzinfo=get_timezone('US/Eastern'))
-            >>> fmt.time(datetime(2007, 4, 1, 15, 30))
-            u'11:30:00\u202fAM'
-            """
-            pass
+            ...
 
         def timedelta(self, delta: datetime.timedelta | int, granularity: Literal['year', 'month', 'week', 'day', 'hour', 'minute', 'second']='second', threshold: float=0.85, format: Literal['narrow', 'short', 'medium', 'long']='long', add_direction: bool=False) -> str:
-            """Return a time delta according to the rules of the given locale.
-
-            >>> from datetime import timedelta
-            >>> fmt = Format('en_US')
-            >>> fmt.timedelta(timedelta(weeks=11))
-            u'3 months'
-            """
-            pass
+            ...
 
         def number(self, number: float | decimal.Decimal | str) -> str:
-            """Return an integer number formatted for the locale.
-
-            >>> fmt = Format('en_US')
-            >>> fmt.number(1099)
-            u'1,099'
-            """
-            pass
+            ...
 
         def decimal(self, number: float | decimal.Decimal | str, format: str | None=None) -> str:
-            """Return a decimal number formatted for the locale.
-
-            >>> fmt = Format('en_US')
-            >>> fmt.decimal(1.2345)
-            u'1.234'
-            """
-            pass
+            ...
 
         def compact_decimal(self, number: float | decimal.Decimal | str, format_type: Literal['short', 'long']='short', fraction_digits: int=0) -> str:
-            """Return a number formatted in compact form for the locale.
-
-            >>> fmt = Format('en_US')
-            >>> fmt.compact_decimal(123456789)
-            u'123M'
-            >>> fmt.compact_decimal(1234567, format_type='long', fraction_digits=2)
-            '1.23 million'
-            """
-            pass
+            ...
 
         def currency(self, number: float | decimal.Decimal | str, currency: str) -> str:
-            """Return a number in the given currency formatted for the locale.
-            """
-            pass
+            ...
 
         def compact_currency(self, number: float | decimal.Decimal | str, currency: str, format_type: Literal['short']='short', fraction_digits: int=0) -> str:
-            """Return a number in the given currency formatted for the locale
-            using the compact number format.
-
-            >>> Format('en_US').compact_currency(1234567, "USD", format_type='short', fraction_digits=2)
-            '$1.23M'
-            """
-            pass
+            ...
 
         def percent(self, number: float | decimal.Decimal | str, format: str | None=None) -> str:
-            """Return a number formatted as percentage for the locale.
-
-            >>> fmt = Format('en_US')
-            >>> fmt.percent(0.34)
-            u'34%'
-            """
-            pass
+            ...
 
         def scientific(self, number: float | decimal.Decimal | str) -> str:
-            """Return a number formatted using scientific notation for the locale.
-            """
-            pass
+            ...
     class LazyProxy:
         """Class for proxy objects that delegate to a specified function to evaluate
         the actual object.
@@ -1664,142 +1293,63 @@ preamble support:
             self._domains: dict[str, NullTranslations] = {}
 
         def dgettext(self, domain: str, message: str) -> str:
-            """Like ``gettext()``, but look the message up in the specified
-            domain.
-            """
-            pass
+            ...
 
         def ldgettext(self, domain: str, message: str) -> str:
-            """Like ``lgettext()``, but look the message up in the specified
-            domain.
-            """
-            pass
+            ...
 
         def udgettext(self, domain: str, message: str) -> str:
-            """Like ``ugettext()``, but look the message up in the specified
-            domain.
-            """
-            pass
+            ...
         dugettext = udgettext
 
         def dngettext(self, domain: str, singular: str, plural: str, num: int) -> str:
-            """Like ``ngettext()``, but look the message up in the specified
-            domain.
-            """
-            pass
+            ...
 
         def ldngettext(self, domain: str, singular: str, plural: str, num: int) -> str:
-            """Like ``lngettext()``, but look the message up in the specified
-            domain.
-            """
-            pass
+            ...
 
         def udngettext(self, domain: str, singular: str, plural: str, num: int) -> str:
-            """Like ``ungettext()`` but look the message up in the specified
-            domain.
-            """
-            pass
+            ...
         dungettext = udngettext
         CONTEXT_ENCODING = '%s\x04%s'
 
         def pgettext(self, context: str, message: str) -> str | object:
-            """Look up the `context` and `message` id in the catalog and return the
-            corresponding message string, as an 8-bit string encoded with the
-            catalog's charset encoding, if known.  If there is no entry in the
-            catalog for the `message` id and `context` , and a fallback has been
-            set, the look up is forwarded to the fallback's ``pgettext()``
-            method. Otherwise, the `message` id is returned.
-            """
-            pass
+            ...
 
         def lpgettext(self, context: str, message: str) -> str | bytes | object:
-            """Equivalent to ``pgettext()``, but the translation is returned in the
-            preferred system encoding, if no other encoding was explicitly set with
-            ``bind_textdomain_codeset()``.
-            """
-            pass
+            ...
 
         def npgettext(self, context: str, singular: str, plural: str, num: int) -> str:
-            """Do a plural-forms lookup of a message id.  `singular` is used as the
-            message id for purposes of lookup in the catalog, while `num` is used to
-            determine which plural form to use.  The returned message string is an
-            8-bit string encoded with the catalog's charset encoding, if known.
-
-            If the message id for `context` is not found in the catalog, and a
-            fallback is specified, the request is forwarded to the fallback's
-            ``npgettext()`` method.  Otherwise, when ``num`` is 1 ``singular`` is
-            returned, and ``plural`` is returned in all other cases.
-            """
-            pass
+            ...
 
         def lnpgettext(self, context: str, singular: str, plural: str, num: int) -> str | bytes:
-            """Equivalent to ``npgettext()``, but the translation is returned in the
-            preferred system encoding, if no other encoding was explicitly set with
-            ``bind_textdomain_codeset()``.
-            """
-            pass
+            ...
 
         def upgettext(self, context: str, message: str) -> str:
-            """Look up the `context` and `message` id in the catalog and return the
-            corresponding message string, as a Unicode string.  If there is no entry
-            in the catalog for the `message` id and `context`, and a fallback has
-            been set, the look up is forwarded to the fallback's ``upgettext()``
-            method.  Otherwise, the `message` id is returned.
-            """
-            pass
+            ...
 
         def unpgettext(self, context: str, singular: str, plural: str, num: int) -> str:
-            """Do a plural-forms lookup of a message id.  `singular` is used as the
-            message id for purposes of lookup in the catalog, while `num` is used to
-            determine which plural form to use.  The returned message string is a
-            Unicode string.
-
-            If the message id for `context` is not found in the catalog, and a
-            fallback is specified, the request is forwarded to the fallback's
-            ``unpgettext()`` method.  Otherwise, when `num` is 1 `singular` is
-            returned, and `plural` is returned in all other cases.
-            """
-            pass
+            ...
 
         def dpgettext(self, domain: str, context: str, message: str) -> str | object:
-            """Like `pgettext()`, but look the message up in the specified
-            `domain`.
-            """
-            pass
+            ...
 
         def udpgettext(self, domain: str, context: str, message: str) -> str:
-            """Like `upgettext()`, but look the message up in the specified
-            `domain`.
-            """
-            pass
+            ...
         dupgettext = udpgettext
 
         def ldpgettext(self, domain: str, context: str, message: str) -> str | bytes | object:
-            """Equivalent to ``dpgettext()``, but the translation is returned in the
-            preferred system encoding, if no other encoding was explicitly set with
-            ``bind_textdomain_codeset()``.
-            """
-            pass
+            ...
 
         def dnpgettext(self, domain: str, context: str, singular: str, plural: str, num: int) -> str:
-            """Like ``npgettext``, but look the message up in the specified
-            `domain`.
-            """
-            pass
+            ...
 
         def udnpgettext(self, domain: str, context: str, singular: str, plural: str, num: int) -> str:
-            """Like ``unpgettext``, but look the message up in the specified
-            `domain`.
-            """
-            pass
+            ...
         dunpgettext = udnpgettext
 
         def ldnpgettext(self, domain: str, context: str, singular: str, plural: str, num: int) -> str | bytes:
-            """Equivalent to ``dnpgettext()``, but the translation is returned in
-            the preferred system encoding, if no other encoding was explicitly set
-            with ``bind_textdomain_codeset()``.
-            """
-            pass
+            ...
         ugettext = gettext.NullTranslations.gettext
         ungettext = gettext.NullTranslations.ngettext
     class Translations(NullTranslations, gettext.GNUTranslations):
@@ -1819,45 +1369,17 @@ preamble support:
 
         @classmethod
         def load(cls, dirname: str | os.PathLike[str] | None=None, locales: Iterable[str | Locale] | str | Locale | None=None, domain: str | None=None) -> NullTranslations:
-            """Load translations from the given directory.
-
-            :param dirname: the directory containing the ``MO`` files
-            :param locales: the list of locales in order of preference (items in
-                            this list can be either `Locale` objects or locale
-                            strings)
-            :param domain: the message domain (default: 'messages')
-            """
-            pass
+            ...
 
         def __repr__(self) -> str:
             version = self._info.get('project-id-version')
             return f'<{type(self).__name__}: "{version}">'
 
         def add(self, translations: Translations, merge: bool=True):
-            """Add the given translations to the catalog.
-
-            If the domain of the translations is different than that of the
-            current catalog, they are added as a catalog that is only accessible
-            by the various ``d*gettext`` functions.
-
-            :param translations: the `Translations` instance with the messages to
-                                 add
-            :param merge: whether translations for message domains that have
-                          already been added should be merged with the existing
-                          translations
-            """
-            pass
+            ...
 
         def merge(self, translations: Translations):
-            """Merge the given translations into the catalog.
-
-            Message translations in the specified catalog override any messages
-            with the same identifier in the existing catalog.
-
-            :param translations: the `Translations` instance with the messages to
-                                 merge
-            """
-            pass
+            ...
 
 
 preamble units:

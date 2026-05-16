@@ -662,6 +662,7 @@ flow zipfile_group:
 
 code version_msg:
   body: |
+    # inject-into: cookiecutter/cli.py
     def version_msg():
         """Return the Cookiecutter version, location and Python powering it."""
         pass
@@ -669,6 +670,7 @@ code version_msg:
 
 code validate_extra_context:
   body: |
+    # inject-into: cookiecutter/cli.py
     def validate_extra_context(ctx, param, value):
         """Validate extra context."""
         pass
@@ -676,6 +678,7 @@ code validate_extra_context:
 
 code list_installed_templates:
   body: |
+    # inject-into: cookiecutter/cli.py
     def list_installed_templates(default_config, passed_config_file):
         """List installed (locally cloned) templates. Use cookiecutter --list-installed."""
         pass
@@ -683,6 +686,7 @@ code list_installed_templates:
 
 code main:
   body: |
+    # inject-into: cookiecutter/cli.py
     def main(template, extra_context, no_input, checkout, verbose, replay, overwrite_if_exists, output_dir, config_file, default_config, debug_file, directory, skip_if_file_exists, accept_hooks, replay_file, list_installed, keep_project_on_failure):
         """Create a project from a Cookiecutter project template (TEMPLATE).
     
@@ -696,6 +700,7 @@ code main:
 
 code _expand_path:
   body: |
+    # inject-into: cookiecutter/config.py
     def _expand_path(path):
         """Expand both environment variables and user home in the given path."""
         pass
@@ -703,6 +708,7 @@ code _expand_path:
 
 code merge_configs:
   body: |
+    # inject-into: cookiecutter/config.py
     def merge_configs(default, overwrite):
         """Recursively update a dict with the key/value pair of another.
     
@@ -715,6 +721,7 @@ code merge_configs:
 
 code get_config:
   body: |
+    # inject-into: cookiecutter/config.py
     def get_config(config_path):
         """Retrieve the config from the specified path, returning a config dict."""
         pass
@@ -722,6 +729,7 @@ code get_config:
 
 code get_user_config:
   body: |
+    # inject-into: cookiecutter/config.py
     def get_user_config(config_file=None, default_config=False):
         """Return the user config as a dict.
     
@@ -747,6 +755,7 @@ code get_user_config:
 
 code ExtensionLoaderMixin___read_extensions:
   body: |
+    # inject-into: cookiecutter/environment.py
     def _read_extensions(self, context):
         """Return list of extensions as str to be passed on to the Jinja2 env.
     
@@ -759,6 +768,7 @@ code ExtensionLoaderMixin___read_extensions:
 
 code TimeExtension__parse:
   body: |
+    # inject-into: cookiecutter/extensions.py
     def parse(self, parser):
         """Parse datetime template and add datetime value."""
         pass
@@ -766,6 +776,7 @@ code TimeExtension__parse:
 
 code find_template:
   body: |
+    # inject-into: cookiecutter/find.py
     def find_template(repo_dir: 'os.PathLike[str]', env: Environment):
         """Determine which child directory of ``repo_dir`` is the project template.
     
@@ -778,6 +789,7 @@ code find_template:
 
 code is_copy_only_path:
   body: |
+    # inject-into: cookiecutter/generate.py
     def is_copy_only_path(path, context):
         """Check whether the given `path` should only be copied and not rendered.
     
@@ -794,6 +806,7 @@ code is_copy_only_path:
 
 code apply_overwrites_to_context:
   body: |
+    # inject-into: cookiecutter/generate.py
     def apply_overwrites_to_context(context, overwrite_context, *, in_dictionary_variable=False):
         """Modify the given context in place based on the overwrite_context."""
         pass
@@ -801,6 +814,7 @@ code apply_overwrites_to_context:
 
 code generate_context:
   body: |
+    # inject-into: cookiecutter/generate.py
     def generate_context(context_file='cookiecutter.json', default_context=None, extra_context=None):
         """Generate the context for a Cookiecutter project template.
     
@@ -817,6 +831,7 @@ code generate_context:
 
 code generate_file:
   body: |
+    # inject-into: cookiecutter/generate.py
     def generate_file(project_dir, infile, context, env, skip_if_file_exists=False):
         """Render filename of infile as name of outfile, handle infile correctly.
     
@@ -844,6 +859,7 @@ code generate_file:
 
 code render_and_create_dir:
   body: |
+    # inject-into: cookiecutter/generate.py
     def render_and_create_dir(dirname: str, context: dict, output_dir: 'os.PathLike[str]', environment: Environment, overwrite_if_exists: bool=False):
         """Render name of a directory, create the directory, return its path."""
         pass
@@ -851,6 +867,7 @@ code render_and_create_dir:
 
 code _run_hook_from_repo_dir:
   body: |
+    # inject-into: cookiecutter/generate.py
     def _run_hook_from_repo_dir(repo_dir, hook_name, project_dir, context, delete_project_on_failure):
         """Run hook from repo directory, clean project directory if hook fails.
     
@@ -867,6 +884,7 @@ code _run_hook_from_repo_dir:
 
 code generate_files:
   body: |
+    # inject-into: cookiecutter/generate.py
     def generate_files(repo_dir, context=None, output_dir='.', overwrite_if_exists=False, skip_if_file_exists=False, accept_hooks=True, keep_project_on_failure=False):
         """Render the templates and saves them to files.
     
@@ -887,6 +905,7 @@ code generate_files:
 
 code valid_hook:
   body: |
+    # inject-into: cookiecutter/hooks.py
     def valid_hook(hook_file, hook_name):
         """Determine if a hook file is valid.
     
@@ -900,6 +919,7 @@ code valid_hook:
 
 code find_hook:
   body: |
+    # inject-into: cookiecutter/hooks.py
     def find_hook(hook_name, hooks_dir='hooks'):
         """Return a dict of all hook scripts provided.
     
@@ -918,6 +938,7 @@ code find_hook:
 
 code run_script:
   body: |
+    # inject-into: cookiecutter/hooks.py
     def run_script(script_path, cwd='.'):
         """Execute a script from a working directory.
     
@@ -930,6 +951,7 @@ code run_script:
 
 code run_script_with_context:
   body: |
+    # inject-into: cookiecutter/hooks.py
     def run_script_with_context(script_path, cwd, context):
         """Execute a script after rendering it with Jinja.
     
@@ -943,6 +965,7 @@ code run_script_with_context:
 
 code run_hook:
   body: |
+    # inject-into: cookiecutter/hooks.py
     def run_hook(hook_name, project_dir, context):
         """
         Try to find and execute a hook from the specified project directory.
@@ -957,6 +980,7 @@ code run_hook:
 
 code run_hook_from_repo_dir:
   body: |
+    # inject-into: cookiecutter/hooks.py
     def run_hook_from_repo_dir(repo_dir, hook_name, project_dir, context, delete_project_on_failure):
         """Run hook from repo directory, clean project directory if hook fails.
     
@@ -973,6 +997,7 @@ code run_hook_from_repo_dir:
 
 code run_pre_prompt_hook:
   body: |
+    # inject-into: cookiecutter/hooks.py
     def run_pre_prompt_hook(repo_dir: 'os.PathLike[str]'):
         """Run pre_prompt hook from repo directory.
     
@@ -984,6 +1009,7 @@ code run_pre_prompt_hook:
 
 code configure_logger:
   body: |
+    # inject-into: cookiecutter/log.py
     def configure_logger(stream_level='DEBUG', debug_file=None):
         """Configure logging for cookiecutter.
     
@@ -996,6 +1022,7 @@ code configure_logger:
 
 code cookiecutter:
   body: |
+    # inject-into: cookiecutter/main.py
     def cookiecutter(template, checkout=None, no_input=False, extra_context=None, replay=None, overwrite_if_exists=False, output_dir='.', config_file=None, default_config=False, password=None, directory=None, skip_if_file_exists=False, accept_hooks=True, keep_project_on_failure=False):
         """
         Run Cookiecutter just as if using it from the command line.
@@ -1030,6 +1057,7 @@ code cookiecutter:
 
 code read_user_variable:
   body: |
+    # inject-into: cookiecutter/prompt.py
     def read_user_variable(var_name, default_value, prompts=None, prefix=''):
         """Prompt user for variable and return the entered value or given default.
     
@@ -1042,6 +1070,7 @@ code read_user_variable:
 
 code YesNoPrompt__process_response:
   body: |
+    # inject-into: cookiecutter/prompt.py
     def process_response(self, value: str):
         """Convert choices to a bool."""
         pass
@@ -1049,6 +1078,7 @@ code YesNoPrompt__process_response:
 
 code read_user_yes_no:
   body: |
+    # inject-into: cookiecutter/prompt.py
     def read_user_yes_no(var_name, default_value, prompts=None, prefix=''):
         """Prompt the user to reply with 'yes' or 'no' (or equivalent values).
     
@@ -1069,6 +1099,7 @@ code read_user_yes_no:
 
 code read_repo_password:
   body: |
+    # inject-into: cookiecutter/prompt.py
     def read_repo_password(question):
         """Prompt the user to enter a password.
     
@@ -1080,6 +1111,7 @@ code read_repo_password:
 
 code read_user_choice:
   body: |
+    # inject-into: cookiecutter/prompt.py
     def read_user_choice(var_name, options, prompts=None, prefix=''):
         """Prompt the user to choose from several options for the given variable.
     
@@ -1095,6 +1127,7 @@ code read_user_choice:
 
 code process_json:
   body: |
+    # inject-into: cookiecutter/prompt.py
     def process_json(user_value, default_value=None):
         """Load user-supplied value as a JSON dict.
     
@@ -1106,6 +1139,7 @@ code process_json:
 
 code JsonPrompt__process_response:
   body: |
+    # inject-into: cookiecutter/prompt.py
     def process_response(self, value: str):
         """Convert choices to a dict."""
         pass
@@ -1113,6 +1147,7 @@ code JsonPrompt__process_response:
 
 code read_user_dict:
   body: |
+    # inject-into: cookiecutter/prompt.py
     def read_user_dict(var_name, default_value, prompts=None, prefix=''):
         """Prompt the user to provide a dictionary of data.
     
@@ -1126,6 +1161,7 @@ code read_user_dict:
 
 code render_variable:
   body: |
+    # inject-into: cookiecutter/prompt.py
     def render_variable(env, raw, cookiecutter_dict):
         """Render the next variable to be displayed in the user prompt.
     
@@ -1149,6 +1185,7 @@ code render_variable:
 
 code _prompts_from_options:
   body: |
+    # inject-into: cookiecutter/prompt.py
     def _prompts_from_options(options: dict):
         """Process template options and return friendly prompt information."""
         pass
@@ -1156,6 +1193,7 @@ code _prompts_from_options:
 
 code prompt_choice_for_template:
   body: |
+    # inject-into: cookiecutter/prompt.py
     def prompt_choice_for_template(key, options, no_input):
         """Prompt user with a set of options to choose from.
     
@@ -1167,6 +1205,7 @@ code prompt_choice_for_template:
 
 code prompt_choice_for_config:
   body: |
+    # inject-into: cookiecutter/prompt.py
     def prompt_choice_for_config(cookiecutter_dict, env, key, options, no_input, prompts=None, prefix=''):
         """Prompt user with a set of options to choose from.
     
@@ -1178,6 +1217,7 @@ code prompt_choice_for_config:
 
 code prompt_for_config:
   body: |
+    # inject-into: cookiecutter/prompt.py
     def prompt_for_config(context, no_input=False):
         """Prompt user to enter a new config.
     
@@ -1190,6 +1230,7 @@ code prompt_for_config:
 
 code choose_nested_template:
   body: |
+    # inject-into: cookiecutter/prompt.py
     def choose_nested_template(context: dict, repo_dir: str, no_input: bool=False):
         """Prompt user to select the nested template to use.
     
@@ -1204,6 +1245,7 @@ code choose_nested_template:
 
 code prompt_and_delete:
   body: |
+    # inject-into: cookiecutter/prompt.py
     def prompt_and_delete(path, no_input=False):
         """
         Ask user if it's okay to delete the previously-downloaded file/directory.
@@ -1221,6 +1263,7 @@ code prompt_and_delete:
 
 code get_file_name:
   body: |
+    # inject-into: cookiecutter/replay.py
     def get_file_name(replay_dir, template_name):
         """Get the name of file."""
         pass
@@ -1228,6 +1271,7 @@ code get_file_name:
 
 code dump:
   body: |
+    # inject-into: cookiecutter/replay.py
     def dump(replay_dir: 'os.PathLike[str]', template_name: str, context: dict):
         """Write json data to file."""
         pass
@@ -1235,6 +1279,7 @@ code dump:
 
 code load:
   body: |
+    # inject-into: cookiecutter/replay.py
     def load(replay_dir, template_name):
         """Read json data from file."""
         pass
@@ -1242,6 +1287,7 @@ code load:
 
 code is_repo_url:
   body: |
+    # inject-into: cookiecutter/repository.py
     def is_repo_url(value):
         """Return True if value is a repository URL."""
         pass
@@ -1249,6 +1295,7 @@ code is_repo_url:
 
 code is_zip_file:
   body: |
+    # inject-into: cookiecutter/repository.py
     def is_zip_file(value):
         """Return True if value is a zip file."""
         pass
@@ -1256,6 +1303,7 @@ code is_zip_file:
 
 code expand_abbreviations:
   body: |
+    # inject-into: cookiecutter/repository.py
     def expand_abbreviations(template, abbreviations):
         """Expand abbreviations in a template name.
     
@@ -1268,6 +1316,7 @@ code expand_abbreviations:
 
 code repository_has_cookiecutter_json:
   body: |
+    # inject-into: cookiecutter/repository.py
     def repository_has_cookiecutter_json(repo_directory):
         """Determine if `repo_directory` contains a `cookiecutter.json` file.
     
@@ -1280,6 +1329,7 @@ code repository_has_cookiecutter_json:
 
 code determine_repo_dir:
   body: |
+    # inject-into: cookiecutter/repository.py
     def determine_repo_dir(template, abbreviations, clone_to_dir, checkout, no_input, password=None, directory=None):
         """
         Locate the repository directory from a template reference.
@@ -1309,6 +1359,7 @@ code determine_repo_dir:
 
 code force_delete:
   body: |
+    # inject-into: cookiecutter/utils.py
     def force_delete(func, path, exc_info):
         """Error handler for `shutil.rmtree()` equivalent to `rm -rf`.
     
@@ -1321,6 +1372,7 @@ code force_delete:
 
 code rmtree:
   body: |
+    # inject-into: cookiecutter/utils.py
     def rmtree(path):
         """Remove a directory and all its contents. Like rm -rf on Unix.
     
@@ -1332,6 +1384,7 @@ code rmtree:
 
 code make_sure_path_exists:
   body: |
+    # inject-into: cookiecutter/utils.py
     def make_sure_path_exists(path: 'os.PathLike[str]'):
         """Ensure that a directory exists.
     
@@ -1343,6 +1396,7 @@ code make_sure_path_exists:
 
 code work_in:
   body: |
+    # inject-into: cookiecutter/utils.py
     def work_in(dirname=None):
         """Context manager version of os.chdir.
     
@@ -1354,6 +1408,7 @@ code work_in:
 
 code make_executable:
   body: |
+    # inject-into: cookiecutter/utils.py
     def make_executable(script_path):
         """Make `script_path` executable.
     
@@ -1365,6 +1420,7 @@ code make_executable:
 
 code simple_filter:
   body: |
+    # inject-into: cookiecutter/utils.py
     def simple_filter(filter_function):
         """Decorate a function to wrap it in a simplified jinja2 extension."""
         pass
@@ -1372,6 +1428,7 @@ code simple_filter:
 
 code create_tmp_repo_dir:
   body: |
+    # inject-into: cookiecutter/utils.py
     def create_tmp_repo_dir(repo_dir: 'os.PathLike[str]'):
         """Create a temporary dir with a copy of the contents of repo_dir."""
         pass
@@ -1379,6 +1436,7 @@ code create_tmp_repo_dir:
 
 code create_env_with_context:
   body: |
+    # inject-into: cookiecutter/utils.py
     def create_env_with_context(context: Dict):
         """Create a jinja environment using the provided context."""
         pass
@@ -1386,6 +1444,7 @@ code create_env_with_context:
 
 code identify_repo:
   body: |
+    # inject-into: cookiecutter/vcs.py
     def identify_repo(repo_url):
         """Determine if `repo_url` should be treated as a URL to a git or hg repo.
     
@@ -1400,6 +1459,7 @@ code identify_repo:
 
 code is_vcs_installed:
   body: |
+    # inject-into: cookiecutter/vcs.py
     def is_vcs_installed(repo_type):
         """
         Check if the version control system for a repo type is installed.
@@ -1412,6 +1472,7 @@ code is_vcs_installed:
 
 code clone:
   body: |
+    # inject-into: cookiecutter/vcs.py
     def clone(repo_url: str, checkout: Optional[str]=None, clone_to_dir: 'os.PathLike[str]'='.', no_input: bool=False):
         """Clone a repo to the current directory.
     
@@ -1429,6 +1490,7 @@ code clone:
 
 code unzip:
   body: |
+    # inject-into: cookiecutter/zipfile.py
     def unzip(zip_uri: str, is_url: bool, clone_to_dir: 'os.PathLike[str]'='.', no_input: bool=False, password: Optional[str]=None):
         """Download and unpack a zipfile at a given URI.
     

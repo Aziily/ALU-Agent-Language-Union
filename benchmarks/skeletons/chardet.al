@@ -1020,6 +1020,11 @@ flow cli_chardetect_group:
 flow enums_group:
   steps:
     - SequenceLikelihood__get_num_categories
+    - CHINESE
+    - CHINESE_SIMPLIFIED
+    - CHINESE_TRADITIONAL
+    - JAPANESE
+    - KOREAN
 
 
 flow universaldetector_group:
@@ -1037,6 +1042,7 @@ flow utf1632prober_group:
 
 code CharDistributionAnalysis__reset:
   body: |
+    # inject-into: chardet/chardistribution.py
     def reset(self):
         """reset analyser, clear any state"""
         pass
@@ -1044,6 +1050,7 @@ code CharDistributionAnalysis__reset:
 
 code CharDistributionAnalysis__feed:
   body: |
+    # inject-into: chardet/chardistribution.py
     def feed(self, char, char_len):
         """feed a character with known length"""
         pass
@@ -1051,6 +1058,7 @@ code CharDistributionAnalysis__feed:
 
 code CharDistributionAnalysis__get_confidence:
   body: |
+    # inject-into: chardet/chardistribution.py
     def get_confidence(self):
         """return confidence based on existing data"""
         pass
@@ -1058,6 +1066,7 @@ code CharDistributionAnalysis__get_confidence:
 
 code CharSetProber__filter_international_words:
   body: |
+    # inject-into: chardet/charsetprober.py
     def filter_international_words(buf):
         """
             We define three types of bytes:
@@ -1076,6 +1085,7 @@ code CharSetProber__filter_international_words:
 
 code CharSetProber__remove_xml_tags:
   body: |
+    # inject-into: chardet/charsetprober.py
     def remove_xml_tags(buf):
         """
             Returns a copy of ``buf`` that retains only the sequences of English
@@ -1090,6 +1100,7 @@ code CharSetProber__remove_xml_tags:
 
 code description_of:
   body: |
+    # inject-into: chardet/cli/chardetect.py
     def description_of(lines, name='stdin'):
         """
         Return a string describing the probable encoding of a file or
@@ -1106,6 +1117,7 @@ code description_of:
 
 code main:
   body: |
+    # inject-into: chardet/cli/chardetect.py
     def main(argv=None):
         """
         Handles command line arguments and gets things started.
@@ -1120,13 +1132,60 @@ code main:
 
 code SequenceLikelihood__get_num_categories:
   body: |
+    # inject-into: chardet/enums.py
     def get_num_categories(cls):
         """:returns: The number of likelihood categories in the enum."""
         pass
 
 
+code CHINESE:
+  body: |
+    # inject-into: chardet/enums.py
+    # dangling-name: append-if-missing
+    def CHINESE(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code CHINESE_SIMPLIFIED:
+  body: |
+    # inject-into: chardet/enums.py
+    # dangling-name: append-if-missing
+    def CHINESE_SIMPLIFIED(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code CHINESE_TRADITIONAL:
+  body: |
+    # inject-into: chardet/enums.py
+    # dangling-name: append-if-missing
+    def CHINESE_TRADITIONAL(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code JAPANESE:
+  body: |
+    # inject-into: chardet/enums.py
+    # dangling-name: append-if-missing
+    def JAPANESE(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code KOREAN:
+  body: |
+    # inject-into: chardet/enums.py
+    # dangling-name: append-if-missing
+    def KOREAN(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code UniversalDetector__reset:
   body: |
+    # inject-into: chardet/universaldetector.py
     def reset(self):
         """
             Reset the UniversalDetector and all of its probers back to their
@@ -1139,6 +1198,7 @@ code UniversalDetector__reset:
 
 code UniversalDetector__feed:
   body: |
+    # inject-into: chardet/universaldetector.py
     def feed(self, byte_str):
         """
             Takes a chunk of a document and feeds it through all of the relevant
@@ -1159,6 +1219,7 @@ code UniversalDetector__feed:
 
 code UniversalDetector__close:
   body: |
+    # inject-into: chardet/universaldetector.py
     def close(self):
         """
             Stop analyzing the current document and come up with a final
@@ -1173,6 +1234,7 @@ code UniversalDetector__close:
 
 code UTF1632Prober__validate_utf32_characters:
   body: |
+    # inject-into: chardet/utf1632prober.py
     def validate_utf32_characters(self, quad):
         """
             Validate if the quad of bytes is valid UTF-32.
@@ -1188,6 +1250,7 @@ code UTF1632Prober__validate_utf32_characters:
 
 code UTF1632Prober__validate_utf16_characters:
   body: |
+    # inject-into: chardet/utf1632prober.py
     def validate_utf16_characters(self, pair):
         """
             Validate if the pair of bytes is  valid UTF-16.

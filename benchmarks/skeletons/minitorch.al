@@ -900,6 +900,7 @@ flow minitorch_lib:
     - tensor_functions_group
     - tensor_ops_group
     - testing_group
+    - datasets_group
 
 
 flow autodiff_group:
@@ -1074,8 +1075,19 @@ flow testing_group:
     - MathTest___tests
 
 
+flow datasets_group:
+  steps:
+    - circle
+    - diag
+    - simple
+    - spiral
+    - split
+    - xor
+
+
 code central_difference:
   body: |
+    # inject-into: minitorch/autodiff.py
     def central_difference(f: Any, *vals: Any, arg: int=0, epsilon: float=1e-06):
         """
         Computes an approximation to the derivative of `f` with respect to one arg.
@@ -1097,6 +1109,7 @@ code central_difference:
 
 code topological_sort:
   body: |
+    # inject-into: minitorch/autodiff.py
     def topological_sort(variable: Variable):
         """
         Computes the topological order of the computation graph.
@@ -1113,6 +1126,7 @@ code topological_sort:
 
 code backpropagate:
   body: |
+    # inject-into: minitorch/autodiff.py
     def backpropagate(variable: Variable, deriv: Any):
         """
         Runs backpropagation on the computation graph in order to
@@ -1130,6 +1144,7 @@ code backpropagate:
 
 code Context__save_for_backward:
   body: |
+    # inject-into: minitorch/autodiff.py
     def save_for_backward(self, *values: Any):
         """Store the given `values` if they need to be used during backpropagation."""
         pass
@@ -1137,6 +1152,7 @@ code Context__save_for_backward:
 
 code CudaOps__map:
   body: |
+    # inject-into: minitorch/cuda_ops.py
     def map(fn: Callable[[float], float]):
         """See `tensor_ops.py`"""
         pass
@@ -1144,6 +1160,7 @@ code CudaOps__map:
 
 code tensor_map:
   body: |
+    # inject-into: minitorch/cuda_ops.py
     def tensor_map(fn: Callable[[float], float]):
         """
         CUDA higher-order tensor map function. ::
@@ -1163,6 +1180,7 @@ code tensor_map:
 
 code tensor_zip:
   body: |
+    # inject-into: minitorch/cuda_ops.py
     def tensor_zip(fn: Callable[[float, float], float]):
         """
         CUDA higher-order tensor zipWith (or map2) function ::
@@ -1182,6 +1200,7 @@ code tensor_zip:
 
 code _sum_practice:
   body: |
+    # inject-into: minitorch/cuda_ops.py
     def _sum_practice(out: Storage, a: Storage, size: int):
         """
         This is a practice sum kernel to prepare for reduce.
@@ -1209,6 +1228,7 @@ code _sum_practice:
 
 code tensor_reduce:
   body: |
+    # inject-into: minitorch/cuda_ops.py
     def tensor_reduce(fn: Callable[[float, float], float]):
         """
         CUDA higher-order tensor reduce function.
@@ -1226,6 +1246,7 @@ code tensor_reduce:
 
 code _mm_practice:
   body: |
+    # inject-into: minitorch/cuda_ops.py
     def _mm_practice(out: Storage, a: Storage, b: Storage, size: int):
         """
         This is a practice square MM kernel to prepare for matmul.
@@ -1262,6 +1283,7 @@ code _mm_practice:
 
 code _tensor_matrix_multiply:
   body: |
+    # inject-into: minitorch/cuda_ops.py
     def _tensor_matrix_multiply(out: Storage, out_shape: Shape, out_strides: Strides, out_size: int, a_storage: Storage, a_shape: Shape, a_strides: Strides, b_storage: Storage, b_shape: Shape, b_strides: Strides):
         """
         CUDA tensor matrix multiply function.
@@ -1286,6 +1308,7 @@ code _tensor_matrix_multiply:
 
 code _tensor_conv1d:
   body: |
+    # inject-into: minitorch/fast_conv.py
     def _tensor_conv1d(out: Tensor, out_shape: Shape, out_strides: Strides, out_size: int, input: Tensor, input_shape: Shape, input_strides: Strides, weight: Tensor, weight_shape: Shape, weight_strides: Strides, reverse: bool):
         """
         1D Convolution implementation.
@@ -1324,6 +1347,7 @@ code _tensor_conv1d:
 
 code Conv1dFun__forward:
   body: |
+    # inject-into: minitorch/fast_conv.py
     def forward(ctx: Context, input: Tensor, weight: Tensor):
         """
             Compute a 1D Convolution
@@ -1342,6 +1366,7 @@ code Conv1dFun__forward:
 
 code _tensor_conv2d:
   body: |
+    # inject-into: minitorch/fast_conv.py
     def _tensor_conv2d(out: Tensor, out_shape: Shape, out_strides: Strides, out_size: int, input: Tensor, input_shape: Shape, input_strides: Strides, weight: Tensor, weight_shape: Shape, weight_strides: Strides, reverse: bool):
         """
         2D Convolution implementation.
@@ -1381,6 +1406,7 @@ code _tensor_conv2d:
 
 code Conv2dFun__forward:
   body: |
+    # inject-into: minitorch/fast_conv.py
     def forward(ctx: Context, input: Tensor, weight: Tensor):
         """
             Compute a 2D Convolution
@@ -1399,6 +1425,7 @@ code Conv2dFun__forward:
 
 code FastOps__map:
   body: |
+    # inject-into: minitorch/fast_ops.py
     def map(fn: Callable[[float], float]):
         """See `tensor_ops.py`"""
         pass
@@ -1406,6 +1433,7 @@ code FastOps__map:
 
 code FastOps__zip:
   body: |
+    # inject-into: minitorch/fast_ops.py
     def zip(fn: Callable[[float, float], float]):
         """See `tensor_ops.py`"""
         pass
@@ -1413,6 +1441,7 @@ code FastOps__zip:
 
 code FastOps__reduce:
   body: |
+    # inject-into: minitorch/fast_ops.py
     def reduce(fn: Callable[[float, float], float], start: float=0.0):
         """See `tensor_ops.py`"""
         pass
@@ -1420,6 +1449,7 @@ code FastOps__reduce:
 
 code FastOps__matrix_multiply:
   body: |
+    # inject-into: minitorch/fast_ops.py
     def matrix_multiply(a: Tensor, b: Tensor):
         """
             Batched tensor matrix multiply ::
@@ -1449,6 +1479,7 @@ code FastOps__matrix_multiply:
 
 code tensor_map:
   body: |
+    # inject-into: minitorch/fast_ops.py
     def tensor_map(fn: Callable[[float], float]):
         """
         NUMBA low_level tensor_map function. See `tensor_ops.py` for description.
@@ -1471,6 +1502,7 @@ code tensor_map:
 
 code tensor_zip:
   body: |
+    # inject-into: minitorch/fast_ops.py
     def tensor_zip(fn: Callable[[float, float], float]):
         """
         NUMBA higher-order tensor zip function. See `tensor_ops.py` for description.
@@ -1494,6 +1526,7 @@ code tensor_zip:
 
 code tensor_reduce:
   body: |
+    # inject-into: minitorch/fast_ops.py
     def tensor_reduce(fn: Callable[[float, float], float]):
         """
         NUMBA higher-order tensor reduce function. See `tensor_ops.py` for description.
@@ -1516,6 +1549,7 @@ code tensor_reduce:
 
 code _tensor_matrix_multiply:
   body: |
+    # inject-into: minitorch/fast_ops.py
     def _tensor_matrix_multiply(out: Storage, out_shape: Shape, out_strides: Strides, a_storage: Storage, a_shape: Shape, a_strides: Strides, b_storage: Storage, b_shape: Shape, b_strides: Strides):
         """
         NUMBA tensor matrix multiply function.
@@ -1553,6 +1587,7 @@ code _tensor_matrix_multiply:
 
 code Module__modules:
   body: |
+    # inject-into: minitorch/module.py
     def modules(self):
         """Return the direct child modules of this module."""
         pass
@@ -1560,6 +1595,7 @@ code Module__modules:
 
 code Module__train:
   body: |
+    # inject-into: minitorch/module.py
     def train(self):
         """Set the mode of this module and all descendent modules to `train`."""
         pass
@@ -1567,6 +1603,7 @@ code Module__train:
 
 code Module__eval:
   body: |
+    # inject-into: minitorch/module.py
     def eval(self):
         """Set the mode of this module and all descendent modules to `eval`."""
         pass
@@ -1574,6 +1611,7 @@ code Module__eval:
 
 code Module__named_parameters:
   body: |
+    # inject-into: minitorch/module.py
     def named_parameters(self):
         """
             Collect all the parameters of this module and its descendents.
@@ -1588,6 +1626,7 @@ code Module__named_parameters:
 
 code Module__parameters:
   body: |
+    # inject-into: minitorch/module.py
     def parameters(self):
         """Enumerate over all the parameters of this module and its descendents."""
         pass
@@ -1595,6 +1634,7 @@ code Module__parameters:
 
 code Module__add_parameter:
   body: |
+    # inject-into: minitorch/module.py
     def add_parameter(self, k: str, v: Any):
         """
             Manually add a parameter. Useful helper for scalar parameters.
@@ -1612,6 +1652,7 @@ code Module__add_parameter:
 
 code Parameter__update:
   body: |
+    # inject-into: minitorch/module.py
     def update(self, x: Any):
         """Update the parameter value."""
         pass
@@ -1619,6 +1660,7 @@ code Parameter__update:
 
 code tile:
   body: |
+    # inject-into: minitorch/nn.py
     def tile(input: Tensor, kernel: Tuple[int, int]):
         """
         Reshape an image tensor for 2D pooling
@@ -1636,6 +1678,7 @@ code tile:
 
 code avgpool2d:
   body: |
+    # inject-into: minitorch/nn.py
     def avgpool2d(input: Tensor, kernel: Tuple[int, int]):
         """
         Tiled average pooling 2D
@@ -1653,6 +1696,7 @@ code avgpool2d:
 
 code argmax:
   body: |
+    # inject-into: minitorch/nn.py
     def argmax(input: Tensor, dim: int):
         """
         Compute the argmax as a 1-hot tensor.
@@ -1672,6 +1716,7 @@ code argmax:
 
 code Max__forward:
   body: |
+    # inject-into: minitorch/nn.py
     def forward(ctx: Context, input: Tensor, dim: Tensor):
         """Forward of max should be max reduction"""
         pass
@@ -1679,6 +1724,7 @@ code Max__forward:
 
 code Max__backward:
   body: |
+    # inject-into: minitorch/nn.py
     def backward(ctx: Context, grad_output: Tensor):
         """Backward of max should be argmax (see above)"""
         pass
@@ -1686,6 +1732,7 @@ code Max__backward:
 
 code softmax:
   body: |
+    # inject-into: minitorch/nn.py
     def softmax(input: Tensor, dim: int):
         """
         Compute the softmax as a tensor.
@@ -1707,6 +1754,7 @@ code softmax:
 
 code logsoftmax:
   body: |
+    # inject-into: minitorch/nn.py
     def logsoftmax(input: Tensor, dim: int):
         """
         Compute the log of the softmax as a tensor.
@@ -1728,6 +1776,7 @@ code logsoftmax:
 
 code maxpool2d:
   body: |
+    # inject-into: minitorch/nn.py
     def maxpool2d(input: Tensor, kernel: Tuple[int, int]):
         """
         Tiled max pooling 2D
@@ -1745,6 +1794,7 @@ code maxpool2d:
 
 code dropout:
   body: |
+    # inject-into: minitorch/nn.py
     def dropout(input: Tensor, rate: float, ignore: bool=False):
         """
         Dropout positions based on random noise.
@@ -1763,6 +1813,7 @@ code dropout:
 
 code mul:
   body: |
+    # inject-into: minitorch/operators.py
     def mul(x: float, y: float):
         """$f(x, y) = x * y$"""
         pass
@@ -1770,6 +1821,7 @@ code mul:
 
 code id:
   body: |
+    # inject-into: minitorch/operators.py
     def id(x: float):
         """$f(x) = x$"""
         pass
@@ -1777,6 +1829,7 @@ code id:
 
 code add:
   body: |
+    # inject-into: minitorch/operators.py
     def add(x: float, y: float):
         """$f(x, y) = x + y$"""
         pass
@@ -1784,6 +1837,7 @@ code add:
 
 code neg:
   body: |
+    # inject-into: minitorch/operators.py
     def neg(x: float):
         """$f(x) = -x$"""
         pass
@@ -1791,6 +1845,7 @@ code neg:
 
 code lt:
   body: |
+    # inject-into: minitorch/operators.py
     def lt(x: float, y: float):
         """$f(x) =$ 1.0 if x is less than y else 0.0"""
         pass
@@ -1798,6 +1853,7 @@ code lt:
 
 code eq:
   body: |
+    # inject-into: minitorch/operators.py
     def eq(x: float, y: float):
         """$f(x) =$ 1.0 if x is equal to y else 0.0"""
         pass
@@ -1805,6 +1861,7 @@ code eq:
 
 code max:
   body: |
+    # inject-into: minitorch/operators.py
     def max(x: float, y: float):
         """$f(x) =$ x if x is greater than y else y"""
         pass
@@ -1812,6 +1869,7 @@ code max:
 
 code is_close:
   body: |
+    # inject-into: minitorch/operators.py
     def is_close(x: float, y: float):
         """$f(x) = |x - y| < 1e-2$"""
         pass
@@ -1819,6 +1877,7 @@ code is_close:
 
 code sigmoid:
   body: |
+    # inject-into: minitorch/operators.py
     def sigmoid(x: float):
         """
         $f(x) =  \frac{1.0}{(1.0 + e^{-x})}$
@@ -1837,6 +1896,7 @@ code sigmoid:
 
 code relu:
   body: |
+    # inject-into: minitorch/operators.py
     def relu(x: float):
         """
         $f(x) =$ x if x is greater than 0, else 0
@@ -1849,6 +1909,7 @@ code relu:
 
 code log:
   body: |
+    # inject-into: minitorch/operators.py
     def log(x: float):
         """$f(x) = log(x)$"""
         pass
@@ -1856,6 +1917,7 @@ code log:
 
 code exp:
   body: |
+    # inject-into: minitorch/operators.py
     def exp(x: float):
         """$f(x) = e^{x}$"""
         pass
@@ -1863,6 +1925,7 @@ code exp:
 
 code log_back:
   body: |
+    # inject-into: minitorch/operators.py
     def log_back(x: float, d: float):
         """If $f = log$ as above, compute $d \times f'(x)$"""
         pass
@@ -1870,6 +1933,7 @@ code log_back:
 
 code inv:
   body: |
+    # inject-into: minitorch/operators.py
     def inv(x: float):
         """$f(x) = 1/x$"""
         pass
@@ -1877,6 +1941,7 @@ code inv:
 
 code inv_back:
   body: |
+    # inject-into: minitorch/operators.py
     def inv_back(x: float, d: float):
         """If $f(x) = 1/x$ compute $d \times f'(x)$"""
         pass
@@ -1884,6 +1949,7 @@ code inv_back:
 
 code relu_back:
   body: |
+    # inject-into: minitorch/operators.py
     def relu_back(x: float, d: float):
         """If $f = relu$ compute $d \times f'(x)$"""
         pass
@@ -1891,6 +1957,7 @@ code relu_back:
 
 code map:
   body: |
+    # inject-into: minitorch/operators.py
     def map(fn: Callable[[float], float]):
         """
         Higher-order map.
@@ -1910,6 +1977,7 @@ code map:
 
 code negList:
   body: |
+    # inject-into: minitorch/operators.py
     def negList(ls: Iterable[float]):
         """Use `map` and `neg` to negate each element in `ls`"""
         pass
@@ -1917,6 +1985,7 @@ code negList:
 
 code zipWith:
   body: |
+    # inject-into: minitorch/operators.py
     def zipWith(fn: Callable[[float, float], float]):
         """
         Higher-order zipwith (or map2).
@@ -1937,6 +2006,7 @@ code zipWith:
 
 code addLists:
   body: |
+    # inject-into: minitorch/operators.py
     def addLists(ls1: Iterable[float], ls2: Iterable[float]):
         """Add the elements of `ls1` and `ls2` using `zipWith` and `add`"""
         pass
@@ -1944,6 +2014,7 @@ code addLists:
 
 code reduce:
   body: |
+    # inject-into: minitorch/operators.py
     def reduce(fn: Callable[[float, float], float], start: float):
         """
         Higher-order reduce.
@@ -1963,6 +2034,7 @@ code reduce:
 
 code sum:
   body: |
+    # inject-into: minitorch/operators.py
     def sum(ls: Iterable[float]):
         """Sum up a list using `reduce` and `add`."""
         pass
@@ -1970,6 +2042,7 @@ code sum:
 
 code prod:
   body: |
+    # inject-into: minitorch/operators.py
     def prod(ls: Iterable[float]):
         """Product of a list using `reduce` and `mul`."""
         pass
@@ -1977,6 +2050,7 @@ code prod:
 
 code Scalar__accumulate_derivative:
   body: |
+    # inject-into: minitorch/scalar.py
     def accumulate_derivative(self, x: Any):
         """
             Add `val` to the the derivative accumulated on this variable.
@@ -1991,6 +2065,7 @@ code Scalar__accumulate_derivative:
 
 code Scalar__is_leaf:
   body: |
+    # inject-into: minitorch/scalar.py
     def is_leaf(self):
         """True if this variable created by the user (no `last_fn`)"""
         pass
@@ -1998,6 +2073,7 @@ code Scalar__is_leaf:
 
 code Scalar__backward:
   body: |
+    # inject-into: minitorch/scalar.py
     def backward(self, d_output: Optional[float]=None):
         """
             Calls autodiff to fill in the derivatives for the history of this object.
@@ -2012,6 +2088,7 @@ code Scalar__backward:
 
 code derivative_check:
   body: |
+    # inject-into: minitorch/scalar.py
     def derivative_check(f: Any, *scalars: Scalar):
         """
         Checks that autodiff works on a python function.
@@ -2027,6 +2104,7 @@ code derivative_check:
 
 code wrap_tuple:
   body: |
+    # inject-into: minitorch/scalar_functions.py
     def wrap_tuple(x):
         """Turn a possible value into a tuple"""
         pass
@@ -2034,6 +2112,7 @@ code wrap_tuple:
 
 code unwrap_tuple:
   body: |
+    # inject-into: minitorch/scalar_functions.py
     def unwrap_tuple(x):
         """Turn a singleton tuple into a value"""
         pass
@@ -2041,6 +2120,7 @@ code unwrap_tuple:
 
 code Tensor__to_numpy:
   body: |
+    # inject-into: minitorch/tensor.py
     def to_numpy(self):
         """
             Returns:
@@ -2052,6 +2132,7 @@ code Tensor__to_numpy:
 
 code Tensor__shape:
   body: |
+    # inject-into: minitorch/tensor.py
     def shape(self):
         """
             Returns:
@@ -2063,6 +2144,7 @@ code Tensor__shape:
 
 code Tensor__size:
   body: |
+    # inject-into: minitorch/tensor.py
     def size(self):
         """
             Returns:
@@ -2074,6 +2156,7 @@ code Tensor__size:
 
 code Tensor__dims:
   body: |
+    # inject-into: minitorch/tensor.py
     def dims(self):
         """
             Returns:
@@ -2085,6 +2168,7 @@ code Tensor__dims:
 
 code Tensor___ensure_tensor:
   body: |
+    # inject-into: minitorch/tensor.py
     def _ensure_tensor(self, b: TensorLike):
         """Turns a python number into a tensor with the same backend."""
         pass
@@ -2092,6 +2176,7 @@ code Tensor___ensure_tensor:
 
 code Tensor__sum:
   body: |
+    # inject-into: minitorch/tensor.py
     def sum(self, dim: Optional[int]=None):
         """Compute the sum over dimension `dim`"""
         pass
@@ -2099,6 +2184,7 @@ code Tensor__sum:
 
 code Tensor__mean:
   body: |
+    # inject-into: minitorch/tensor.py
     def mean(self, dim: Optional[int]=None):
         """Compute the mean over dimension `dim`"""
         pass
@@ -2106,6 +2192,7 @@ code Tensor__mean:
 
 code Tensor__permute:
   body: |
+    # inject-into: minitorch/tensor.py
     def permute(self, *order: int):
         """Permute tensor dimensions to *order"""
         pass
@@ -2113,6 +2200,7 @@ code Tensor__permute:
 
 code Tensor__view:
   body: |
+    # inject-into: minitorch/tensor.py
     def view(self, *shape: int):
         """Change the shape of the tensor to a new shape with the same size"""
         pass
@@ -2120,6 +2208,7 @@ code Tensor__view:
 
 code Tensor__contiguous:
   body: |
+    # inject-into: minitorch/tensor.py
     def contiguous(self):
         """Return a contiguous tensor with the same data"""
         pass
@@ -2127,6 +2216,7 @@ code Tensor__contiguous:
 
 code Tensor__make:
   body: |
+    # inject-into: minitorch/tensor.py
     def make(storage: Union[Storage, List[float]], shape: UserShape, strides: Optional[UserStrides]=None, backend: Optional[TensorBackend]=None):
         """Create a new tensor from data"""
         pass
@@ -2134,6 +2224,7 @@ code Tensor__make:
 
 code Tensor__expand:
   body: |
+    # inject-into: minitorch/tensor.py
     def expand(self, other: Tensor):
         """
             Method used to allow for backprop over broadcasting.
@@ -2154,6 +2245,7 @@ code Tensor__expand:
 
 code Tensor__accumulate_derivative:
   body: |
+    # inject-into: minitorch/tensor.py
     def accumulate_derivative(self, x: Any):
         """
             Add `val` to the the derivative accumulated on this variable.
@@ -2168,6 +2260,7 @@ code Tensor__accumulate_derivative:
 
 code Tensor__is_leaf:
   body: |
+    # inject-into: minitorch/tensor.py
     def is_leaf(self):
         """True if this variable created by the user (no `last_fn`)"""
         pass
@@ -2175,6 +2268,7 @@ code Tensor__is_leaf:
 
 code Tensor__zero_grad_:
   body: |
+    # inject-into: minitorch/tensor.py
     def zero_grad_(self):
         """
             Reset the derivative on this variable.
@@ -2185,6 +2279,7 @@ code Tensor__zero_grad_:
 
 code index_to_position:
   body: |
+    # inject-into: minitorch/tensor_data.py
     def index_to_position(index: Index, strides: Strides):
         """
         Converts a multidimensional tensor `index` into a single-dimensional position in
@@ -2203,6 +2298,7 @@ code index_to_position:
 
 code to_index:
   body: |
+    # inject-into: minitorch/tensor_data.py
     def to_index(ordinal: int, shape: Shape, out_index: OutIndex):
         """
         Convert an `ordinal` to an index in the `shape`.
@@ -2222,6 +2318,7 @@ code to_index:
 
 code broadcast_index:
   body: |
+    # inject-into: minitorch/tensor_data.py
     def broadcast_index(big_index: Index, big_shape: Shape, shape: Shape, out_index: OutIndex):
         """
         Convert a `big_index` into `big_shape` to a smaller `out_index`
@@ -2245,6 +2342,7 @@ code broadcast_index:
 
 code shape_broadcast:
   body: |
+    # inject-into: minitorch/tensor_data.py
     def shape_broadcast(shape1: UserShape, shape2: UserShape):
         """
         Broadcast two shapes to create a new union shape.
@@ -2265,6 +2363,7 @@ code shape_broadcast:
 
 code TensorData__is_contiguous:
   body: |
+    # inject-into: minitorch/tensor_data.py
     def is_contiguous(self):
         """
             Check that the layout is contiguous, i.e. outer dimensions have bigger strides than inner dimensions.
@@ -2278,6 +2377,7 @@ code TensorData__is_contiguous:
 
 code TensorData__permute:
   body: |
+    # inject-into: minitorch/tensor_data.py
     def permute(self, *order: int):
         """
             Permute the dimensions of the tensor.
@@ -2294,6 +2394,7 @@ code TensorData__permute:
 
 code wrap_tuple:
   body: |
+    # inject-into: minitorch/tensor_functions.py
     def wrap_tuple(x):
         """Turn a possible value into a tuple"""
         pass
@@ -2301,6 +2402,7 @@ code wrap_tuple:
 
 code zeros:
   body: |
+    # inject-into: minitorch/tensor_functions.py
     def zeros(shape: UserShape, backend: TensorBackend=SimpleBackend):
         """
         Produce a zero tensor of size `shape`.
@@ -2318,6 +2420,7 @@ code zeros:
 
 code rand:
   body: |
+    # inject-into: minitorch/tensor_functions.py
     def rand(shape: UserShape, backend: TensorBackend=SimpleBackend, requires_grad: bool=False):
         """
         Produce a random tensor of size `shape`.
@@ -2336,6 +2439,7 @@ code rand:
 
 code _tensor:
   body: |
+    # inject-into: minitorch/tensor_functions.py
     def _tensor(ls: Any, shape: UserShape, backend: TensorBackend=SimpleBackend, requires_grad: bool=False):
         """
         Produce a tensor with data ls and shape `shape`.
@@ -2355,6 +2459,7 @@ code _tensor:
 
 code tensor:
   body: |
+    # inject-into: minitorch/tensor_functions.py
     def tensor(ls: Any, backend: TensorBackend=SimpleBackend, requires_grad: bool=False):
         """
         Produce a tensor with data and shape from ls
@@ -2373,6 +2478,7 @@ code tensor:
 
 code SimpleOps__map:
   body: |
+    # inject-into: minitorch/tensor_ops.py
     def map(fn: Callable[[float], float]):
         """
             Higher-order tensor map function ::
@@ -2408,6 +2514,7 @@ code SimpleOps__map:
 
 code SimpleOps__zip:
   body: |
+    # inject-into: minitorch/tensor_ops.py
     def zip(fn: Callable[[float, float], float]):
         """
             Higher-order tensor zip function ::
@@ -2442,6 +2549,7 @@ code SimpleOps__zip:
 
 code SimpleOps__reduce:
   body: |
+    # inject-into: minitorch/tensor_ops.py
     def reduce(fn: Callable[[float, float], float], start: float=0.0):
         """
             Higher-order tensor reduce function. ::
@@ -2471,6 +2579,7 @@ code SimpleOps__reduce:
 
 code tensor_map:
   body: |
+    # inject-into: minitorch/tensor_ops.py
     def tensor_map(fn: Callable[[float], float]):
         """
         Low-level implementation of tensor map between
@@ -2500,6 +2609,7 @@ code tensor_map:
 
 code tensor_zip:
   body: |
+    # inject-into: minitorch/tensor_ops.py
     def tensor_zip(fn: Callable[[float, float], float]):
         """
         Low-level implementation of tensor zip between
@@ -2529,6 +2639,7 @@ code tensor_zip:
 
 code tensor_reduce:
   body: |
+    # inject-into: minitorch/tensor_ops.py
     def tensor_reduce(fn: Callable[[float, float], float]):
         """
         Low-level implementation of tensor reduce.
@@ -2548,6 +2659,7 @@ code tensor_reduce:
 
 code MathTest__neg:
   body: |
+    # inject-into: minitorch/testing.py
     def neg(a: A):
         """Negate the argument"""
         pass
@@ -2555,6 +2667,7 @@ code MathTest__neg:
 
 code MathTest__addConstant:
   body: |
+    # inject-into: minitorch/testing.py
     def addConstant(a: A):
         """Add contant to the argument"""
         pass
@@ -2562,6 +2675,7 @@ code MathTest__addConstant:
 
 code MathTest__square:
   body: |
+    # inject-into: minitorch/testing.py
     def square(a: A):
         """Manual square"""
         pass
@@ -2569,6 +2683,7 @@ code MathTest__square:
 
 code MathTest__cube:
   body: |
+    # inject-into: minitorch/testing.py
     def cube(a: A):
         """Manual cube"""
         pass
@@ -2576,6 +2691,7 @@ code MathTest__cube:
 
 code MathTest__subConstant:
   body: |
+    # inject-into: minitorch/testing.py
     def subConstant(a: A):
         """Subtract a constant from the argument"""
         pass
@@ -2583,6 +2699,7 @@ code MathTest__subConstant:
 
 code MathTest__multConstant:
   body: |
+    # inject-into: minitorch/testing.py
     def multConstant(a: A):
         """Multiply a constant to the argument"""
         pass
@@ -2590,6 +2707,7 @@ code MathTest__multConstant:
 
 code MathTest__div:
   body: |
+    # inject-into: minitorch/testing.py
     def div(a: A):
         """Divide by a constant"""
         pass
@@ -2597,6 +2715,7 @@ code MathTest__div:
 
 code MathTest__inv:
   body: |
+    # inject-into: minitorch/testing.py
     def inv(a: A):
         """Invert after adding"""
         pass
@@ -2604,6 +2723,7 @@ code MathTest__inv:
 
 code MathTest__sig:
   body: |
+    # inject-into: minitorch/testing.py
     def sig(a: A):
         """Apply sigmoid"""
         pass
@@ -2611,6 +2731,7 @@ code MathTest__sig:
 
 code MathTest__log:
   body: |
+    # inject-into: minitorch/testing.py
     def log(a: A):
         """Apply log to a large value"""
         pass
@@ -2618,6 +2739,7 @@ code MathTest__log:
 
 code MathTest__relu:
   body: |
+    # inject-into: minitorch/testing.py
     def relu(a: A):
         """Apply relu"""
         pass
@@ -2625,6 +2747,7 @@ code MathTest__relu:
 
 code MathTest__exp:
   body: |
+    # inject-into: minitorch/testing.py
     def exp(a: A):
         """Apply exp to a smaller value"""
         pass
@@ -2632,6 +2755,7 @@ code MathTest__exp:
 
 code MathTest__add2:
   body: |
+    # inject-into: minitorch/testing.py
     def add2(a: A, b: A):
         """Add two arguments"""
         pass
@@ -2639,6 +2763,7 @@ code MathTest__add2:
 
 code MathTest__mul2:
   body: |
+    # inject-into: minitorch/testing.py
     def mul2(a: A, b: A):
         """Mul two arguments"""
         pass
@@ -2646,6 +2771,7 @@ code MathTest__mul2:
 
 code MathTest__div2:
   body: |
+    # inject-into: minitorch/testing.py
     def div2(a: A, b: A):
         """Divide two arguments"""
         pass
@@ -2653,9 +2779,64 @@ code MathTest__div2:
 
 code MathTest___tests:
   body: |
+    # inject-into: minitorch/testing.py
     def _tests(cls):
         """
             Returns a list of all the math tests.
             
         """
+        pass
+
+
+code circle:
+  body: |
+    # inject-into: minitorch/datasets.py
+    # dangling-name: append-if-missing
+    def circle(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code diag:
+  body: |
+    # inject-into: minitorch/datasets.py
+    # dangling-name: append-if-missing
+    def diag(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code simple:
+  body: |
+    # inject-into: minitorch/datasets.py
+    # dangling-name: append-if-missing
+    def simple(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code spiral:
+  body: |
+    # inject-into: minitorch/datasets.py
+    # dangling-name: append-if-missing
+    def spiral(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code split:
+  body: |
+    # inject-into: minitorch/datasets.py
+    # dangling-name: append-if-missing
+    def split(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code xor:
+  body: |
+    # inject-into: minitorch/datasets.py
+    # dangling-name: append-if-missing
+    def xor(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
         pass

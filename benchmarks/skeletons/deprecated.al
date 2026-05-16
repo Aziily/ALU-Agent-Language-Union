@@ -273,6 +273,7 @@ flow sphinx_group:
 
 code ClassicAdapter__get_deprecated_msg:
   body: |
+    # inject-into: deprecated/classic.py
     def get_deprecated_msg(self, wrapped, instance):
         """
             Get the deprecation warning message for the user.
@@ -289,6 +290,7 @@ code ClassicAdapter__get_deprecated_msg:
 
 code deprecated:
   body: |
+    # inject-into: deprecated/classic.py
     def deprecated(*args, **kwargs):
         """
         This is a decorator which can be used to mark functions
@@ -371,6 +373,7 @@ code deprecated:
 
 code SphinxAdapter__get_deprecated_msg:
   body: |
+    # inject-into: deprecated/sphinx.py
     def get_deprecated_msg(self, wrapped, instance):
         """
             Get the deprecation warning message (without Sphinx cross-referencing syntax) for the user.
@@ -391,6 +394,7 @@ code SphinxAdapter__get_deprecated_msg:
 
 code versionadded:
   body: |
+    # inject-into: deprecated/sphinx.py
     def versionadded(reason='', version='', line_length=70):
         """
         This decorator can be used to insert a "versionadded" directive
@@ -418,6 +422,7 @@ code versionadded:
 
 code versionchanged:
   body: |
+    # inject-into: deprecated/sphinx.py
     def versionchanged(reason='', version='', line_length=70):
         """
         This decorator can be used to insert a "versionchanged" directive
@@ -444,6 +449,7 @@ code versionchanged:
 
 code deprecated:
   body: |
+    # inject-into: deprecated/sphinx.py
     def deprecated(reason='', version='', line_length=70, **kwargs):
         """
         This decorator can be used to insert a "deprecated" directive

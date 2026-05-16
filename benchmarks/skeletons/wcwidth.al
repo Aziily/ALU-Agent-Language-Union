@@ -83,6 +83,7 @@ flow wcwidth_group:
 
 code list_versions:
   body: |
+    # inject-into: wcwidth/unicode_versions.py
     def list_versions():
         """
         Return Unicode version levels supported by this module release.
@@ -99,6 +100,7 @@ code list_versions:
 
 code _bisearch:
   body: |
+    # inject-into: wcwidth/wcwidth.py
     def _bisearch(ucs, table):
         """
         Auxiliary function for binary search in interval table.
@@ -115,6 +117,7 @@ code _bisearch:
 
 code wcwidth:
   body: |
+    # inject-into: wcwidth/wcwidth.py
     def wcwidth(wc, unicode_version='auto'):
         """
         Given one Unicode character, return its printable length on a terminal.
@@ -143,6 +146,7 @@ code wcwidth:
 
 code wcswidth:
   body: |
+    # inject-into: wcwidth/wcwidth.py
     def wcswidth(pwcs, n=None, unicode_version='auto'):
         """
         Given a unicode string, return its printable length on a terminal.
@@ -170,6 +174,7 @@ code wcswidth:
 
 code _wcversion_value:
   body: |
+    # inject-into: wcwidth/wcwidth.py
     def _wcversion_value(ver_string):
         """
         Integer-mapped value of given dotted version string.
@@ -184,6 +189,7 @@ code _wcversion_value:
 
 code _wcmatch_version:
   body: |
+    # inject-into: wcwidth/wcwidth.py
     def _wcmatch_version(given_version):
         """
         Return nearest matching supported Unicode version level.

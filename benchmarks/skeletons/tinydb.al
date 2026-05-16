@@ -885,16 +885,19 @@ flow table_group:
     - Table___get_next_id
     - Table___read_table
     - Table___update_table
+    - default_query_cache_capacity
 
 
 flow utils_group:
   steps:
     - with_typehint
     - freeze
+    - _immutable
 
 
 code TinyDB__table:
   body: |
+    # inject-into: tinydb/database.py
     def table(self, name: str, **kwargs):
         """
             Get access to a specific table.
@@ -916,6 +919,7 @@ code TinyDB__table:
 
 code TinyDB__tables:
   body: |
+    # inject-into: tinydb/database.py
     def tables(self):
         """
             Get the names of all tables in the database.
@@ -928,6 +932,7 @@ code TinyDB__tables:
 
 code TinyDB__drop_tables:
   body: |
+    # inject-into: tinydb/database.py
     def drop_tables(self):
         """
             Drop all tables from the database. **CANNOT BE REVERSED!**
@@ -938,6 +943,7 @@ code TinyDB__drop_tables:
 
 code TinyDB__drop_table:
   body: |
+    # inject-into: tinydb/database.py
     def drop_table(self, name: str):
         """
             Drop a specific table from the database. **CANNOT BE REVERSED!**
@@ -950,6 +956,7 @@ code TinyDB__drop_table:
 
 code TinyDB__storage:
   body: |
+    # inject-into: tinydb/database.py
     def storage(self):
         """
             Get the storage instance used for this TinyDB instance.
@@ -963,6 +970,7 @@ code TinyDB__storage:
 
 code TinyDB__close:
   body: |
+    # inject-into: tinydb/database.py
     def close(self):
         """
             Close the database.
@@ -984,6 +992,7 @@ code TinyDB__close:
 
 code CachingMiddleware__flush:
   body: |
+    # inject-into: tinydb/middlewares.py
     def flush(self):
         """
             Flush all unwritten data to disk.
@@ -994,6 +1003,7 @@ code CachingMiddleware__flush:
 
 code delete:
   body: |
+    # inject-into: tinydb/operations.py
     def delete(field):
         """
         Delete a given field from the document.
@@ -1004,6 +1014,7 @@ code delete:
 
 code add:
   body: |
+    # inject-into: tinydb/operations.py
     def add(field, n):
         """
         Add ``n`` to a given field in the document.
@@ -1014,6 +1025,7 @@ code add:
 
 code subtract:
   body: |
+    # inject-into: tinydb/operations.py
     def subtract(field, n):
         """
         Subtract ``n`` to a given field in the document.
@@ -1024,6 +1036,7 @@ code subtract:
 
 code set:
   body: |
+    # inject-into: tinydb/operations.py
     def set(field, val):
         """
         Set a given field to ``val``.
@@ -1034,6 +1047,7 @@ code set:
 
 code increment:
   body: |
+    # inject-into: tinydb/operations.py
     def increment(field):
         """
         Increment a given field in the document by 1.
@@ -1044,6 +1058,7 @@ code increment:
 
 code decrement:
   body: |
+    # inject-into: tinydb/operations.py
     def decrement(field):
         """
         Decrement a given field in the document by 1.
@@ -1054,6 +1069,7 @@ code decrement:
 
 code Query___generate_test:
   body: |
+    # inject-into: tinydb/queries.py
     def _generate_test(self, test: Callable[[Any], bool], hashval: Tuple, allow_empty_path: bool=False):
         """
             Generate a query based on a test function that first resolves the query
@@ -1069,6 +1085,7 @@ code Query___generate_test:
 
 code Query__exists:
   body: |
+    # inject-into: tinydb/queries.py
     def exists(self):
         """
             Test for a dict where a provided key exists.
@@ -1081,6 +1098,7 @@ code Query__exists:
 
 code Query__matches:
   body: |
+    # inject-into: tinydb/queries.py
     def matches(self, regex: str, flags: int=0):
         """
             Run a regex test against a dict value (whole string has to match).
@@ -1096,6 +1114,7 @@ code Query__matches:
 
 code Query__search:
   body: |
+    # inject-into: tinydb/queries.py
     def search(self, regex: str, flags: int=0):
         """
             Run a regex test against a dict value (only substring string has to
@@ -1112,6 +1131,7 @@ code Query__search:
 
 code Query__test:
   body: |
+    # inject-into: tinydb/queries.py
     def test(self, func: Callable[[Mapping], bool], *args):
         """
             Run a user-defined test function against a dict value.
@@ -1138,6 +1158,7 @@ code Query__test:
 
 code Query__any:
   body: |
+    # inject-into: tinydb/queries.py
     def any(self, cond: Union[QueryInstance, List[Any]]):
         """
             Check if a condition is met by any document in a list,
@@ -1166,6 +1187,7 @@ code Query__any:
 
 code Query__all:
   body: |
+    # inject-into: tinydb/queries.py
     def all(self, cond: Union['QueryInstance', List[Any]]):
         """
             Check if a condition is met by all documents in a list,
@@ -1192,6 +1214,7 @@ code Query__all:
 
 code Query__one_of:
   body: |
+    # inject-into: tinydb/queries.py
     def one_of(self, items: List[Any]):
         """
             Check if the value is contained in a list or generator.
@@ -1206,6 +1229,7 @@ code Query__one_of:
 
 code Query__noop:
   body: |
+    # inject-into: tinydb/queries.py
     def noop(self):
         """
             Always evaluate to ``True``.
@@ -1218,6 +1242,7 @@ code Query__noop:
 
 code Query__map:
   body: |
+    # inject-into: tinydb/queries.py
     def map(self, fn: Callable[[Any], Any]):
         """
             Add a function to the query path. Similar to __getattr__ but for
@@ -1229,6 +1254,7 @@ code Query__map:
 
 code where:
   body: |
+    # inject-into: tinydb/queries.py
     def where(key: str):
         """
         A shorthand for ``Query()[key]``
@@ -1239,6 +1265,7 @@ code where:
 
 code touch:
   body: |
+    # inject-into: tinydb/storages.py
     def touch(path: str, create_dirs: bool):
         """
         Create a file if it doesn't exist yet.
@@ -1252,6 +1279,7 @@ code touch:
 
 code Storage__read:
   body: |
+    # inject-into: tinydb/storages.py
     def read(self):
         """
             Read the current state.
@@ -1266,6 +1294,7 @@ code Storage__read:
 
 code Storage__write:
   body: |
+    # inject-into: tinydb/storages.py
     def write(self, data: Dict[str, Dict[str, Any]]):
         """
             Write the current state of the database to the storage.
@@ -1280,6 +1309,7 @@ code Storage__write:
 
 code Storage__close:
   body: |
+    # inject-into: tinydb/storages.py
     def close(self):
         """
             Optional: Close open file handles, etc.
@@ -1290,6 +1320,7 @@ code Storage__close:
 
 code Table__name:
   body: |
+    # inject-into: tinydb/table.py
     def name(self):
         """
             Get the table name.
@@ -1300,6 +1331,7 @@ code Table__name:
 
 code Table__storage:
   body: |
+    # inject-into: tinydb/table.py
     def storage(self):
         """
             Get the table storage instance.
@@ -1310,6 +1342,7 @@ code Table__storage:
 
 code Table__insert:
   body: |
+    # inject-into: tinydb/table.py
     def insert(self, document: Mapping):
         """
             Insert a new document into the table.
@@ -1323,6 +1356,7 @@ code Table__insert:
 
 code Table__insert_multiple:
   body: |
+    # inject-into: tinydb/table.py
     def insert_multiple(self, documents: Iterable[Mapping]):
         """
             Insert multiple documents into the table.
@@ -1336,6 +1370,7 @@ code Table__insert_multiple:
 
 code Table__all:
   body: |
+    # inject-into: tinydb/table.py
     def all(self):
         """
             Get all documents stored in the table.
@@ -1348,6 +1383,7 @@ code Table__all:
 
 code Table__search:
   body: |
+    # inject-into: tinydb/table.py
     def search(self, cond: QueryLike):
         """
             Search for all documents matching a 'where' cond.
@@ -1361,6 +1397,7 @@ code Table__search:
 
 code Table__get:
   body: |
+    # inject-into: tinydb/table.py
     def get(self, cond: Optional[QueryLike]=None, doc_id: Optional[int]=None, doc_ids: Optional[List]=None):
         """
             Get exactly one document specified by a query or a document ID.
@@ -1381,6 +1418,7 @@ code Table__get:
 
 code Table__contains:
   body: |
+    # inject-into: tinydb/table.py
     def contains(self, cond: Optional[QueryLike]=None, doc_id: Optional[int]=None):
         """
             Check whether the database contains a document matching a query or
@@ -1397,6 +1435,7 @@ code Table__contains:
 
 code Table__update:
   body: |
+    # inject-into: tinydb/table.py
     def update(self, fields: Union[Mapping, Callable[[Mapping], None]], cond: Optional[QueryLike]=None, doc_ids: Optional[Iterable[int]]=None):
         """
             Update all matching documents to have a given set of fields.
@@ -1413,6 +1452,7 @@ code Table__update:
 
 code Table__update_multiple:
   body: |
+    # inject-into: tinydb/table.py
     def update_multiple(self, updates: Iterable[Tuple[Union[Mapping, Callable[[Mapping], None]], QueryLike]]):
         """
             Update all matching documents to have a given set of fields.
@@ -1425,6 +1465,7 @@ code Table__update_multiple:
 
 code Table__upsert:
   body: |
+    # inject-into: tinydb/table.py
     def upsert(self, document: Mapping, cond: Optional[QueryLike]=None):
         """
             Update documents, if they exist, insert them otherwise.
@@ -1444,6 +1485,7 @@ code Table__upsert:
 
 code Table__remove:
   body: |
+    # inject-into: tinydb/table.py
     def remove(self, cond: Optional[QueryLike]=None, doc_ids: Optional[Iterable[int]]=None):
         """
             Remove all matching documents.
@@ -1458,6 +1500,7 @@ code Table__remove:
 
 code Table__truncate:
   body: |
+    # inject-into: tinydb/table.py
     def truncate(self):
         """
             Truncate the table by removing all documents.
@@ -1468,6 +1511,7 @@ code Table__truncate:
 
 code Table__count:
   body: |
+    # inject-into: tinydb/table.py
     def count(self, cond: QueryLike):
         """
             Count the documents matching a query.
@@ -1480,6 +1524,7 @@ code Table__count:
 
 code Table__clear_cache:
   body: |
+    # inject-into: tinydb/table.py
     def clear_cache(self):
         """
             Clear the query cache.
@@ -1490,6 +1535,7 @@ code Table__clear_cache:
 
 code Table___get_next_id:
   body: |
+    # inject-into: tinydb/table.py
     def _get_next_id(self):
         """
             Return the ID for a newly inserted document.
@@ -1500,6 +1546,7 @@ code Table___get_next_id:
 
 code Table___read_table:
   body: |
+    # inject-into: tinydb/table.py
     def _read_table(self):
         """
             Read the table data from the underlying storage.
@@ -1514,6 +1561,7 @@ code Table___read_table:
 
 code Table___update_table:
   body: |
+    # inject-into: tinydb/table.py
     def _update_table(self, updater: Callable[[Dict[int, Mapping]], None]):
         """
             Perform a table update operation.
@@ -1531,8 +1579,18 @@ code Table___update_table:
         pass
 
 
+code default_query_cache_capacity:
+  body: |
+    # inject-into: tinydb/table.py
+    # dangling-name: append-if-missing
+    def default_query_cache_capacity(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code with_typehint:
   body: |
+    # inject-into: tinydb/utils.py
     def with_typehint(baseclass: Type[T]):
         """
         Add type hints from a specified class to a base class:
@@ -1552,9 +1610,19 @@ code with_typehint:
 
 code freeze:
   body: |
+    # inject-into: tinydb/utils.py
     def freeze(obj):
         """
         Freeze an object by making it immutable and thus hashable.
         
         """
+        pass
+
+
+code _immutable:
+  body: |
+    # inject-into: tinydb/utils.py
+    # dangling-name: append-if-missing
+    def _immutable(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
         pass

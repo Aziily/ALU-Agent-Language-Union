@@ -1248,6 +1248,7 @@ flow voluptuous_lib:
     - schema_builder_group
     - util_group
     - validators_group
+    - __init___group
 
 
 flow humanize_group:
@@ -1275,6 +1276,8 @@ flow schema_builder_group:
     - _args_to_dict
     - _merge_args_with_kwargs
     - validate
+    - default_factory
+    - raises
 
 
 flow util_group:
@@ -1302,8 +1305,14 @@ flow validators_group:
     - Number___get_precision_scale
 
 
+flow __init___group:
+  steps:
+    - Self
+
+
 code humanize_error:
   body: |
+    # inject-into: voluptuous/humanize.py
     def humanize_error(data, validation_error: Invalid, max_sub_error_length: int=MAX_VALIDATION_ERROR_ITEM_LENGTH):
         """Provide a more helpful + complete validation error message than that provided automatically
         Invalid and MultipleInvalid do not include the offending value in error messages,
@@ -1315,6 +1324,7 @@ code humanize_error:
 
 code Extra:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def Extra(_):
         """Allow keys in the data that are not present in the schema."""
         pass
@@ -1322,6 +1332,7 @@ code Extra:
 
 code Schema__infer:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def infer(cls, data, **kwargs):
         """Create a Schema from concrete data (e.g. an API response).
     
@@ -1355,6 +1366,7 @@ code Schema__infer:
 
 code Schema___compile_mapping:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def _compile_mapping(self, schema, invalid_msg=None):
         """Create validator for given mapping."""
         pass
@@ -1362,6 +1374,7 @@ code Schema___compile_mapping:
 
 code Schema___compile_object:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def _compile_object(self, schema):
         """Validate an object.
     
@@ -1386,6 +1399,7 @@ code Schema___compile_object:
 
 code Schema___compile_dict:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def _compile_dict(self, schema):
         """Validate a dictionary.
     
@@ -1468,6 +1482,7 @@ code Schema___compile_dict:
 
 code Schema___compile_sequence:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def _compile_sequence(self, schema, seq_type):
         """Validate a sequence type.
     
@@ -1487,6 +1502,7 @@ code Schema___compile_sequence:
 
 code Schema___compile_tuple:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def _compile_tuple(self, schema):
         """Validate a tuple.
     
@@ -1506,6 +1522,7 @@ code Schema___compile_tuple:
 
 code Schema___compile_list:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def _compile_list(self, schema):
         """Validate a list.
     
@@ -1525,6 +1542,7 @@ code Schema___compile_list:
 
 code Schema___compile_set:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def _compile_set(self, schema):
         """Validate a set.
     
@@ -1544,6 +1562,7 @@ code Schema___compile_set:
 
 code Schema__extend:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def extend(self, schema: Schemable, required: typing.Optional[bool]=None, extra: typing.Optional[int]=None):
         """Create a new `Schema` by merging this and the provided `schema`.
     
@@ -1563,6 +1582,7 @@ code Schema__extend:
 
 code _compile_scalar:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def _compile_scalar(schema):
         """A scalar value.
     
@@ -1588,6 +1608,7 @@ code _compile_scalar:
 
 code _compile_itemsort:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def _compile_itemsort():
         """return sort function of mappings"""
         pass
@@ -1595,6 +1616,7 @@ code _compile_itemsort:
 
 code _iterate_mapping_candidates:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def _iterate_mapping_candidates(schema):
         """Iterate over schema in a meaningful order."""
         pass
@@ -1602,6 +1624,7 @@ code _iterate_mapping_candidates:
 
 code _iterate_object:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def _iterate_object(obj):
         """Return iterator over object attributes. Respect objects with
         defined __slots__.
@@ -1613,6 +1636,7 @@ code _iterate_object:
 
 code message:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def message(default: typing.Optional[str]=None, cls: typing.Optional[typing.Type[Error]]=None):
         """Convenience decorator to allow functions to provide a message.
     
@@ -1647,6 +1671,7 @@ code message:
 
 code _args_to_dict:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def _args_to_dict(func, args):
         """Returns argument names as values as key-value pairs."""
         pass
@@ -1654,6 +1679,7 @@ code _args_to_dict:
 
 code _merge_args_with_kwargs:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def _merge_args_with_kwargs(args_dict, kwargs_dict):
         """Merge args with kwargs."""
         pass
@@ -1661,6 +1687,7 @@ code _merge_args_with_kwargs:
 
 code validate:
   body: |
+    # inject-into: voluptuous/schema_builder.py
     def validate(*a, **kw):
         """Decorator for validating arguments of a function against a given schema.
     
@@ -1681,8 +1708,27 @@ code validate:
         pass
 
 
+code default_factory:
+  body: |
+    # inject-into: voluptuous/schema_builder.py
+    # dangling-name: append-if-missing
+    def default_factory(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code raises:
+  body: |
+    # inject-into: voluptuous/schema_builder.py
+    # dangling-name: append-if-missing
+    def raises(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code Lower:
   body: |
+    # inject-into: voluptuous/util.py
     def Lower(v: str):
         """Transform a string to lower case.
     
@@ -1696,6 +1742,7 @@ code Lower:
 
 code Upper:
   body: |
+    # inject-into: voluptuous/util.py
     def Upper(v: str):
         """Transform a string to upper case.
     
@@ -1709,6 +1756,7 @@ code Upper:
 
 code Capitalize:
   body: |
+    # inject-into: voluptuous/util.py
     def Capitalize(v: str):
         """Capitalise a string.
     
@@ -1722,6 +1770,7 @@ code Capitalize:
 
 code Title:
   body: |
+    # inject-into: voluptuous/util.py
     def Title(v: str):
         """Title case a string.
     
@@ -1735,6 +1784,7 @@ code Title:
 
 code Strip:
   body: |
+    # inject-into: voluptuous/util.py
     def Strip(v: str):
         """Strip whitespace from a string.
     
@@ -1748,6 +1798,7 @@ code Strip:
 
 code truth:
   body: |
+    # inject-into: voluptuous/validators.py
     def truth(f: typing.Callable):
         """Convenience decorator to convert truth functions into validators.
     
@@ -1766,6 +1817,7 @@ code truth:
 
 code IsTrue:
   body: |
+    # inject-into: voluptuous/validators.py
     def IsTrue(v):
         """Assert that a value is true, in the Python sense.
     
@@ -1794,6 +1846,7 @@ code IsTrue:
 
 code IsFalse:
   body: |
+    # inject-into: voluptuous/validators.py
     def IsFalse(v):
         """Assert that a value is false, in the Python sense.
     
@@ -1816,6 +1869,7 @@ code IsFalse:
 
 code Boolean:
   body: |
+    # inject-into: voluptuous/validators.py
     def Boolean(v):
         """Convert human-readable boolean values to a bool.
     
@@ -1842,6 +1896,7 @@ code Boolean:
 
 code Email:
   body: |
+    # inject-into: voluptuous/validators.py
     def Email(v):
         """Verify that the value is an email address or not.
     
@@ -1861,6 +1916,7 @@ code Email:
 
 code FqdnUrl:
   body: |
+    # inject-into: voluptuous/validators.py
     def FqdnUrl(v):
         """Verify that the value is a fully qualified domain name URL.
     
@@ -1876,6 +1932,7 @@ code FqdnUrl:
 
 code Url:
   body: |
+    # inject-into: voluptuous/validators.py
     def Url(v):
         """Verify that the value is a URL.
     
@@ -1891,6 +1948,7 @@ code Url:
 
 code IsFile:
   body: |
+    # inject-into: voluptuous/validators.py
     def IsFile(v):
         """Verify the file exists.
     
@@ -1907,6 +1965,7 @@ code IsFile:
 
 code IsDir:
   body: |
+    # inject-into: voluptuous/validators.py
     def IsDir(v):
         """Verify the directory exists.
     
@@ -1921,6 +1980,7 @@ code IsDir:
 
 code PathExists:
   body: |
+    # inject-into: voluptuous/validators.py
     def PathExists(v):
         """Verify the path exists, regardless of its type.
     
@@ -1937,6 +1997,7 @@ code PathExists:
 
 code Maybe:
   body: |
+    # inject-into: voluptuous/validators.py
     def Maybe(validator: Schemable, msg: typing.Optional[str]=None):
         """Validate that the object matches given validator or is None.
     
@@ -1956,10 +2017,20 @@ code Maybe:
 
 code Number___get_precision_scale:
   body: |
+    # inject-into: voluptuous/validators.py
     def _get_precision_scale(self, number):
         """
             :param number:
             :return: tuple(precision, scale, decimal_number)
             
         """
+        pass
+
+
+code Self:
+  body: |
+    # inject-into: voluptuous/__init__.py
+    # dangling-name: append-if-missing
+    def Self(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
         pass

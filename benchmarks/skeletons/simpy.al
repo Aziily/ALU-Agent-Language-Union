@@ -1,5 +1,5 @@
 preamble __init__:
-  source: simpy/__init__.py
+  source: src/simpy/__init__.py
   imports: |
     from __future__ import annotations
     import importlib.metadata
@@ -26,7 +26,7 @@ preamble __init__:
 
 
 preamble core:
-  source: simpy/core.py
+  source: src/simpy/core.py
   imports: |
     from __future__ import annotations
     from heapq import heappop, heappush
@@ -143,7 +143,7 @@ preamble core:
 
 
 preamble events:
-  source: simpy/events.py
+  source: src/simpy/events.py
   imports: |
     from __future__ import annotations
     from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, Iterable, Iterator, List, NewType, Optional, Tuple, TypeVar
@@ -460,7 +460,7 @@ preamble events:
 
 
 preamble exceptions:
-  source: simpy/exceptions.py
+  source: src/simpy/exceptions.py
   imports: |
     from __future__ import annotations
     from typing import Any, Optional
@@ -492,13 +492,13 @@ preamble exceptions:
 
 
 preamble resources___init__:
-  source: simpy/resources/__init__.py
+  source: src/simpy/resources/__init__.py
   body: |
     '\nSimPy implements three types of resources that can be used to synchronize\nprocesses or to model congestion points:\n\n.. currentmodule:: simpy.resources\n\n.. autosummary::\n\n   resource\n   container\n   store\n\nThey are derived from the base classes defined in the\n:mod:`~simpy.resources.base` module. These classes are also meant to support\nthe implementation of custom resource types.\n\n'
 
 
 preamble resources_base:
-  source: simpy/resources/base.py
+  source: src/simpy/resources/base.py
   imports: |
     from __future__ import annotations
     from typing import TYPE_CHECKING, ClassVar, ContextManager, Generic, MutableSequence, Optional, Type, TypeVar, Union
@@ -642,7 +642,7 @@ preamble resources_base:
 
 
 preamble resources_container:
-  source: simpy/resources/container.py
+  source: src/simpy/resources/container.py
   imports: |
     from __future__ import annotations
     from typing import TYPE_CHECKING, Optional, Union
@@ -725,7 +725,7 @@ preamble resources_container:
 
 
 preamble resources_resource:
-  source: simpy/resources/resource.py
+  source: src/simpy/resources/resource.py
   imports: |
     from __future__ import annotations
     from typing import TYPE_CHECKING, Any, List, Optional, Type
@@ -890,7 +890,7 @@ preamble resources_resource:
 
 
 preamble resources_store:
-  source: simpy/resources/store.py
+  source: src/simpy/resources/store.py
   imports: |
     from __future__ import annotations
     from heapq import heappop, heappush
@@ -1014,7 +1014,7 @@ preamble resources_store:
 
 
 preamble rt:
-  source: simpy/rt.py
+  source: src/simpy/rt.py
   imports: |
     from time import monotonic, sleep
     from simpy.core import EmptySchedule, Environment, Infinity, SimTime
@@ -1057,7 +1057,7 @@ preamble rt:
 
 
 preamble util:
-  source: simpy/util.py
+  source: src/simpy/util.py
   imports: |
     from typing import Generator
     from simpy.core import Environment, SimTime
@@ -1076,6 +1076,7 @@ flow simpy_lib:
     - resources_resource_group
     - rt_group
     - util_group
+    - __init___group
 
 
 flow core_group:
@@ -1159,8 +1160,15 @@ flow util_group:
     - subscribe_at
 
 
+flow __init___group:
+  steps:
+    - obj
+    - objs
+
+
 code BoundClass__bind_early:
   body: |
+    # inject-into: src/simpy/core.py
     def bind_early(instance: object):
         """Bind all :class:`BoundClass` attributes of the *instance's* class
             to the instance itself to increase performance.
@@ -1170,6 +1178,7 @@ code BoundClass__bind_early:
 
 code StopSimulation__callback:
   body: |
+    # inject-into: src/simpy/core.py
     def callback(cls, event: Event):
         """Used as callback in :meth:`Environment.run()` to stop the simulation
             when the *until* event occurred.
@@ -1179,6 +1188,7 @@ code StopSimulation__callback:
 
 code Environment__now:
   body: |
+    # inject-into: src/simpy/core.py
     def now(self):
         """The current simulation time."""
         pass
@@ -1186,6 +1196,7 @@ code Environment__now:
 
 code Environment__active_process:
   body: |
+    # inject-into: src/simpy/core.py
     def active_process(self):
         """The currently active process of the environment."""
         pass
@@ -1193,6 +1204,7 @@ code Environment__active_process:
 
 code Environment__schedule:
   body: |
+    # inject-into: src/simpy/core.py
     def schedule(self, event: Event, priority: EventPriority=NORMAL, delay: SimTime=0):
         """Schedule an *event* with a given *priority* and a *delay*."""
         pass
@@ -1200,6 +1212,7 @@ code Environment__schedule:
 
 code Environment__peek:
   body: |
+    # inject-into: src/simpy/core.py
     def peek(self):
         """Get the time of the next scheduled event. Return
             :data:`~simpy.core.Infinity` if there is no further event.
@@ -1209,6 +1222,7 @@ code Environment__peek:
 
 code Environment__step:
   body: |
+    # inject-into: src/simpy/core.py
     def step(self):
         """Process the next event.
     
@@ -1221,6 +1235,7 @@ code Environment__step:
 
 code Environment__run:
   body: |
+    # inject-into: src/simpy/core.py
     def run(self, until: Optional[Union[SimTime, Event]]=None):
         """Executes :meth:`step()` until the given criterion *until* is met.
     
@@ -1242,6 +1257,7 @@ code Environment__run:
 
 code Event___desc:
   body: |
+    # inject-into: src/simpy/events.py
     def _desc(self):
         """Return a string *Event()*."""
         pass
@@ -1249,6 +1265,7 @@ code Event___desc:
 
 code Event__triggered:
   body: |
+    # inject-into: src/simpy/events.py
     def triggered(self):
         """Becomes ``True`` if the event has been triggered and its callbacks
             are about to be invoked.
@@ -1258,6 +1275,7 @@ code Event__triggered:
 
 code Event__processed:
   body: |
+    # inject-into: src/simpy/events.py
     def processed(self):
         """Becomes ``True`` if the event has been processed (e.g., its
             callbacks have been invoked).
@@ -1267,6 +1285,7 @@ code Event__processed:
 
 code Event__ok:
   body: |
+    # inject-into: src/simpy/events.py
     def ok(self):
         """Becomes ``True`` when the event has been triggered successfully.
     
@@ -1281,6 +1300,7 @@ code Event__ok:
 
 code Event__defused:
   body: |
+    # inject-into: src/simpy/events.py
     def defused(self):
         """Becomes ``True`` when the failed event's exception is "defused".
     
@@ -1301,6 +1321,7 @@ code Event__defused:
 
 code Event__value:
   body: |
+    # inject-into: src/simpy/events.py
     def value(self):
         """The value of the event if it is available.
     
@@ -1315,6 +1336,7 @@ code Event__value:
 
 code Event__trigger:
   body: |
+    # inject-into: src/simpy/events.py
     def trigger(self, event: Event):
         """Trigger the event with the state and value of the provided *event*.
             Return *self* (this event instance).
@@ -1329,6 +1351,7 @@ code Event__trigger:
 
 code Event__succeed:
   body: |
+    # inject-into: src/simpy/events.py
     def succeed(self, value: Optional[Any]=None):
         """Set the event's value, mark it as successful and schedule it for
             processing by the environment. Returns the event instance.
@@ -1342,6 +1365,7 @@ code Event__succeed:
 
 code Event__fail:
   body: |
+    # inject-into: src/simpy/events.py
     def fail(self, exception: Exception):
         """Set *exception* as the events value, mark it as failed and schedule
             it for processing by the environment. Returns the event instance.
@@ -1357,6 +1381,7 @@ code Event__fail:
 
 code Timeout___desc:
   body: |
+    # inject-into: src/simpy/events.py
     def _desc(self):
         """Return a string *Timeout(delay[, value=value])*."""
         pass
@@ -1364,6 +1389,7 @@ code Timeout___desc:
 
 code Process___desc:
   body: |
+    # inject-into: src/simpy/events.py
     def _desc(self):
         """Return a string *Process(process_func_name)*."""
         pass
@@ -1371,6 +1397,7 @@ code Process___desc:
 
 code Process__target:
   body: |
+    # inject-into: src/simpy/events.py
     def target(self):
         """The event that the process is currently waiting for.
     
@@ -1384,6 +1411,7 @@ code Process__target:
 
 code Process__name:
   body: |
+    # inject-into: src/simpy/events.py
     def name(self):
         """Name of the function used to start the process."""
         pass
@@ -1391,6 +1419,7 @@ code Process__name:
 
 code Process__is_alive:
   body: |
+    # inject-into: src/simpy/events.py
     def is_alive(self):
         """``True`` until the process generator exits."""
         pass
@@ -1398,6 +1427,7 @@ code Process__is_alive:
 
 code Process__interrupt:
   body: |
+    # inject-into: src/simpy/events.py
     def interrupt(self, cause: Optional[Any]=None):
         """Interrupt this process optionally providing a *cause*.
     
@@ -1412,6 +1442,7 @@ code Process__interrupt:
 
 code Process___resume:
   body: |
+    # inject-into: src/simpy/events.py
     def _resume(self, event: Event):
         """Resumes the execution of the process with the value of *event*. If
             the process generator exits, the process itself will get triggered with
@@ -1422,6 +1453,7 @@ code Process___resume:
 
 code Condition___desc:
   body: |
+    # inject-into: src/simpy/events.py
     def _desc(self):
         """Return a string *Condition(evaluate, [events])*."""
         pass
@@ -1429,6 +1461,7 @@ code Condition___desc:
 
 code Condition___populate_value:
   body: |
+    # inject-into: src/simpy/events.py
     def _populate_value(self, value: ConditionValue):
         """Populate the *value* by recursively visiting all nested
             conditions.
@@ -1438,6 +1471,7 @@ code Condition___populate_value:
 
 code Condition___build_value:
   body: |
+    # inject-into: src/simpy/events.py
     def _build_value(self, event: Event):
         """Build the value of this condition."""
         pass
@@ -1445,6 +1479,7 @@ code Condition___build_value:
 
 code Condition___remove_check_callbacks:
   body: |
+    # inject-into: src/simpy/events.py
     def _remove_check_callbacks(self):
         """Remove _check() callbacks from events recursively.
     
@@ -1460,6 +1495,7 @@ code Condition___remove_check_callbacks:
 
 code Condition___check:
   body: |
+    # inject-into: src/simpy/events.py
     def _check(self, event: Event):
         """Check if the condition was already met and schedule the *event* if
             so.
@@ -1469,6 +1505,7 @@ code Condition___check:
 
 code Condition__all_events:
   body: |
+    # inject-into: src/simpy/events.py
     def all_events(events: Tuple[Event, ...], count: int):
         """An evaluation function that returns ``True`` if all *events* have
             been triggered.
@@ -1478,6 +1515,7 @@ code Condition__all_events:
 
 code Condition__any_events:
   body: |
+    # inject-into: src/simpy/events.py
     def any_events(events: Tuple[Event, ...], count: int):
         """An evaluation function that returns ``True`` if at least one of
             *events* has been triggered.
@@ -1487,6 +1525,7 @@ code Condition__any_events:
 
 code _describe_frame:
   body: |
+    # inject-into: src/simpy/events.py
     def _describe_frame(frame: FrameType):
         """Print filename, line number and function name of a stack frame."""
         pass
@@ -1494,6 +1533,7 @@ code _describe_frame:
 
 code Interrupt__cause:
   body: |
+    # inject-into: src/simpy/exceptions.py
     def cause(self):
         """The cause of the interrupt or ``None`` if no cause was provided."""
         pass
@@ -1501,6 +1541,7 @@ code Interrupt__cause:
 
 code Put__cancel:
   body: |
+    # inject-into: src/simpy/resources/base.py
     def cancel(self):
         """Cancel this put request.
     
@@ -1518,6 +1559,7 @@ code Put__cancel:
 
 code Get__cancel:
   body: |
+    # inject-into: src/simpy/resources/base.py
     def cancel(self):
         """Cancel this get request.
     
@@ -1535,6 +1577,7 @@ code Get__cancel:
 
 code BaseResource__capacity:
   body: |
+    # inject-into: src/simpy/resources/base.py
     def capacity(self):
         """Maximum capacity of the resource."""
         pass
@@ -1542,6 +1585,7 @@ code BaseResource__capacity:
 
 code BaseResource___do_put:
   body: |
+    # inject-into: src/simpy/resources/base.py
     def _do_put(self, event: PutType):
         """Perform the *put* operation.
     
@@ -1559,6 +1603,7 @@ code BaseResource___do_put:
 
 code BaseResource___trigger_put:
   body: |
+    # inject-into: src/simpy/resources/base.py
     def _trigger_put(self, get_event: Optional[GetType]):
         """This method is called once a new put event has been created or a get
             event has been processed.
@@ -1573,6 +1618,7 @@ code BaseResource___trigger_put:
 
 code BaseResource___do_get:
   body: |
+    # inject-into: src/simpy/resources/base.py
     def _do_get(self, event: GetType):
         """Perform the *get* operation.
     
@@ -1590,6 +1636,7 @@ code BaseResource___do_get:
 
 code BaseResource___trigger_get:
   body: |
+    # inject-into: src/simpy/resources/base.py
     def _trigger_get(self, put_event: Optional[PutType]):
         """Trigger get events.
     
@@ -1606,6 +1653,7 @@ code BaseResource___trigger_get:
 
 code Container__level:
   body: |
+    # inject-into: src/simpy/resources/container.py
     def level(self):
         """The current amount of the matter in the container."""
         pass
@@ -1613,6 +1661,7 @@ code Container__level:
 
 code SortedQueue__append:
   body: |
+    # inject-into: src/simpy/resources/resource.py
     def append(self, item: Any):
         """Sort *item* into the queue.
     
@@ -1625,6 +1674,7 @@ code SortedQueue__append:
 
 code Resource__count:
   body: |
+    # inject-into: src/simpy/resources/resource.py
     def count(self):
         """Number of users currently using the resource."""
         pass
@@ -1632,6 +1682,7 @@ code Resource__count:
 
 code RealtimeEnvironment__factor:
   body: |
+    # inject-into: src/simpy/rt.py
     def factor(self):
         """Scaling factor of the real-time."""
         pass
@@ -1639,6 +1690,7 @@ code RealtimeEnvironment__factor:
 
 code RealtimeEnvironment__strict:
   body: |
+    # inject-into: src/simpy/rt.py
     def strict(self):
         """Running mode of the environment. :meth:`step()` will raise a
             :exc:`RuntimeError` if this is set to ``True`` and the processing of
@@ -1649,6 +1701,7 @@ code RealtimeEnvironment__strict:
 
 code RealtimeEnvironment__sync:
   body: |
+    # inject-into: src/simpy/rt.py
     def sync(self):
         """Synchronize the internal time with the current wall-clock time.
     
@@ -1663,6 +1716,7 @@ code RealtimeEnvironment__sync:
 
 code RealtimeEnvironment__step:
   body: |
+    # inject-into: src/simpy/rt.py
     def step(self):
         """Process the next event after enough real-time has passed for the
             event to happen.
@@ -1678,6 +1732,7 @@ code RealtimeEnvironment__step:
 
 code start_delayed:
   body: |
+    # inject-into: src/simpy/util.py
     def start_delayed(env: Environment, generator: ProcessGenerator, delay: SimTime):
         """Return a helper process that starts another process for *generator*
         after a certain *delay*.
@@ -1706,6 +1761,7 @@ code start_delayed:
 
 code subscribe_at:
   body: |
+    # inject-into: src/simpy/util.py
     def subscribe_at(event: Event):
         """Register at the *event* to receive an interrupt when it occurs.
     
@@ -1716,4 +1772,22 @@ code subscribe_at:
     
         
         """
+        pass
+
+
+code obj:
+  body: |
+    # inject-into: src/simpy/__init__.py
+    # dangling-name: append-if-missing
+    def obj(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code objs:
+  body: |
+    # inject-into: src/simpy/__init__.py
+    # dangling-name: append-if-missing
+    def objs(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
         pass

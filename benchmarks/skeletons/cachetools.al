@@ -1,5 +1,5 @@
 preamble __init__:
-  source: cachetools/__init__.py
+  source: src/cachetools/__init__.py
   imports: |
     import collections
     import collections.abc
@@ -588,7 +588,7 @@ preamble __init__:
 
 
 preamble func:
-  source: cachetools/func.py
+  source: src/cachetools/func.py
   imports: |
     import math
     import random
@@ -611,7 +611,7 @@ preamble func:
 
 
 preamble keys:
-  source: cachetools/keys.py
+  source: src/cachetools/keys.py
   constants: |
     __all__ = ('hashkey', 'methodkey', 'typedkey', 'typedmethodkey')
     _kwmark = (_HashedTuple,)
@@ -646,6 +646,7 @@ flow cachetools_lib:
   steps:
     - func_group
     - keys_group
+    - __init___group
 
 
 flow func_group:
@@ -666,8 +667,14 @@ flow keys_group:
     - typedmethodkey
 
 
+flow __init___group:
+  steps:
+    - __marker
+
+
 code fifo_cache:
   body: |
+    # inject-into: src/cachetools/func.py
     def fifo_cache(maxsize=128, typed=False):
         """Decorator to wrap a function with a memoizing callable that saves
         up to `maxsize` results based on a First In First Out (FIFO)
@@ -680,6 +687,7 @@ code fifo_cache:
 
 code lfu_cache:
   body: |
+    # inject-into: src/cachetools/func.py
     def lfu_cache(maxsize=128, typed=False):
         """Decorator to wrap a function with a memoizing callable that saves
         up to `maxsize` results based on a Least Frequently Used (LFU)
@@ -692,6 +700,7 @@ code lfu_cache:
 
 code lru_cache:
   body: |
+    # inject-into: src/cachetools/func.py
     def lru_cache(maxsize=128, typed=False):
         """Decorator to wrap a function with a memoizing callable that saves
         up to `maxsize` results based on a Least Recently Used (LRU)
@@ -704,6 +713,7 @@ code lru_cache:
 
 code mru_cache:
   body: |
+    # inject-into: src/cachetools/func.py
     def mru_cache(maxsize=128, typed=False):
         """Decorator to wrap a function with a memoizing callable that saves
         up to `maxsize` results based on a Most Recently Used (MRU)
@@ -715,6 +725,7 @@ code mru_cache:
 
 code rr_cache:
   body: |
+    # inject-into: src/cachetools/func.py
     def rr_cache(maxsize=128, choice=random.choice, typed=False):
         """Decorator to wrap a function with a memoizing callable that saves
         up to `maxsize` results based on a Random Replacement (RR)
@@ -727,6 +738,7 @@ code rr_cache:
 
 code ttl_cache:
   body: |
+    # inject-into: src/cachetools/func.py
     def ttl_cache(maxsize=128, ttl=600, timer=time.monotonic, typed=False):
         """Decorator to wrap a function with a memoizing callable that saves
         up to `maxsize` results based on a Least Recently Used (LRU)
@@ -738,6 +750,7 @@ code ttl_cache:
 
 code hashkey:
   body: |
+    # inject-into: src/cachetools/keys.py
     def hashkey(*args, **kwargs):
         """Return a cache key for the specified hashable arguments."""
         pass
@@ -745,6 +758,7 @@ code hashkey:
 
 code methodkey:
   body: |
+    # inject-into: src/cachetools/keys.py
     def methodkey(self, *args, **kwargs):
         """Return a cache key for use with cached methods."""
         pass
@@ -752,6 +766,7 @@ code methodkey:
 
 code typedkey:
   body: |
+    # inject-into: src/cachetools/keys.py
     def typedkey(*args, **kwargs):
         """Return a typed cache key for the specified hashable arguments."""
         pass
@@ -759,6 +774,16 @@ code typedkey:
 
 code typedmethodkey:
   body: |
+    # inject-into: src/cachetools/keys.py
     def typedmethodkey(self, *args, **kwargs):
         """Return a typed cache key for use with cached methods."""
+        pass
+
+
+code __marker:
+  body: |
+    # inject-into: src/cachetools/__init__.py
+    # dangling-name: append-if-missing
+    def __marker(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
         pass

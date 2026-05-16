@@ -571,16 +571,18 @@ def _run_al_cell(
             _revert_files(project.path, workdir, injected_files_so_far)
         if al_res.al_parse_ok:
             inject = inject_filled_al(workdir, al_res.filled_al)
-            # ``inject_filled_al`` reports files_modified relative to workdir;
-            # translate to repo-relative paths for the revert map.
-            for abs_path in inject.files_modified:
-                try:
-                    injected_files_so_far.add(
-                        str(Path(abs_path).resolve().relative_to(workdir.resolve()))
-                    )
-                except ValueError:
-                    # Outside the workdir (shouldn't happen) — skip.
-                    pass
+            # ``inject_filled_al`` reports files_modified as ALREADY
+            # workdir-relative path strings (see inject.py line 247:
+            # ``return target_file.relative_to(workdir)``). Use them
+            # directly — DO NOT call ``.resolve()`` here, which would
+            # turn the relative path into ``<CWD>/<rel>`` and break
+            # the .relative_to(workdir) translation, leaving
+            # ``injected_files_so_far`` empty and silently disabling
+            # ``_revert_files`` for every iter > 0. That's the bug that
+            # made every AL cell look like "iter 0 worked, iter 1+ did
+            # nothing" in run 20260515-213540.
+            for rel_str in inject.files_modified:
+                injected_files_so_far.add(rel_str)
         else:
             inject = InjectReport()
         test = run_tests_fn(project, workdir, skip_install=(iter_idx > 0))

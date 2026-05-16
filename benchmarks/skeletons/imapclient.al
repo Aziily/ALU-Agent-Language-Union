@@ -899,11 +899,17 @@ flow imapclient_lib:
     - imap_utf7_group
     - imapclient_group
     - response_parser_group
+    - interact_group
+    - response_lexer_group
+    - version_group
+    - util_group
 
 
 flow config_group:
   steps:
     - parse_config_file
+    - create_client_from_config
+    - get_config_defaults
 
 
 flow datetime_util_group:
@@ -994,6 +1000,7 @@ flow imapclient_group:
     - IMAPClient__welcome
     - _quoted__maybe
     - join_message_ids
+    - iteritems
 
 
 flow response_parser_group:
@@ -1003,8 +1010,32 @@ flow response_parser_group:
     - parse_fetch_response
 
 
+flow interact_group:
+  steps:
+    - main
+
+
+flow response_lexer_group:
+  steps:
+    - c
+
+
+flow version_group:
+  steps:
+    - _imapclient_version_string
+
+
+flow util_group:
+  steps:
+    - assert_imap_protocol
+    - chunk
+    - to_bytes
+    - to_unicode
+
+
 code parse_config_file:
   body: |
+    # inject-into: imapclient/config.py
     def parse_config_file(filename: str):
         """Parse INI files containing IMAP connection details.
     
@@ -1014,8 +1045,27 @@ code parse_config_file:
         pass
 
 
+code create_client_from_config:
+  body: |
+    # inject-into: imapclient/config.py
+    # dangling-name: append-if-missing
+    def create_client_from_config(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code get_config_defaults:
+  body: |
+    # inject-into: imapclient/config.py
+    # dangling-name: append-if-missing
+    def get_config_defaults(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code parse_to_datetime:
   body: |
+    # inject-into: imapclient/datetime_util.py
     def parse_to_datetime(timestamp: bytes, normalise: bool=True):
         """Convert an IMAP datetime string to a datetime.
     
@@ -1031,6 +1081,7 @@ code parse_to_datetime:
 
 code datetime_to_INTERNALDATE:
   body: |
+    # inject-into: imapclient/datetime_util.py
     def datetime_to_INTERNALDATE(dt: datetime):
         """Convert a datetime instance to a IMAP INTERNALDATE string.
     
@@ -1043,6 +1094,7 @@ code datetime_to_INTERNALDATE:
 
 code format_criteria_date:
   body: |
+    # inject-into: imapclient/datetime_util.py
     def format_criteria_date(dt: datetime):
         """Format a date or datetime instance for use in IMAP search criteria."""
         pass
@@ -1050,6 +1102,7 @@ code format_criteria_date:
 
 code FixedOffset__for_system:
   body: |
+    # inject-into: imapclient/fixed_offset.py
     def for_system(cls):
         """Return a FixedOffset instance for the current working timezone and
             DST conditions.
@@ -1060,6 +1113,7 @@ code FixedOffset__for_system:
 
 code encode:
   body: |
+    # inject-into: imapclient/imap_utf7.py
     def encode(s: Union[str, bytes]):
         """Encode a folder name using IMAP modified UTF-7 encoding.
     
@@ -1072,6 +1126,7 @@ code encode:
 
 code decode:
   body: |
+    # inject-into: imapclient/imap_utf7.py
     def decode(s: Union[bytes, str]):
         """Decode a folder name from IMAP modified UTF-7 encoding to unicode.
     
@@ -1085,6 +1140,7 @@ code decode:
 
 code require_capability:
   body: |
+    # inject-into: imapclient/imapclient.py
     def require_capability(capability):
         """Decorator raising CapabilityError when a capability is not available."""
         pass
@@ -1092,6 +1148,7 @@ code require_capability:
 
 code IMAPClient__socket:
   body: |
+    # inject-into: imapclient/imapclient.py
     def socket(self):
         """Returns socket used to connect to server.
     
@@ -1111,6 +1168,7 @@ code IMAPClient__socket:
 
 code IMAPClient__starttls:
   body: |
+    # inject-into: imapclient/imapclient.py
     def starttls(self, ssl_context=None):
         """Switch to an SSL encrypted connection by sending a STARTTLS command.
     
@@ -1134,6 +1192,7 @@ code IMAPClient__starttls:
 
 code IMAPClient__login:
   body: |
+    # inject-into: imapclient/imapclient.py
     def login(self, username: str, password: str):
         """Login using *username* and *password*, returning the
             server response.
@@ -1144,6 +1203,7 @@ code IMAPClient__login:
 
 code IMAPClient__oauth2_login:
   body: |
+    # inject-into: imapclient/imapclient.py
     def oauth2_login(self, user: str, access_token: str, mech: str='XOAUTH2', vendor: Optional[str]=None):
         """Authenticate using the OAUTH2 or XOAUTH2 methods.
     
@@ -1156,6 +1216,7 @@ code IMAPClient__oauth2_login:
 
 code IMAPClient__oauthbearer_login:
   body: |
+    # inject-into: imapclient/imapclient.py
     def oauthbearer_login(self, identity, access_token):
         """Authenticate using the OAUTHBEARER method.
     
@@ -1168,6 +1229,7 @@ code IMAPClient__oauthbearer_login:
 
 code IMAPClient__plain_login:
   body: |
+    # inject-into: imapclient/imapclient.py
     def plain_login(self, identity, password, authorization_identity=None):
         """Authenticate using the PLAIN method (requires server support)."""
         pass
@@ -1175,6 +1237,7 @@ code IMAPClient__plain_login:
 
 code IMAPClient__sasl_login:
   body: |
+    # inject-into: imapclient/imapclient.py
     def sasl_login(self, mech_name, mech_callable):
         """Authenticate using a provided SASL mechanism (requires server support).
     
@@ -1230,6 +1293,7 @@ code IMAPClient__sasl_login:
 
 code IMAPClient__logout:
   body: |
+    # inject-into: imapclient/imapclient.py
     def logout(self):
         """Logout, returning the server response."""
         pass
@@ -1237,6 +1301,7 @@ code IMAPClient__logout:
 
 code IMAPClient__shutdown:
   body: |
+    # inject-into: imapclient/imapclient.py
     def shutdown(self):
         """Close the connection to the IMAP server (without logging out)
     
@@ -1249,6 +1314,7 @@ code IMAPClient__shutdown:
 
 code IMAPClient__enable:
   body: |
+    # inject-into: imapclient/imapclient.py
     def enable(self, *capabilities):
         """Activate one or more server side capability extensions.
     
@@ -1271,6 +1337,7 @@ code IMAPClient__enable:
 
 code IMAPClient__id_:
   body: |
+    # inject-into: imapclient/imapclient.py
     def id_(self, parameters=None):
         """Issue the ID command, returning a dict of server implementation
             fields.
@@ -1284,6 +1351,7 @@ code IMAPClient__id_:
 
 code IMAPClient__capabilities:
   body: |
+    # inject-into: imapclient/imapclient.py
     def capabilities(self):
         """Returns the server capability list.
     
@@ -1302,6 +1370,7 @@ code IMAPClient__capabilities:
 
 code IMAPClient__has_capability:
   body: |
+    # inject-into: imapclient/imapclient.py
     def has_capability(self, capability):
         """Return ``True`` if the IMAP server has the given *capability*."""
         pass
@@ -1309,6 +1378,7 @@ code IMAPClient__has_capability:
 
 code IMAPClient__namespace:
   body: |
+    # inject-into: imapclient/imapclient.py
     def namespace(self):
         """Return the namespace for the account as a (personal, other,
             shared) tuple.
@@ -1328,6 +1398,7 @@ code IMAPClient__namespace:
 
 code IMAPClient__list_folders:
   body: |
+    # inject-into: imapclient/imapclient.py
     def list_folders(self, directory='', pattern='*'):
         """Get a listing of folders on the server as a list of
             ``(flags, delimiter, name)`` tuples.
@@ -1355,6 +1426,7 @@ code IMAPClient__list_folders:
 
 code IMAPClient__xlist_folders:
   body: |
+    # inject-into: imapclient/imapclient.py
     def xlist_folders(self, directory='', pattern='*'):
         """Execute the XLIST command, returning ``(flags, delimiter,
             name)`` tuples.
@@ -1390,6 +1462,7 @@ code IMAPClient__xlist_folders:
 
 code IMAPClient__list_sub_folders:
   body: |
+    # inject-into: imapclient/imapclient.py
     def list_sub_folders(self, directory='', pattern='*'):
         """Return a list of subscribed folders on the server as
             ``(flags, delimiter, name)`` tuples.
@@ -1403,6 +1476,7 @@ code IMAPClient__list_sub_folders:
 
 code IMAPClient__find_special_folder:
   body: |
+    # inject-into: imapclient/imapclient.py
     def find_special_folder(self, folder_flag):
         """Try to locate a special folder, like the Sent or Trash folder.
     
@@ -1421,6 +1495,7 @@ code IMAPClient__find_special_folder:
 
 code IMAPClient__select_folder:
   body: |
+    # inject-into: imapclient/imapclient.py
     def select_folder(self, folder, readonly=False):
         """Set the current folder on the server.
     
@@ -1445,6 +1520,7 @@ code IMAPClient__select_folder:
 
 code IMAPClient__unselect_folder:
   body: |
+    # inject-into: imapclient/imapclient.py
     def unselect_folder(self):
         """Unselect the current folder and release associated resources.
     
@@ -1459,6 +1535,7 @@ code IMAPClient__unselect_folder:
 
 code IMAPClient__noop:
   body: |
+    # inject-into: imapclient/imapclient.py
     def noop(self):
         """Execute the NOOP command.
     
@@ -1481,6 +1558,7 @@ code IMAPClient__noop:
 
 code IMAPClient__idle:
   body: |
+    # inject-into: imapclient/imapclient.py
     def idle(self):
         """Put the server into IDLE mode.
     
@@ -1502,6 +1580,7 @@ code IMAPClient__idle:
 
 code IMAPClient___poll_socket:
   body: |
+    # inject-into: imapclient/imapclient.py
     def _poll_socket(self, sock, timeout=None):
         """
             Polls the socket for events telling us it's available to read.
@@ -1514,6 +1593,7 @@ code IMAPClient___poll_socket:
 
 code IMAPClient___select_poll_socket:
   body: |
+    # inject-into: imapclient/imapclient.py
     def _select_poll_socket(self, sock, timeout=None):
         """
             Polls the socket for events telling us it's available to read.
@@ -1527,6 +1607,7 @@ code IMAPClient___select_poll_socket:
 
 code IMAPClient__idle_check:
   body: |
+    # inject-into: imapclient/imapclient.py
     def idle_check(self, timeout=None):
         """Check for any IDLE responses sent by the server.
     
@@ -1551,6 +1632,7 @@ code IMAPClient__idle_check:
 
 code IMAPClient__idle_done:
   body: |
+    # inject-into: imapclient/imapclient.py
     def idle_done(self):
         """Take the server out of IDLE mode.
     
@@ -1571,6 +1653,7 @@ code IMAPClient__idle_done:
 
 code IMAPClient__folder_status:
   body: |
+    # inject-into: imapclient/imapclient.py
     def folder_status(self, folder, what=None):
         """Return the status of *folder*.
     
@@ -1587,6 +1670,7 @@ code IMAPClient__folder_status:
 
 code IMAPClient__close_folder:
   body: |
+    # inject-into: imapclient/imapclient.py
     def close_folder(self):
         """Close the currently selected folder, returning the server
             response string.
@@ -1597,6 +1681,7 @@ code IMAPClient__close_folder:
 
 code IMAPClient__create_folder:
   body: |
+    # inject-into: imapclient/imapclient.py
     def create_folder(self, folder):
         """Create *folder* on the server returning the server response string."""
         pass
@@ -1604,6 +1689,7 @@ code IMAPClient__create_folder:
 
 code IMAPClient__rename_folder:
   body: |
+    # inject-into: imapclient/imapclient.py
     def rename_folder(self, old_name, new_name):
         """Change the name of a folder on the server."""
         pass
@@ -1611,6 +1697,7 @@ code IMAPClient__rename_folder:
 
 code IMAPClient__delete_folder:
   body: |
+    # inject-into: imapclient/imapclient.py
     def delete_folder(self, folder):
         """Delete *folder* on the server returning the server response string."""
         pass
@@ -1618,6 +1705,7 @@ code IMAPClient__delete_folder:
 
 code IMAPClient__folder_exists:
   body: |
+    # inject-into: imapclient/imapclient.py
     def folder_exists(self, folder):
         """Return ``True`` if *folder* exists on the server."""
         pass
@@ -1625,6 +1713,7 @@ code IMAPClient__folder_exists:
 
 code IMAPClient__subscribe_folder:
   body: |
+    # inject-into: imapclient/imapclient.py
     def subscribe_folder(self, folder):
         """Subscribe to *folder*, returning the server response string."""
         pass
@@ -1632,6 +1721,7 @@ code IMAPClient__subscribe_folder:
 
 code IMAPClient__unsubscribe_folder:
   body: |
+    # inject-into: imapclient/imapclient.py
     def unsubscribe_folder(self, folder):
         """Unsubscribe to *folder*, returning the server response string."""
         pass
@@ -1639,6 +1729,7 @@ code IMAPClient__unsubscribe_folder:
 
 code IMAPClient__search:
   body: |
+    # inject-into: imapclient/imapclient.py
     def search(self, criteria='ALL', charset=None):
         """Return a list of messages ids from the currently selected
             folder matching *criteria*.
@@ -1705,6 +1796,7 @@ code IMAPClient__search:
 
 code IMAPClient__gmail_search:
   body: |
+    # inject-into: imapclient/imapclient.py
     def gmail_search(self, query, charset='UTF-8'):
         """Search using Gmail's X-GM-RAW attribute.
     
@@ -1725,6 +1817,7 @@ code IMAPClient__gmail_search:
 
 code IMAPClient__sort:
   body: |
+    # inject-into: imapclient/imapclient.py
     def sort(self, sort_criteria, criteria='ALL', charset='UTF-8'):
         """Return a list of message ids from the currently selected
             folder, sorted by *sort_criteria* and optionally filtered by
@@ -1753,6 +1846,7 @@ code IMAPClient__sort:
 
 code IMAPClient__thread:
   body: |
+    # inject-into: imapclient/imapclient.py
     def thread(self, algorithm='REFERENCES', criteria='ALL', charset='UTF-8'):
         """Return a list of messages threads from the currently
             selected folder which match *criteria*.
@@ -1776,6 +1870,7 @@ code IMAPClient__thread:
 
 code IMAPClient__get_flags:
   body: |
+    # inject-into: imapclient/imapclient.py
     def get_flags(self, messages):
         """Return the flags set for each message in *messages* from
             the currently selected folder.
@@ -1789,6 +1884,7 @@ code IMAPClient__get_flags:
 
 code IMAPClient__add_flags:
   body: |
+    # inject-into: imapclient/imapclient.py
     def add_flags(self, messages, flags, silent=False):
         """Add *flags* to *messages* in the currently selected folder.
     
@@ -1803,6 +1899,7 @@ code IMAPClient__add_flags:
 
 code IMAPClient__remove_flags:
   body: |
+    # inject-into: imapclient/imapclient.py
     def remove_flags(self, messages, flags, silent=False):
         """Remove one or more *flags* from *messages* in the currently
             selected folder.
@@ -1818,6 +1915,7 @@ code IMAPClient__remove_flags:
 
 code IMAPClient__set_flags:
   body: |
+    # inject-into: imapclient/imapclient.py
     def set_flags(self, messages, flags, silent=False):
         """Set the *flags* for *messages* in the currently selected
             folder.
@@ -1833,6 +1931,7 @@ code IMAPClient__set_flags:
 
 code IMAPClient__get_gmail_labels:
   body: |
+    # inject-into: imapclient/imapclient.py
     def get_gmail_labels(self, messages):
         """Return the label set for each message in *messages* in the
             currently selected folder.
@@ -1849,6 +1948,7 @@ code IMAPClient__get_gmail_labels:
 
 code IMAPClient__add_gmail_labels:
   body: |
+    # inject-into: imapclient/imapclient.py
     def add_gmail_labels(self, messages, labels, silent=False):
         """Add *labels* to *messages* in the currently selected folder.
     
@@ -1866,6 +1966,7 @@ code IMAPClient__add_gmail_labels:
 
 code IMAPClient__remove_gmail_labels:
   body: |
+    # inject-into: imapclient/imapclient.py
     def remove_gmail_labels(self, messages, labels, silent=False):
         """Remove one or more *labels* from *messages* in the
             currently selected folder, or None if *silent* is true.
@@ -1884,6 +1985,7 @@ code IMAPClient__remove_gmail_labels:
 
 code IMAPClient__set_gmail_labels:
   body: |
+    # inject-into: imapclient/imapclient.py
     def set_gmail_labels(self, messages, labels, silent=False):
         """Set the *labels* for *messages* in the currently selected
             folder.
@@ -1902,6 +2004,7 @@ code IMAPClient__set_gmail_labels:
 
 code IMAPClient__delete_messages:
   body: |
+    # inject-into: imapclient/imapclient.py
     def delete_messages(self, messages, silent=False):
         """Delete one or more *messages* from the currently selected
             folder.
@@ -1915,6 +2018,7 @@ code IMAPClient__delete_messages:
 
 code IMAPClient__fetch:
   body: |
+    # inject-into: imapclient/imapclient.py
     def fetch(self, messages, data, modifiers=None):
         """Retrieve selected *data* associated with one or more
             *messages* in the currently selected folder.
@@ -1961,6 +2065,7 @@ code IMAPClient__fetch:
 
 code IMAPClient__append:
   body: |
+    # inject-into: imapclient/imapclient.py
     def append(self, folder, msg, flags=(), msg_time=None):
         """Append a message to *folder*.
     
@@ -1984,6 +2089,7 @@ code IMAPClient__append:
 
 code IMAPClient__multiappend:
   body: |
+    # inject-into: imapclient/imapclient.py
     def multiappend(self, folder, msgs):
         """Append messages to *folder* using the MULTIAPPEND feature from :rfc:`3502`.
     
@@ -2001,6 +2107,7 @@ code IMAPClient__multiappend:
 
 code IMAPClient__copy:
   body: |
+    # inject-into: imapclient/imapclient.py
     def copy(self, messages, folder):
         """Copy one or more messages from the current folder to
             *folder*. Returns the COPY response string returned by the
@@ -2012,6 +2119,7 @@ code IMAPClient__copy:
 
 code IMAPClient__move:
   body: |
+    # inject-into: imapclient/imapclient.py
     def move(self, messages, folder):
         """Atomically move messages to another folder.
     
@@ -2026,6 +2134,7 @@ code IMAPClient__move:
 
 code IMAPClient__expunge:
   body: |
+    # inject-into: imapclient/imapclient.py
     def expunge(self, messages=None):
         """Use of the *messages* argument is discouraged.
             Please see the ``uid_expunge`` method instead.
@@ -2065,6 +2174,7 @@ code IMAPClient__expunge:
 
 code IMAPClient__uid_expunge:
   body: |
+    # inject-into: imapclient/imapclient.py
     def uid_expunge(self, messages):
         """Expunge deleted messages with the specified message ids from the
             folder.
@@ -2079,6 +2189,7 @@ code IMAPClient__uid_expunge:
 
 code IMAPClient__getacl:
   body: |
+    # inject-into: imapclient/imapclient.py
     def getacl(self, folder):
         """Returns a list of ``(who, acl)`` tuples describing the
             access controls for *folder*.
@@ -2089,6 +2200,7 @@ code IMAPClient__getacl:
 
 code IMAPClient__setacl:
   body: |
+    # inject-into: imapclient/imapclient.py
     def setacl(self, folder, who, what):
         """Set an ACL (*what*) for user (*who*) for a folder.
     
@@ -2101,6 +2213,7 @@ code IMAPClient__setacl:
 
 code IMAPClient__get_quota:
   body: |
+    # inject-into: imapclient/imapclient.py
     def get_quota(self, mailbox='INBOX'):
         """Get the quotas associated with a mailbox.
     
@@ -2112,6 +2225,7 @@ code IMAPClient__get_quota:
 
 code IMAPClient___get_quota:
   body: |
+    # inject-into: imapclient/imapclient.py
     def _get_quota(self, quota_root=''):
         """Get the quotas associated with a quota root.
     
@@ -2127,6 +2241,7 @@ code IMAPClient___get_quota:
 
 code IMAPClient__get_quota_root:
   body: |
+    # inject-into: imapclient/imapclient.py
     def get_quota_root(self, mailbox):
         """Get the quota roots for a mailbox.
     
@@ -2143,6 +2258,7 @@ code IMAPClient__get_quota_root:
 
 code IMAPClient__set_quota:
   body: |
+    # inject-into: imapclient/imapclient.py
     def set_quota(self, quotas):
         """Set one or more quotas on resources.
     
@@ -2154,6 +2270,7 @@ code IMAPClient__set_quota:
 
 code IMAPClient___check_resp:
   body: |
+    # inject-into: imapclient/imapclient.py
     def _check_resp(self, expected, command, typ, data):
         """Check command responses for errors.
     
@@ -2165,6 +2282,7 @@ code IMAPClient___check_resp:
 
 code IMAPClient___raw_command:
   body: |
+    # inject-into: imapclient/imapclient.py
     def _raw_command(self, command, args, uid=True):
         """Run the specific command with the arguments given. 8-bit arguments
             are sent as literals. The return value is (typ, data).
@@ -2182,6 +2300,7 @@ code IMAPClient___raw_command:
 
 code IMAPClient___send_literal:
   body: |
+    # inject-into: imapclient/imapclient.py
     def _send_literal(self, tag, item):
         """Send a single literal for the command with *tag*."""
         pass
@@ -2189,6 +2308,7 @@ code IMAPClient___send_literal:
 
 code IMAPClient___store:
   body: |
+    # inject-into: imapclient/imapclient.py
     def _store(self, cmd, messages, flags, fetch_key, silent):
         """Worker function for the various flag manipulation methods.
     
@@ -2200,6 +2320,7 @@ code IMAPClient___store:
 
 code IMAPClient__welcome:
   body: |
+    # inject-into: imapclient/imapclient.py
     def welcome(self):
         """access the server greeting message"""
         pass
@@ -2207,6 +2328,7 @@ code IMAPClient__welcome:
 
 code _quoted__maybe:
   body: |
+    # inject-into: imapclient/imapclient.py
     def maybe(cls, original):
         """Maybe quote a bytes value.
     
@@ -2222,6 +2344,7 @@ code _quoted__maybe:
 
 code join_message_ids:
   body: |
+    # inject-into: imapclient/imapclient.py
     def join_message_ids(messages):
         """Convert a sequence of messages ids or a single integer message id
         into an id byte string for use with IMAP commands
@@ -2230,8 +2353,18 @@ code join_message_ids:
         pass
 
 
+code iteritems:
+  body: |
+    # inject-into: imapclient/imapclient.py
+    # dangling-name: append-if-missing
+    def iteritems(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code parse_response:
   body: |
+    # inject-into: imapclient/response_parser.py
     def parse_response(data: List[bytes]):
         """Pull apart IMAP command responses.
     
@@ -2243,6 +2376,7 @@ code parse_response:
 
 code parse_message_list:
   body: |
+    # inject-into: imapclient/response_parser.py
     def parse_message_list(data: List[Union[bytes, str]]):
         """Parse a list of message ids and return them as a list.
     
@@ -2260,6 +2394,7 @@ code parse_message_list:
 
 code parse_fetch_response:
   body: |
+    # inject-into: imapclient/response_parser.py
     def parse_fetch_response(text: List[bytes], normalise_times: bool=True, uid_is_key: bool=True):
         """Pull apart IMAP FETCH responses as returned by imaplib.
     
@@ -2267,4 +2402,67 @@ code parse_fetch_response:
         keyed by FETCH field type (eg."RFC822").
         
         """
+        pass
+
+
+code main:
+  body: |
+    # inject-into: imapclient/interact.py
+    # dangling-name: append-if-missing
+    def main(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code c:
+  body: |
+    # inject-into: imapclient/response_lexer.py
+    # dangling-name: append-if-missing
+    def c(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code _imapclient_version_string:
+  body: |
+    # inject-into: imapclient/version.py
+    # dangling-name: append-if-missing
+    def _imapclient_version_string(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code assert_imap_protocol:
+  body: |
+    # inject-into: imapclient/util.py
+    # dangling-name: append-if-missing
+    def assert_imap_protocol(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code chunk:
+  body: |
+    # inject-into: imapclient/util.py
+    # dangling-name: append-if-missing
+    def chunk(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code to_bytes:
+  body: |
+    # inject-into: imapclient/util.py
+    # dangling-name: append-if-missing
+    def to_bytes(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code to_unicode:
+  body: |
+    # inject-into: imapclient/util.py
+    # dangling-name: append-if-missing
+    def to_unicode(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
         pass

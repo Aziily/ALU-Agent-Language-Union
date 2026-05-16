@@ -1,5 +1,5 @@
 preamble __init__:
-  source: jinja2/__init__.py
+  source: src/jinja2/__init__.py
   imports: |
     from .bccache import BytecodeCache as BytecodeCache
     from .bccache import FileSystemBytecodeCache as FileSystemBytecodeCache
@@ -39,7 +39,7 @@ preamble __init__:
 
 
 preamble _identifier:
-  source: jinja2/_identifier.py
+  source: src/jinja2/_identifier.py
   imports: |
     import re
   constants: |
@@ -47,7 +47,7 @@ preamble _identifier:
 
 
 preamble async_utils:
-  source: jinja2/async_utils.py
+  source: src/jinja2/async_utils.py
   imports: |
     import inspect
     import typing as t
@@ -61,7 +61,7 @@ preamble async_utils:
 
 
 preamble bccache:
-  source: jinja2/bccache.py
+  source: src/jinja2/bccache.py
   imports: |
     import errno
     import fnmatch
@@ -240,7 +240,7 @@ preamble bccache:
 
 
 preamble compiler:
-  source: jinja2/compiler.py
+  source: src/jinja2/compiler.py
   imports: |
     import typing as t
     from contextlib import contextmanager
@@ -496,13 +496,13 @@ preamble compiler:
 
 
 preamble constants:
-  source: jinja2/constants.py
+  source: src/jinja2/constants.py
   constants: |
     LOREM_IPSUM_WORDS = 'a ac accumsan ad adipiscing aenean aliquam aliquet amet ante aptent arcu at\nauctor augue bibendum blandit class commodo condimentum congue consectetuer\nconsequat conubia convallis cras cubilia cum curabitur curae cursus dapibus\ndiam dictum dictumst dignissim dis dolor donec dui duis egestas eget eleifend\nelementum elit enim erat eros est et etiam eu euismod facilisi facilisis fames\nfaucibus felis fermentum feugiat fringilla fusce gravida habitant habitasse hac\nhendrerit hymenaeos iaculis id imperdiet in inceptos integer interdum ipsum\njusto lacinia lacus laoreet lectus leo libero ligula litora lobortis lorem\nluctus maecenas magna magnis malesuada massa mattis mauris metus mi molestie\nmollis montes morbi mus nam nascetur natoque nec neque netus nibh nisi nisl non\nnonummy nostra nulla nullam nunc odio orci ornare parturient pede pellentesque\npenatibus per pharetra phasellus placerat platea porta porttitor posuere\npotenti praesent pretium primis proin pulvinar purus quam quis quisque rhoncus\nridiculus risus rutrum sagittis sapien scelerisque sed sem semper senectus sit\nsociis sociosqu sodales sollicitudin suscipit suspendisse taciti tellus tempor\ntempus tincidunt torquent tortor tristique turpis ullamcorper ultrices\nultricies urna ut varius vehicula vel velit venenatis vestibulum vitae vivamus\nviverra volutpat vulputate'
 
 
 preamble debug:
-  source: jinja2/debug.py
+  source: src/jinja2/debug.py
   imports: |
     import sys
     import typing as t
@@ -517,7 +517,7 @@ preamble debug:
 
 
 preamble defaults:
-  source: jinja2/defaults.py
+  source: src/jinja2/defaults.py
   imports: |
     import typing as t
     from .filters import FILTERS as DEFAULT_FILTERS
@@ -547,7 +547,7 @@ preamble defaults:
 
 
 preamble environment:
-  source: jinja2/environment.py
+  source: src/jinja2/environment.py
   imports: |
     import os
     import typing
@@ -1017,7 +1017,7 @@ preamble environment:
 
 
 preamble exceptions:
-  source: jinja2/exceptions.py
+  source: src/jinja2/exceptions.py
   imports: |
     import typing as t
   body: |
@@ -1128,7 +1128,7 @@ preamble exceptions:
 
 
 preamble ext:
-  source: jinja2/ext.py
+  source: src/jinja2/ext.py
   imports: |
     import pprint
     import re
@@ -1271,7 +1271,7 @@ preamble ext:
 
 
 preamble filters:
-  source: jinja2/filters.py
+  source: src/jinja2/filters.py
   imports: |
     import math
     import random
@@ -1331,7 +1331,7 @@ preamble filters:
 
 
 preamble idtracking:
-  source: jinja2/idtracking.py
+  source: src/jinja2/idtracking.py
   imports: |
     import typing as t
     from . import nodes
@@ -1395,7 +1395,7 @@ preamble idtracking:
 
 
 preamble loaders:
-  source: jinja2/loaders.py
+  source: src/jinja2/loaders.py
   imports: |
     import importlib.util
     import os
@@ -1646,7 +1646,7 @@ preamble loaders:
 
 
 preamble meta:
-  source: jinja2/meta.py
+  source: src/jinja2/meta.py
   imports: |
     import typing as t
     from . import nodes
@@ -1674,7 +1674,7 @@ preamble meta:
 
 
 preamble nativetypes:
-  source: jinja2/nativetypes.py
+  source: src/jinja2/nativetypes.py
   imports: |
     import typing as t
     from ast import literal_eval
@@ -1706,7 +1706,7 @@ preamble nativetypes:
 
 
 preamble optimizer:
-  source: jinja2/optimizer.py
+  source: src/jinja2/optimizer.py
   imports: |
     import typing as t
     from . import nodes
@@ -1722,7 +1722,7 @@ preamble optimizer:
 
 
 preamble parser:
-  source: jinja2/parser.py
+  source: src/jinja2/parser.py
   imports: |
     import typing
     import typing as t
@@ -1805,7 +1805,7 @@ preamble parser:
 
 
 preamble runtime:
-  source: jinja2/runtime.py
+  source: src/jinja2/runtime.py
   imports: |
     import functools
     import sys
@@ -2274,7 +2274,7 @@ preamble runtime:
 
 
 preamble sandbox:
-  source: jinja2/sandbox.py
+  source: src/jinja2/sandbox.py
   imports: |
     import operator
     import types
@@ -2363,7 +2363,7 @@ preamble sandbox:
 
 
 preamble tests:
-  source: jinja2/tests.py
+  source: src/jinja2/tests.py
   imports: |
     import operator
     import typing as t
@@ -2380,7 +2380,7 @@ preamble tests:
 
 
 preamble utils:
-  source: jinja2/utils.py
+  source: src/jinja2/utils.py
   imports: |
     import enum
     import json
@@ -2587,7 +2587,7 @@ preamble utils:
 
 
 preamble visitor:
-  source: jinja2/visitor.py
+  source: src/jinja2/visitor.py
   imports: |
     import typing as t
     from .nodes import Node
@@ -2654,6 +2654,7 @@ flow jinja_lib:
     - tests_group
     - utils_group
     - visitor_group
+    - async_utils_group
 
 
 flow bccache_group:
@@ -2718,6 +2719,10 @@ flow compiler_group:
     - CodeGenerator___output_child_to_const
     - CodeGenerator___output_child_pre
     - CodeGenerator___output_child_post
+    - _FinalizeInfo
+    - _make_binop
+    - _make_unop
+    - copy
 
 
 flow debug_group:
@@ -2849,6 +2854,17 @@ flow filters_group:
     - sync_do_selectattr
     - sync_do_rejectattr
     - do_tojson
+    - do_first
+    - do_groupby
+    - do_join
+    - do_list
+    - do_map
+    - do_reject
+    - do_rejectattr
+    - do_select
+    - do_selectattr
+    - do_slice
+    - do_sum
 
 
 flow idtracking_group:
@@ -2860,6 +2876,7 @@ flow idtracking_group:
     - FrameSymbolVisitor__visit_Scope
     - FrameSymbolVisitor__visit_Block
     - FrameSymbolVisitor__visit_OverlayScope
+    - _simple_visit
 
 
 flow loaders_group:
@@ -2937,6 +2954,8 @@ flow runtime_group:
     - Undefined___undefined_message
     - Undefined___fail_with_undefined_error
     - make_logging_undefined
+    - _dict_method_all
+    - _fail_with_undefined_error
 
 
 flow sandbox_group:
@@ -3011,6 +3030,7 @@ flow utils_group:
     - Cycler__reset
     - Cycler__current
     - Cycler__next
+    - copy
 
 
 flow visitor_group:
@@ -3021,8 +3041,17 @@ flow visitor_group:
     - NodeTransformer__visit_list
 
 
+flow async_utils_group:
+  steps:
+    - async_variant
+    - auto_aiter
+    - auto_await
+    - auto_to_list
+
+
 code Bucket__reset:
   body: |
+    # inject-into: src/jinja2/bccache.py
     def reset(self):
         """Resets the bucket (unloads the bytecode)."""
         pass
@@ -3030,6 +3059,7 @@ code Bucket__reset:
 
 code Bucket__load_bytecode:
   body: |
+    # inject-into: src/jinja2/bccache.py
     def load_bytecode(self, f: t.BinaryIO):
         """Loads bytecode from a file or file like object."""
         pass
@@ -3037,6 +3067,7 @@ code Bucket__load_bytecode:
 
 code Bucket__write_bytecode:
   body: |
+    # inject-into: src/jinja2/bccache.py
     def write_bytecode(self, f: t.IO[bytes]):
         """Dump the bytecode into the file or file like object passed."""
         pass
@@ -3044,6 +3075,7 @@ code Bucket__write_bytecode:
 
 code Bucket__bytecode_from_string:
   body: |
+    # inject-into: src/jinja2/bccache.py
     def bytecode_from_string(self, string: bytes):
         """Load bytecode from bytes."""
         pass
@@ -3051,6 +3083,7 @@ code Bucket__bytecode_from_string:
 
 code Bucket__bytecode_to_string:
   body: |
+    # inject-into: src/jinja2/bccache.py
     def bytecode_to_string(self):
         """Return the bytecode as bytes."""
         pass
@@ -3058,6 +3091,7 @@ code Bucket__bytecode_to_string:
 
 code BytecodeCache__load_bytecode:
   body: |
+    # inject-into: src/jinja2/bccache.py
     def load_bytecode(self, bucket: Bucket):
         """Subclasses have to override this method to load bytecode into a
             bucket.  If they are not able to find code in the cache for the
@@ -3069,6 +3103,7 @@ code BytecodeCache__load_bytecode:
 
 code BytecodeCache__dump_bytecode:
   body: |
+    # inject-into: src/jinja2/bccache.py
     def dump_bytecode(self, bucket: Bucket):
         """Subclasses have to override this method to write the bytecode
             from a bucket back to the cache.  If it unable to do so it must not
@@ -3080,6 +3115,7 @@ code BytecodeCache__dump_bytecode:
 
 code BytecodeCache__clear:
   body: |
+    # inject-into: src/jinja2/bccache.py
     def clear(self):
         """Clears the cache.  This method is not used by Jinja but should be
             implemented to allow applications to clear the bytecode cache used
@@ -3091,6 +3127,7 @@ code BytecodeCache__clear:
 
 code BytecodeCache__get_cache_key:
   body: |
+    # inject-into: src/jinja2/bccache.py
     def get_cache_key(self, name: str, filename: t.Optional[t.Union[str]]=None):
         """Returns the unique hash key for this template name."""
         pass
@@ -3098,6 +3135,7 @@ code BytecodeCache__get_cache_key:
 
 code BytecodeCache__get_source_checksum:
   body: |
+    # inject-into: src/jinja2/bccache.py
     def get_source_checksum(self, source: str):
         """Returns a checksum for the source."""
         pass
@@ -3105,6 +3143,7 @@ code BytecodeCache__get_source_checksum:
 
 code BytecodeCache__get_bucket:
   body: |
+    # inject-into: src/jinja2/bccache.py
     def get_bucket(self, environment: 'Environment', name: str, filename: t.Optional[str], source: str):
         """Return a cache bucket for the given template.  All arguments are
             mandatory but filename may be `None`.
@@ -3115,6 +3154,7 @@ code BytecodeCache__get_bucket:
 
 code BytecodeCache__set_bucket:
   body: |
+    # inject-into: src/jinja2/bccache.py
     def set_bucket(self, bucket: Bucket):
         """Put the bucket into the cache."""
         pass
@@ -3122,6 +3162,7 @@ code BytecodeCache__set_bucket:
 
 code generate:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def generate(node: nodes.Template, environment: 'Environment', name: t.Optional[str], filename: t.Optional[str], stream: t.Optional[t.TextIO]=None, defer_init: bool=False, optimized: bool=True):
         """Generate the python source for a node tree."""
         pass
@@ -3129,6 +3170,7 @@ code generate:
 
 code has_safe_repr:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def has_safe_repr(value: t.Any):
         """Does the node have a safe representation?"""
         pass
@@ -3136,6 +3178,7 @@ code has_safe_repr:
 
 code find_undeclared:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def find_undeclared(nodes: t.Iterable[nodes.Node], names: t.Iterable[str]):
         """Check if the names passed are accessed undeclared.  The return value
         is a set of all the undeclared names from the sequence of names found.
@@ -3146,6 +3189,7 @@ code find_undeclared:
 
 code Frame__copy:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def copy(self):
         """Create a copy of the current one."""
         pass
@@ -3153,6 +3197,7 @@ code Frame__copy:
 
 code Frame__inner:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def inner(self, isolated: bool=False):
         """Return an inner frame."""
         pass
@@ -3160,6 +3205,7 @@ code Frame__inner:
 
 code Frame__soft:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def soft(self):
         """Return a soft frame.  A soft frame may not be modified as
             standalone thing as it shares the resources with the frame it
@@ -3174,6 +3220,7 @@ code Frame__soft:
 
 code DependencyFinderVisitor__visit_Block:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def visit_Block(self, node: nodes.Block):
         """Stop visiting at blocks."""
         pass
@@ -3181,6 +3228,7 @@ code DependencyFinderVisitor__visit_Block:
 
 code UndeclaredNameVisitor__visit_Block:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def visit_Block(self, node: nodes.Block):
         """Stop visiting a blocks."""
         pass
@@ -3188,6 +3236,7 @@ code UndeclaredNameVisitor__visit_Block:
 
 code CodeGenerator__fail:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def fail(self, msg: str, lineno: int):
         """Fail with a :exc:`TemplateAssertionError`."""
         pass
@@ -3195,6 +3244,7 @@ code CodeGenerator__fail:
 
 code CodeGenerator__temporary_identifier:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def temporary_identifier(self):
         """Get a new unique identifier."""
         pass
@@ -3202,6 +3252,7 @@ code CodeGenerator__temporary_identifier:
 
 code CodeGenerator__buffer:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def buffer(self, frame: Frame):
         """Enable buffering for the frame from that point onwards."""
         pass
@@ -3209,6 +3260,7 @@ code CodeGenerator__buffer:
 
 code CodeGenerator__return_buffer_contents:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def return_buffer_contents(self, frame: Frame, force_unescaped: bool=False):
         """Return the buffer contents of the frame."""
         pass
@@ -3216,6 +3268,7 @@ code CodeGenerator__return_buffer_contents:
 
 code CodeGenerator__indent:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def indent(self):
         """Indent by one."""
         pass
@@ -3223,6 +3276,7 @@ code CodeGenerator__indent:
 
 code CodeGenerator__outdent:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def outdent(self, step: int=1):
         """Outdent by step."""
         pass
@@ -3230,6 +3284,7 @@ code CodeGenerator__outdent:
 
 code CodeGenerator__start_write:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def start_write(self, frame: Frame, node: t.Optional[nodes.Node]=None):
         """Yield or write into the frame buffer."""
         pass
@@ -3237,6 +3292,7 @@ code CodeGenerator__start_write:
 
 code CodeGenerator__end_write:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def end_write(self, frame: Frame):
         """End the writing process started by `start_write`."""
         pass
@@ -3244,6 +3300,7 @@ code CodeGenerator__end_write:
 
 code CodeGenerator__simple_write:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def simple_write(self, s: str, frame: Frame, node: t.Optional[nodes.Node]=None):
         """Simple shortcut for start_write + write + end_write."""
         pass
@@ -3251,6 +3308,7 @@ code CodeGenerator__simple_write:
 
 code CodeGenerator__blockvisit:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def blockvisit(self, nodes: t.Iterable[nodes.Node], frame: Frame):
         """Visit a list of nodes as block in a frame.  If the current frame
             is no buffer a dummy ``if 0: yield None`` is written automatically.
@@ -3261,6 +3319,7 @@ code CodeGenerator__blockvisit:
 
 code CodeGenerator__write:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def write(self, x: str):
         """Write a string into the output stream."""
         pass
@@ -3268,6 +3327,7 @@ code CodeGenerator__write:
 
 code CodeGenerator__writeline:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def writeline(self, x: str, node: t.Optional[nodes.Node]=None, extra: int=0):
         """Combination of newline and write."""
         pass
@@ -3275,6 +3335,7 @@ code CodeGenerator__writeline:
 
 code CodeGenerator__newline:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def newline(self, node: t.Optional[nodes.Node]=None, extra: int=0):
         """Add one or more newlines before the next write."""
         pass
@@ -3282,6 +3343,7 @@ code CodeGenerator__newline:
 
 code CodeGenerator__signature:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def signature(self, node: t.Union[nodes.Call, nodes.Filter, nodes.Test], frame: Frame, extra_kwargs: t.Optional[t.Mapping[str, t.Any]]=None):
         """Writes a function call to the stream for the current node.
             A leading comma is added automatically.  The extra keyword
@@ -3295,6 +3357,7 @@ code CodeGenerator__signature:
 
 code CodeGenerator__pull_dependencies:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def pull_dependencies(self, nodes: t.Iterable[nodes.Node]):
         """Find all filter and test names used in the template and
             assign them to variables in the compiled namespace. Checking
@@ -3312,6 +3375,7 @@ code CodeGenerator__pull_dependencies:
 
 code CodeGenerator__macro_body:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def macro_body(self, node: t.Union[nodes.Macro, nodes.CallBlock], frame: Frame):
         """Dump the function def of a macro or call block."""
         pass
@@ -3319,6 +3383,7 @@ code CodeGenerator__macro_body:
 
 code CodeGenerator__macro_def:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def macro_def(self, macro_ref: MacroRef, frame: Frame):
         """Dump the macro definition for the def created by macro_body."""
         pass
@@ -3326,6 +3391,7 @@ code CodeGenerator__macro_def:
 
 code CodeGenerator__position:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def position(self, node: nodes.Node):
         """Return a human readable position for the node."""
         pass
@@ -3333,6 +3399,7 @@ code CodeGenerator__position:
 
 code CodeGenerator__write_commons:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def write_commons(self):
         """Writes a common preamble that is used by root and block functions.
             Primarily this sets up common local helpers and enforces a generator
@@ -3344,6 +3411,7 @@ code CodeGenerator__write_commons:
 
 code CodeGenerator__push_parameter_definitions:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def push_parameter_definitions(self, frame: Frame):
         """Pushes all parameter targets from the given frame into a local
             stack that permits tracking of yet to be assigned parameters.  In
@@ -3357,6 +3425,7 @@ code CodeGenerator__push_parameter_definitions:
 
 code CodeGenerator__pop_parameter_definitions:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def pop_parameter_definitions(self):
         """Pops the current parameter definitions set."""
         pass
@@ -3364,6 +3433,7 @@ code CodeGenerator__pop_parameter_definitions:
 
 code CodeGenerator__mark_parameter_stored:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def mark_parameter_stored(self, target: str):
         """Marks a parameter in the current parameter definitions as stored.
             This will skip the enforced undefined checks.
@@ -3374,6 +3444,7 @@ code CodeGenerator__mark_parameter_stored:
 
 code CodeGenerator__parameter_is_undeclared:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def parameter_is_undeclared(self, target: str):
         """Checks if a given target is an undeclared parameter."""
         pass
@@ -3381,6 +3452,7 @@ code CodeGenerator__parameter_is_undeclared:
 
 code CodeGenerator__push_assign_tracking:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def push_assign_tracking(self):
         """Pushes a new layer for assignment tracking."""
         pass
@@ -3388,6 +3460,7 @@ code CodeGenerator__push_assign_tracking:
 
 code CodeGenerator__pop_assign_tracking:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def pop_assign_tracking(self, frame: Frame):
         """Pops the topmost level for assignment tracking and updates the
             context variables if necessary.
@@ -3398,6 +3471,7 @@ code CodeGenerator__pop_assign_tracking:
 
 code CodeGenerator__visit_Block:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def visit_Block(self, node: nodes.Block, frame: Frame):
         """Call a block and register it for the template."""
         pass
@@ -3405,6 +3479,7 @@ code CodeGenerator__visit_Block:
 
 code CodeGenerator__visit_Extends:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def visit_Extends(self, node: nodes.Extends, frame: Frame):
         """Calls the extender."""
         pass
@@ -3412,6 +3487,7 @@ code CodeGenerator__visit_Extends:
 
 code CodeGenerator__visit_Include:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def visit_Include(self, node: nodes.Include, frame: Frame):
         """Handles includes."""
         pass
@@ -3419,6 +3495,7 @@ code CodeGenerator__visit_Include:
 
 code CodeGenerator__visit_Import:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def visit_Import(self, node: nodes.Import, frame: Frame):
         """Visit regular imports."""
         pass
@@ -3426,6 +3503,7 @@ code CodeGenerator__visit_Import:
 
 code CodeGenerator__visit_FromImport:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def visit_FromImport(self, node: nodes.FromImport, frame: Frame):
         """Visit named imports."""
         pass
@@ -3433,6 +3511,7 @@ code CodeGenerator__visit_FromImport:
 
 code CodeGenerator___default_finalize:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def _default_finalize(value: t.Any):
         """The default finalize function if the environment isn't
             configured with one. Or, if the environment has one, this is
@@ -3444,6 +3523,7 @@ code CodeGenerator___default_finalize:
 
 code CodeGenerator___make_finalize:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def _make_finalize(self):
         """Build the finalize function to be used on constants and at
             runtime. Cached so it's only created once for all output nodes.
@@ -3463,6 +3543,7 @@ code CodeGenerator___make_finalize:
 
 code CodeGenerator___output_const_repr:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def _output_const_repr(self, group: t.Iterable[t.Any]):
         """Given a group of constant values converted from ``Output``
             child nodes, produce a string to write to the template module
@@ -3474,6 +3555,7 @@ code CodeGenerator___output_const_repr:
 
 code CodeGenerator___output_child_to_const:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def _output_child_to_const(self, node: nodes.Expr, frame: Frame, finalize: _FinalizeInfo):
         """Try to optimize a child of an ``Output`` node by trying to
             convert it to constant, finalized data at compile time.
@@ -3488,6 +3570,7 @@ code CodeGenerator___output_child_to_const:
 
 code CodeGenerator___output_child_pre:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def _output_child_pre(self, node: nodes.Expr, frame: Frame, finalize: _FinalizeInfo):
         """Output extra source code before visiting a child of an
             ``Output`` node.
@@ -3498,6 +3581,7 @@ code CodeGenerator___output_child_pre:
 
 code CodeGenerator___output_child_post:
   body: |
+    # inject-into: src/jinja2/compiler.py
     def _output_child_post(self, node: nodes.Expr, frame: Frame, finalize: _FinalizeInfo):
         """Output extra source code after visiting a child of an
             ``Output`` node.
@@ -3506,8 +3590,45 @@ code CodeGenerator___output_child_post:
         pass
 
 
+code _FinalizeInfo:
+  body: |
+    # inject-into: src/jinja2/compiler.py
+    # dangling-name: append-if-missing
+    def _FinalizeInfo(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code _make_binop:
+  body: |
+    # inject-into: src/jinja2/compiler.py
+    # dangling-name: append-if-missing
+    def _make_binop(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code _make_unop:
+  body: |
+    # inject-into: src/jinja2/compiler.py
+    # dangling-name: append-if-missing
+    def _make_unop(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code copy:
+  body: |
+    # inject-into: src/jinja2/compiler.py
+    # dangling-name: append-if-missing
+    def copy(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code rewrite_traceback_stack:
   body: |
+    # inject-into: src/jinja2/debug.py
     def rewrite_traceback_stack(source: t.Optional[str]=None):
         """Rewrite the current exception to replace any tracebacks from
         within compiled template code with tracebacks that look like they
@@ -3525,6 +3646,7 @@ code rewrite_traceback_stack:
 
 code fake_traceback:
   body: |
+    # inject-into: src/jinja2/debug.py
     def fake_traceback(exc_value: BaseException, tb: t.Optional[TracebackType], filename: str, lineno: int):
         """Produce a new traceback object that looks like it came from the
         template source instead of the compiled code. The filename, line
@@ -3544,6 +3666,7 @@ code fake_traceback:
 
 code get_template_locals:
   body: |
+    # inject-into: src/jinja2/debug.py
     def get_template_locals(real_locals: t.Mapping[str, t.Any]):
         """Based on the runtime locals, get the context that would be
         available at that point in the template.
@@ -3554,6 +3677,7 @@ code get_template_locals:
 
 code get_spontaneous_environment:
   body: |
+    # inject-into: src/jinja2/environment.py
     def get_spontaneous_environment(cls: t.Type[_env_bound], *args: t.Any):
         """Return a new spontaneous environment. A spontaneous environment
         is used for templates created directly rather than through an
@@ -3568,6 +3692,7 @@ code get_spontaneous_environment:
 
 code create_cache:
   body: |
+    # inject-into: src/jinja2/environment.py
     def create_cache(size: int):
         """Return the cache class for the given size."""
         pass
@@ -3575,6 +3700,7 @@ code create_cache:
 
 code copy_cache:
   body: |
+    # inject-into: src/jinja2/environment.py
     def copy_cache(cache: t.Optional[t.MutableMapping[t.Any, t.Any]]):
         """Create an empty copy of the given cache."""
         pass
@@ -3582,6 +3708,7 @@ code copy_cache:
 
 code load_extensions:
   body: |
+    # inject-into: src/jinja2/environment.py
     def load_extensions(environment: 'Environment', extensions: t.Sequence[t.Union[str, t.Type['Extension']]]):
         """Load the extensions from the list and bind it to the environment.
         Returns a dict of instantiated extensions.
@@ -3592,6 +3719,7 @@ code load_extensions:
 
 code _environment_config_check:
   body: |
+    # inject-into: src/jinja2/environment.py
     def _environment_config_check(environment: 'Environment'):
         """Perform a sanity check on the environment."""
         pass
@@ -3599,6 +3727,7 @@ code _environment_config_check:
 
 code Environment__add_extension:
   body: |
+    # inject-into: src/jinja2/environment.py
     def add_extension(self, extension: t.Union[str, t.Type['Extension']]):
         """Adds an extension after the environment was created.
     
@@ -3610,6 +3739,7 @@ code Environment__add_extension:
 
 code Environment__extend:
   body: |
+    # inject-into: src/jinja2/environment.py
     def extend(self, **attributes: t.Any):
         """Add the items to the instance of the environment if they do not exist
             yet.  This is used by :ref:`extensions <writing-extensions>` to register
@@ -3621,6 +3751,7 @@ code Environment__extend:
 
 code Environment__overlay:
   body: |
+    # inject-into: src/jinja2/environment.py
     def overlay(self, block_start_string: str=missing, block_end_string: str=missing, variable_start_string: str=missing, variable_end_string: str=missing, comment_start_string: str=missing, comment_end_string: str=missing, line_statement_prefix: t.Optional[str]=missing, line_comment_prefix: t.Optional[str]=missing, trim_blocks: bool=missing, lstrip_blocks: bool=missing, newline_sequence: "te.Literal['\\n', '\\r\\n', '\\r']"=missing, keep_trailing_newline: bool=missing, extensions: t.Sequence[t.Union[str, t.Type['Extension']]]=missing, optimized: bool=missing, undefined: t.Type[Undefined]=missing, finalize: t.Optional[t.Callable[..., t.Any]]=missing, autoescape: t.Union[bool, t.Callable[[t.Optional[str]], bool]]=missing, loader: t.Optional['BaseLoader']=missing, cache_size: int=missing, auto_reload: bool=missing, bytecode_cache: t.Optional['BytecodeCache']=missing, enable_async: bool=False):
         """Create a new overlay environment that shares all the data with the
             current environment except for cache and the overridden attributes.
@@ -3643,6 +3774,7 @@ code Environment__overlay:
 
 code Environment__lexer:
   body: |
+    # inject-into: src/jinja2/environment.py
     def lexer(self):
         """The lexer for this environment."""
         pass
@@ -3650,6 +3782,7 @@ code Environment__lexer:
 
 code Environment__iter_extensions:
   body: |
+    # inject-into: src/jinja2/environment.py
     def iter_extensions(self):
         """Iterates over the extensions by priority."""
         pass
@@ -3657,6 +3790,7 @@ code Environment__iter_extensions:
 
 code Environment__getitem:
   body: |
+    # inject-into: src/jinja2/environment.py
     def getitem(self, obj: t.Any, argument: t.Union[str, t.Any]):
         """Get an item or attribute of an object but prefer the item."""
         pass
@@ -3664,6 +3798,7 @@ code Environment__getitem:
 
 code Environment__getattr:
   body: |
+    # inject-into: src/jinja2/environment.py
     def getattr(self, obj: t.Any, attribute: str):
         """Get an item or attribute of an object but prefer the attribute.
             Unlike :meth:`getitem` the attribute *must* be a string.
@@ -3674,6 +3809,7 @@ code Environment__getattr:
 
 code Environment__call_filter:
   body: |
+    # inject-into: src/jinja2/environment.py
     def call_filter(self, name: str, value: t.Any, args: t.Optional[t.Sequence[t.Any]]=None, kwargs: t.Optional[t.Mapping[str, t.Any]]=None, context: t.Optional[Context]=None, eval_ctx: t.Optional[EvalContext]=None):
         """Invoke a filter on a value the same way the compiler does.
     
@@ -3689,6 +3825,7 @@ code Environment__call_filter:
 
 code Environment__call_test:
   body: |
+    # inject-into: src/jinja2/environment.py
     def call_test(self, name: str, value: t.Any, args: t.Optional[t.Sequence[t.Any]]=None, kwargs: t.Optional[t.Mapping[str, t.Any]]=None, context: t.Optional[Context]=None, eval_ctx: t.Optional[EvalContext]=None):
         """Invoke a test on a value the same way the compiler does.
     
@@ -3708,6 +3845,7 @@ code Environment__call_test:
 
 code Environment__parse:
   body: |
+    # inject-into: src/jinja2/environment.py
     def parse(self, source: str, name: t.Optional[str]=None, filename: t.Optional[str]=None):
         """Parse the sourcecode and return the abstract syntax tree.  This
             tree of nodes is used by the compiler to convert the template into
@@ -3723,6 +3861,7 @@ code Environment__parse:
 
 code Environment___parse:
   body: |
+    # inject-into: src/jinja2/environment.py
     def _parse(self, source: str, name: t.Optional[str], filename: t.Optional[str]):
         """Internal parsing function used by `parse` and `compile`."""
         pass
@@ -3730,6 +3869,7 @@ code Environment___parse:
 
 code Environment__lex:
   body: |
+    # inject-into: src/jinja2/environment.py
     def lex(self, source: str, name: t.Optional[str]=None, filename: t.Optional[str]=None):
         """Lex the given sourcecode and return a generator that yields
             tokens as tuples in the form ``(lineno, token_type, value)``.
@@ -3746,6 +3886,7 @@ code Environment__lex:
 
 code Environment__preprocess:
   body: |
+    # inject-into: src/jinja2/environment.py
     def preprocess(self, source: str, name: t.Optional[str]=None, filename: t.Optional[str]=None):
         """Preprocesses the source with all extensions.  This is automatically
             called for all parsing and compiling methods but *not* for :meth:`lex`
@@ -3757,6 +3898,7 @@ code Environment__preprocess:
 
 code Environment___tokenize:
   body: |
+    # inject-into: src/jinja2/environment.py
     def _tokenize(self, source: str, name: t.Optional[str], filename: t.Optional[str]=None, state: t.Optional[str]=None):
         """Called by the parser to do the preprocessing and filtering
             for all the extensions.  Returns a :class:`~jinja2.lexer.TokenStream`.
@@ -3767,6 +3909,7 @@ code Environment___tokenize:
 
 code Environment___generate:
   body: |
+    # inject-into: src/jinja2/environment.py
     def _generate(self, source: nodes.Template, name: t.Optional[str], filename: t.Optional[str], defer_init: bool=False):
         """Internal hook that can be overridden to hook a different generate
             method in.
@@ -3779,6 +3922,7 @@ code Environment___generate:
 
 code Environment___compile:
   body: |
+    # inject-into: src/jinja2/environment.py
     def _compile(self, source: str, filename: str):
         """Internal hook that can be overridden to hook a different compile
             method in.
@@ -3791,6 +3935,7 @@ code Environment___compile:
 
 code Environment__compile:
   body: |
+    # inject-into: src/jinja2/environment.py
     def compile(self, source: t.Union[str, nodes.Template], name: t.Optional[str]=None, filename: t.Optional[str]=None, raw: bool=False, defer_init: bool=False):
         """Compile a node or template source code.  The `name` parameter is
             the load name of the template after it was joined using
@@ -3817,6 +3962,7 @@ code Environment__compile:
 
 code Environment__compile_expression:
   body: |
+    # inject-into: src/jinja2/environment.py
     def compile_expression(self, source: str, undefined_to_none: bool=True):
         """A handy helper method that returns a callable that accepts keyword
             arguments that appear as variables in the expression.  If called it
@@ -3851,6 +3997,7 @@ code Environment__compile_expression:
 
 code Environment__compile_templates:
   body: |
+    # inject-into: src/jinja2/environment.py
     def compile_templates(self, target: t.Union[str, 'os.PathLike[str]'], extensions: t.Optional[t.Collection[str]]=None, filter_func: t.Optional[t.Callable[[str], bool]]=None, zip: t.Optional[str]='deflated', log_function: t.Optional[t.Callable[[str], None]]=None, ignore_errors: bool=True):
         """Finds all the templates the loader can find, compiles them
             and stores them in `target`.  If `zip` is `None`, instead of in a
@@ -3875,6 +4022,7 @@ code Environment__compile_templates:
 
 code Environment__list_templates:
   body: |
+    # inject-into: src/jinja2/environment.py
     def list_templates(self, extensions: t.Optional[t.Collection[str]]=None, filter_func: t.Optional[t.Callable[[str], bool]]=None):
         """Returns a list of templates for this environment.  This requires
             that the loader supports the loader's
@@ -3897,6 +4045,7 @@ code Environment__list_templates:
 
 code Environment__handle_exception:
   body: |
+    # inject-into: src/jinja2/environment.py
     def handle_exception(self, source: t.Optional[str]=None):
         """Exception handling helper.  This is used internally to either raise
             rewritten exceptions or return a rendered traceback for the template.
@@ -3907,6 +4056,7 @@ code Environment__handle_exception:
 
 code Environment__join_path:
   body: |
+    # inject-into: src/jinja2/environment.py
     def join_path(self, template: str, parent: str):
         """Join a template with the parent.  By default all the lookups are
             relative to the loader root so this method returns the `template`
@@ -3923,6 +4073,7 @@ code Environment__join_path:
 
 code Environment__get_template:
   body: |
+    # inject-into: src/jinja2/environment.py
     def get_template(self, name: t.Union[str, 'Template'], parent: t.Optional[str]=None, globals: t.Optional[t.MutableMapping[str, t.Any]]=None):
         """Load a template by name with :attr:`loader` and return a
             :class:`Template`. If the template does not exist a
@@ -3953,6 +4104,7 @@ code Environment__get_template:
 
 code Environment__select_template:
   body: |
+    # inject-into: src/jinja2/environment.py
     def select_template(self, names: t.Iterable[t.Union[str, 'Template']], parent: t.Optional[str]=None, globals: t.Optional[t.MutableMapping[str, t.Any]]=None):
         """Like :meth:`get_template`, but tries loading multiple names.
             If none of the names can be loaded a :exc:`TemplatesNotFound`
@@ -3988,6 +4140,7 @@ code Environment__select_template:
 
 code Environment__get_or_select_template:
   body: |
+    # inject-into: src/jinja2/environment.py
     def get_or_select_template(self, template_name_or_list: t.Union[str, 'Template', t.List[t.Union[str, 'Template']]], parent: t.Optional[str]=None, globals: t.Optional[t.MutableMapping[str, t.Any]]=None):
         """Use :meth:`select_template` if an iterable of template names
             is given, or :meth:`get_template` if one name is given.
@@ -4000,6 +4153,7 @@ code Environment__get_or_select_template:
 
 code Environment__from_string:
   body: |
+    # inject-into: src/jinja2/environment.py
     def from_string(self, source: t.Union[str, nodes.Template], globals: t.Optional[t.MutableMapping[str, t.Any]]=None, template_class: t.Optional[t.Type['Template']]=None):
         """Load a template from a source string without using
             :attr:`loader`.
@@ -4018,6 +4172,7 @@ code Environment__from_string:
 
 code Environment__make_globals:
   body: |
+    # inject-into: src/jinja2/environment.py
     def make_globals(self, d: t.Optional[t.MutableMapping[str, t.Any]]):
         """Make the globals map for a template. Any given template
             globals overlay the environment :attr:`globals`.
@@ -4039,6 +4194,7 @@ code Environment__make_globals:
 
 code Template__from_code:
   body: |
+    # inject-into: src/jinja2/environment.py
     def from_code(cls, environment: Environment, code: CodeType, globals: t.MutableMapping[str, t.Any], uptodate: t.Optional[t.Callable[[], bool]]=None):
         """Creates a template object from compiled code and the globals.  This
             is used by the loaders and environment to create a template object.
@@ -4049,6 +4205,7 @@ code Template__from_code:
 
 code Template__from_module_dict:
   body: |
+    # inject-into: src/jinja2/environment.py
     def from_module_dict(cls, environment: Environment, module_dict: t.MutableMapping[str, t.Any], globals: t.MutableMapping[str, t.Any]):
         """Creates a template object from a module.  This is used by the
             module loader to create a template object.
@@ -4061,6 +4218,7 @@ code Template__from_module_dict:
 
 code Template__render:
   body: |
+    # inject-into: src/jinja2/environment.py
     def render(self, *args: t.Any, **kwargs: t.Any):
         """This method accepts the same arguments as the `dict` constructor:
             A dict, a dict subclass or some keyword arguments.  If no arguments
@@ -4077,6 +4235,7 @@ code Template__render:
 
 code Template__render_async:
   body: |
+    # inject-into: src/jinja2/environment.py
     def render_async(self, *args: t.Any, **kwargs: t.Any):
         """This works similar to :meth:`render` but returns a coroutine
             that when awaited returns the entire rendered template string.  This
@@ -4092,6 +4251,7 @@ code Template__render_async:
 
 code Template__stream:
   body: |
+    # inject-into: src/jinja2/environment.py
     def stream(self, *args: t.Any, **kwargs: t.Any):
         """Works exactly like :meth:`generate` but returns a
             :class:`TemplateStream`.
@@ -4102,6 +4262,7 @@ code Template__stream:
 
 code Template__generate:
   body: |
+    # inject-into: src/jinja2/environment.py
     def generate(self, *args: t.Any, **kwargs: t.Any):
         """For very large templates it can be useful to not render the whole
             template at once but evaluate each statement after another and yield
@@ -4116,6 +4277,7 @@ code Template__generate:
 
 code Template__generate_async:
   body: |
+    # inject-into: src/jinja2/environment.py
     def generate_async(self, *args: t.Any, **kwargs: t.Any):
         """An async version of :meth:`generate`.  Works very similarly but
             returns an async iterator instead.
@@ -4126,6 +4288,7 @@ code Template__generate_async:
 
 code Template__new_context:
   body: |
+    # inject-into: src/jinja2/environment.py
     def new_context(self, vars: t.Optional[t.Dict[str, t.Any]]=None, shared: bool=False, locals: t.Optional[t.Mapping[str, t.Any]]=None):
         """Create a new :class:`Context` for this template.  The vars
             provided will be passed to the template.  Per default the globals
@@ -4140,6 +4303,7 @@ code Template__new_context:
 
 code Template__make_module:
   body: |
+    # inject-into: src/jinja2/environment.py
     def make_module(self, vars: t.Optional[t.Dict[str, t.Any]]=None, shared: bool=False, locals: t.Optional[t.Mapping[str, t.Any]]=None):
         """This method works like the :attr:`module` attribute when called
             without arguments but it will evaluate the template on every call
@@ -4153,6 +4317,7 @@ code Template__make_module:
 
 code Template__make_module_async:
   body: |
+    # inject-into: src/jinja2/environment.py
     def make_module_async(self, vars: t.Optional[t.Dict[str, t.Any]]=None, shared: bool=False, locals: t.Optional[t.Mapping[str, t.Any]]=None):
         """As template module creation can invoke template code for
             asynchronous executions this method must be used instead of the
@@ -4165,6 +4330,7 @@ code Template__make_module_async:
 
 code Template___get_default_module:
   body: |
+    # inject-into: src/jinja2/environment.py
     def _get_default_module(self, ctx: t.Optional[Context]=None):
         """If a context is passed in, this means that the template was
             imported. Imported templates have access to the current
@@ -4183,6 +4349,7 @@ code Template___get_default_module:
 
 code Template__module:
   body: |
+    # inject-into: src/jinja2/environment.py
     def module(self):
         """The template as module.  This is used for imports in the
             template runtime but is also useful if one wants to access
@@ -4202,6 +4369,7 @@ code Template__module:
 
 code Template__get_corresponding_lineno:
   body: |
+    # inject-into: src/jinja2/environment.py
     def get_corresponding_lineno(self, lineno: int):
         """Return the source line number of a line number in the
             generated bytecode as they are not in sync.
@@ -4212,6 +4380,7 @@ code Template__get_corresponding_lineno:
 
 code Template__is_up_to_date:
   body: |
+    # inject-into: src/jinja2/environment.py
     def is_up_to_date(self):
         """If this variable is `False` there is a newer version available."""
         pass
@@ -4219,6 +4388,7 @@ code Template__is_up_to_date:
 
 code Template__debug_info:
   body: |
+    # inject-into: src/jinja2/environment.py
     def debug_info(self):
         """The debug info mapping."""
         pass
@@ -4226,6 +4396,7 @@ code Template__debug_info:
 
 code TemplateStream__dump:
   body: |
+    # inject-into: src/jinja2/environment.py
     def dump(self, fp: t.Union[str, t.IO[bytes]], encoding: t.Optional[str]=None, errors: t.Optional[str]='strict'):
         """Dump the complete stream into a file or file-like object.
             Per default strings are written, if you want to encode
@@ -4241,6 +4412,7 @@ code TemplateStream__dump:
 
 code TemplateStream__disable_buffering:
   body: |
+    # inject-into: src/jinja2/environment.py
     def disable_buffering(self):
         """Disable the output buffering."""
         pass
@@ -4248,6 +4420,7 @@ code TemplateStream__disable_buffering:
 
 code TemplateStream__enable_buffering:
   body: |
+    # inject-into: src/jinja2/environment.py
     def enable_buffering(self, size: int=5):
         """Enable buffering.  Buffer `size` items before yielding them."""
         pass
@@ -4255,6 +4428,7 @@ code TemplateStream__enable_buffering:
 
 code Extension__bind:
   body: |
+    # inject-into: src/jinja2/ext.py
     def bind(self, environment: Environment):
         """Create a copy of this extension bound to another environment."""
         pass
@@ -4262,6 +4436,7 @@ code Extension__bind:
 
 code Extension__preprocess:
   body: |
+    # inject-into: src/jinja2/ext.py
     def preprocess(self, source: str, name: t.Optional[str], filename: t.Optional[str]=None):
         """This method is called before the actual lexing and can be used to
             preprocess the source.  The `filename` is optional.  The return value
@@ -4273,6 +4448,7 @@ code Extension__preprocess:
 
 code Extension__filter_stream:
   body: |
+    # inject-into: src/jinja2/ext.py
     def filter_stream(self, stream: 'TokenStream'):
         """It's passed a :class:`~jinja2.lexer.TokenStream` that can be used
             to filter tokens returned.  This method has to return an iterable of
@@ -4285,6 +4461,7 @@ code Extension__filter_stream:
 
 code Extension__parse:
   body: |
+    # inject-into: src/jinja2/ext.py
     def parse(self, parser: 'Parser'):
         """If any of the :attr:`tags` matched this method is called with the
             parser as first argument.  The token the parser stream is pointing at
@@ -4297,6 +4474,7 @@ code Extension__parse:
 
 code Extension__attr:
   body: |
+    # inject-into: src/jinja2/ext.py
     def attr(self, name: str, lineno: t.Optional[int]=None):
         """Return an attribute node for the current extension.  This is useful
             to pass constants on extensions to generated template code.
@@ -4311,6 +4489,7 @@ code Extension__attr:
 
 code Extension__call_method:
   body: |
+    # inject-into: src/jinja2/ext.py
     def call_method(self, name: str, args: t.Optional[t.List[nodes.Expr]]=None, kwargs: t.Optional[t.List[nodes.Keyword]]=None, dyn_args: t.Optional[nodes.Expr]=None, dyn_kwargs: t.Optional[nodes.Expr]=None, lineno: t.Optional[int]=None):
         """Call a method of the extension.  This is a shortcut for
             :meth:`attr` + :class:`jinja2.nodes.Call`.
@@ -4321,6 +4500,7 @@ code Extension__call_method:
 
 code InternationalizationExtension__parse:
   body: |
+    # inject-into: src/jinja2/ext.py
     def parse(self, parser: 'Parser'):
         """Parse a translatable tag."""
         pass
@@ -4328,6 +4508,7 @@ code InternationalizationExtension__parse:
 
 code InternationalizationExtension___parse_block:
   body: |
+    # inject-into: src/jinja2/ext.py
     def _parse_block(self, parser: 'Parser', allow_pluralize: bool):
         """Parse until the next block tag with a given name."""
         pass
@@ -4335,6 +4516,7 @@ code InternationalizationExtension___parse_block:
 
 code InternationalizationExtension___make_node:
   body: |
+    # inject-into: src/jinja2/ext.py
     def _make_node(self, singular: str, plural: t.Optional[str], context: t.Optional[str], variables: t.Dict[str, nodes.Expr], plural_expr: t.Optional[nodes.Expr], vars_referenced: bool, num_called_num: bool):
         """Generates a useful node from the data provided."""
         pass
@@ -4342,6 +4524,7 @@ code InternationalizationExtension___make_node:
 
 code extract_from_ast:
   body: |
+    # inject-into: src/jinja2/ext.py
     def extract_from_ast(ast: nodes.Template, gettext_functions: t.Sequence[str]=GETTEXT_FUNCTIONS, babel_style: bool=True):
         """Extract localizable strings from the given template node.  Per
         default this function returns matches in babel style that means non string
@@ -4383,6 +4566,7 @@ code extract_from_ast:
 
 code babel_extract:
   body: |
+    # inject-into: src/jinja2/ext.py
     def babel_extract(fileobj: t.BinaryIO, keywords: t.Sequence[str], comment_tags: t.Sequence[str], options: t.Dict[str, t.Any]):
         """Babel extraction method for Jinja templates.
     
@@ -4417,6 +4601,7 @@ code babel_extract:
 
 code ignore_case:
   body: |
+    # inject-into: src/jinja2/filters.py
     def ignore_case(value: V):
         """For use as a postprocessor for :func:`make_attrgetter`. Converts strings
         to lowercase and returns other types as-is.
@@ -4426,6 +4611,7 @@ code ignore_case:
 
 code make_attrgetter:
   body: |
+    # inject-into: src/jinja2/filters.py
     def make_attrgetter(environment: 'Environment', attribute: t.Optional[t.Union[str, int]], postprocess: t.Optional[t.Callable[[t.Any], t.Any]]=None, default: t.Optional[t.Any]=None):
         """Returns a callable that looks up the given attribute from a
         passed object with the rules of the environment.  Dots are allowed
@@ -4438,6 +4624,7 @@ code make_attrgetter:
 
 code make_multi_attrgetter:
   body: |
+    # inject-into: src/jinja2/filters.py
     def make_multi_attrgetter(environment: 'Environment', attribute: t.Optional[t.Union[str, int]], postprocess: t.Optional[t.Callable[[t.Any], t.Any]]=None):
         """Returns a callable that looks up the given comma separated
         attributes from a passed object with the rules of the environment.
@@ -4455,6 +4642,7 @@ code make_multi_attrgetter:
 
 code do_forceescape:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_forceescape(value: 't.Union[str, HasHTML]'):
         """Enforce HTML escaping.  This will probably double escape variables."""
         pass
@@ -4462,6 +4650,7 @@ code do_forceescape:
 
 code do_urlencode:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_urlencode(value: t.Union[str, t.Mapping[str, t.Any], t.Iterable[t.Tuple[str, t.Any]]]):
         """Quote data for use in a URL path or query using UTF-8.
     
@@ -4484,6 +4673,7 @@ code do_urlencode:
 
 code do_replace:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_replace(eval_ctx: 'EvalContext', s: str, old: str, new: str, count: t.Optional[int]=None):
         """Return a copy of the value with all occurrences of a substring
         replaced with a new one. The first argument is the substring
@@ -4505,6 +4695,7 @@ code do_replace:
 
 code do_upper:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_upper(s: str):
         """Convert a value to uppercase."""
         pass
@@ -4512,6 +4703,7 @@ code do_upper:
 
 code do_lower:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_lower(s: str):
         """Convert a value to lowercase."""
         pass
@@ -4519,6 +4711,7 @@ code do_lower:
 
 code do_items:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_items(value: t.Union[t.Mapping[K, V], Undefined]):
         """Return an iterator over the ``(key, value)`` items of a mapping.
     
@@ -4546,6 +4739,7 @@ code do_items:
 
 code do_xmlattr:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_xmlattr(eval_ctx: 'EvalContext', d: t.Mapping[str, t.Any], autospace: bool=True):
         """Create an SGML/XML attribute string based on the items in a dict.
     
@@ -4589,6 +4783,7 @@ code do_xmlattr:
 
 code do_capitalize:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_capitalize(s: str):
         """Capitalize a value. The first character will be uppercase, all others
         lowercase.
@@ -4599,6 +4794,7 @@ code do_capitalize:
 
 code do_title:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_title(s: str):
         """Return a titlecased version of the value. I.e. words will start with
         uppercase letters, all remaining characters are lowercase.
@@ -4609,6 +4805,7 @@ code do_title:
 
 code do_dictsort:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_dictsort(value: t.Mapping[K, V], case_sensitive: bool=False, by: 'te.Literal["key", "value"]'='key', reverse: bool=False):
         """Sort a dict and yield (key, value) pairs. Python dicts may not
         be in the order you want to display them in, so sort them first.
@@ -4633,6 +4830,7 @@ code do_dictsort:
 
 code do_sort:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_sort(environment: 'Environment', value: 't.Iterable[V]', reverse: bool=False, case_sensitive: bool=False, attribute: t.Optional[t.Union[str, int]]=None):
         """Sort an iterable using Python's :func:`sorted`.
     
@@ -4682,6 +4880,7 @@ code do_sort:
 
 code do_unique:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_unique(environment: 'Environment', value: 't.Iterable[V]', case_sensitive: bool=False, attribute: t.Optional[t.Union[str, int]]=None):
         """Returns a list of unique items from the given iterable.
     
@@ -4702,6 +4901,7 @@ code do_unique:
 
 code do_min:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_min(environment: 'Environment', value: 't.Iterable[V]', case_sensitive: bool=False, attribute: t.Optional[t.Union[str, int]]=None):
         """Return the smallest item from the sequence.
     
@@ -4719,6 +4919,7 @@ code do_min:
 
 code do_max:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_max(environment: 'Environment', value: 't.Iterable[V]', case_sensitive: bool=False, attribute: t.Optional[t.Union[str, int]]=None):
         """Return the largest item from the sequence.
     
@@ -4736,6 +4937,7 @@ code do_max:
 
 code do_default:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_default(value: V, default_value: V='', boolean: bool=False):
         """If the value is undefined it will return the passed default value,
         otherwise the value of the variable:
@@ -4765,6 +4967,7 @@ code do_default:
 
 code sync_do_join:
   body: |
+    # inject-into: src/jinja2/filters.py
     def sync_do_join(eval_ctx: 'EvalContext', value: t.Iterable[t.Any], d: str='', attribute: t.Optional[t.Union[str, int]]=None):
         """Return a string which is the concatenation of the strings in the
         sequence. The separator between elements is an empty string per
@@ -4793,6 +4996,7 @@ code sync_do_join:
 
 code do_center:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_center(value: str, width: int=80):
         """Centers the value in a field of a given width."""
         pass
@@ -4800,6 +5004,7 @@ code do_center:
 
 code sync_do_first:
   body: |
+    # inject-into: src/jinja2/filters.py
     def sync_do_first(environment: 'Environment', seq: 't.Iterable[V]'):
         """Return the first item of a sequence."""
         pass
@@ -4807,6 +5012,7 @@ code sync_do_first:
 
 code do_last:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_last(environment: 'Environment', seq: 't.Reversible[V]'):
         """Return the last item of a sequence.
     
@@ -4823,6 +5029,7 @@ code do_last:
 
 code do_random:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_random(context: 'Context', seq: 't.Sequence[V]'):
         """Return a random item from the sequence."""
         pass
@@ -4830,6 +5037,7 @@ code do_random:
 
 code do_filesizeformat:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_filesizeformat(value: t.Union[str, float, int], binary: bool=False):
         """Format the value like a 'human-readable' file size (i.e. 13 kB,
         4.1 MB, 102 Bytes, etc).  Per default decimal prefixes are used (Mega,
@@ -4842,6 +5050,7 @@ code do_filesizeformat:
 
 code do_pprint:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_pprint(value: t.Any):
         """Pretty print a variable. Useful for debugging."""
         pass
@@ -4849,6 +5058,7 @@ code do_pprint:
 
 code do_urlize:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_urlize(eval_ctx: 'EvalContext', value: str, trim_url_limit: t.Optional[int]=None, nofollow: bool=False, target: t.Optional[str]=None, rel: t.Optional[str]=None, extra_schemes: t.Optional[t.Iterable[str]]=None):
         """Convert URLs in text into clickable links.
     
@@ -4893,6 +5103,7 @@ code do_urlize:
 
 code do_indent:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_indent(s: str, width: t.Union[int, str]=4, first: bool=False, blank: bool=False):
         """Return a copy of the string with each line indented by 4 spaces. The
         first line and blank lines are not indented by default.
@@ -4915,6 +5126,7 @@ code do_indent:
 
 code do_truncate:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_truncate(env: 'Environment', s: str, length: int=255, killwords: bool=False, end: str='...', leeway: t.Optional[int]=None):
         """Return a truncated copy of the string. The length is specified
         with the first parameter which defaults to ``255``. If the second
@@ -4945,6 +5157,7 @@ code do_truncate:
 
 code do_wordwrap:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_wordwrap(environment: 'Environment', s: str, width: int=79, break_long_words: bool=True, wrapstring: t.Optional[str]=None, break_on_hyphens: bool=True):
         """Wrap a string to the given width. Existing newlines are treated
         as paragraphs to be wrapped separately.
@@ -4973,6 +5186,7 @@ code do_wordwrap:
 
 code do_wordcount:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_wordcount(s: str):
         """Count the words in that string."""
         pass
@@ -4980,6 +5194,7 @@ code do_wordcount:
 
 code do_int:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_int(value: t.Any, default: int=0, base: int=10):
         """Convert the value into an integer. If the
         conversion doesn't work it will return ``0``. You can
@@ -4995,6 +5210,7 @@ code do_int:
 
 code do_float:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_float(value: t.Any, default: float=0.0):
         """Convert the value into a floating point number. If the
         conversion doesn't work it will return ``0.0``. You can
@@ -5006,6 +5222,7 @@ code do_float:
 
 code do_format:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_format(value: str, *args: t.Any, **kwargs: t.Any):
         """Apply the given values to a `printf-style`_ format string, like
         ``string % values``.
@@ -5032,6 +5249,7 @@ code do_format:
 
 code do_trim:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_trim(value: str, chars: t.Optional[str]=None):
         """Strip leading and trailing characters, by default whitespace."""
         pass
@@ -5039,6 +5257,7 @@ code do_trim:
 
 code do_striptags:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_striptags(value: 't.Union[str, HasHTML]'):
         """Strip SGML/XML tags and replace adjacent whitespace by one space."""
         pass
@@ -5046,6 +5265,7 @@ code do_striptags:
 
 code sync_do_slice:
   body: |
+    # inject-into: src/jinja2/filters.py
     def sync_do_slice(value: 't.Collection[V]', slices: int, fill_with: 't.Optional[V]'=None):
         """Slice an iterator and return a list of lists containing
         those items. Useful if you want to create a div containing
@@ -5072,6 +5292,7 @@ code sync_do_slice:
 
 code do_batch:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_batch(value: 't.Iterable[V]', linecount: int, fill_with: 't.Optional[V]'=None):
         """
         A filter that batches items. It works pretty much like `slice`
@@ -5097,6 +5318,7 @@ code do_batch:
 
 code do_round:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_round(value: float, precision: int=0, method: 'te.Literal["common", "ceil", "floor"]'='common'):
         """Round the number to a given precision. The first
         parameter specifies the precision (default is ``0``), the
@@ -5129,6 +5351,7 @@ code do_round:
 
 code sync_do_groupby:
   body: |
+    # inject-into: src/jinja2/filters.py
     def sync_do_groupby(environment: 'Environment', value: 't.Iterable[V]', attribute: t.Union[str, int], default: t.Optional[t.Any]=None, case_sensitive: bool=False):
         """Group a sequence of objects by an attribute using Python's
         :func:`itertools.groupby`. The attribute can use dot notation for
@@ -5193,6 +5416,7 @@ code sync_do_groupby:
 
 code sync_do_sum:
   body: |
+    # inject-into: src/jinja2/filters.py
     def sync_do_sum(environment: 'Environment', iterable: 't.Iterable[V]', attribute: t.Optional[t.Union[str, int]]=None, start: V=0):
         """Returns the sum of a sequence of numbers plus the value of parameter
         'start' (which defaults to 0).  When the sequence is empty it returns
@@ -5214,6 +5438,7 @@ code sync_do_sum:
 
 code sync_do_list:
   body: |
+    # inject-into: src/jinja2/filters.py
     def sync_do_list(value: 't.Iterable[V]'):
         """Convert the value into a list.  If it was a string the returned list
         will be a list of characters.
@@ -5224,6 +5449,7 @@ code sync_do_list:
 
 code do_mark_safe:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_mark_safe(value: str):
         """Mark the value as safe which means that in an environment with automatic
         escaping enabled this variable will not be escaped.
@@ -5234,6 +5460,7 @@ code do_mark_safe:
 
 code do_mark_unsafe:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_mark_unsafe(value: str):
         """Mark a value as unsafe.  This is the reverse operation for :func:`safe`."""
         pass
@@ -5241,6 +5468,7 @@ code do_mark_unsafe:
 
 code do_reverse:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_reverse(value: t.Union[str, t.Iterable[V]]):
         """Reverse the object or return an iterator that iterates over it the other
         way round.
@@ -5251,6 +5479,7 @@ code do_reverse:
 
 code do_attr:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_attr(environment: 'Environment', obj: t.Any, name: str):
         """Get an attribute of an object.  ``foo|attr("bar")`` works like
         ``foo.bar`` just that always an attribute is returned and items are not
@@ -5264,6 +5493,7 @@ code do_attr:
 
 code sync_do_map:
   body: |
+    # inject-into: src/jinja2/filters.py
     def sync_do_map(context: 'Context', value: t.Iterable[t.Any], *args: t.Any, **kwargs: t.Any):
         """Applies a filter on a sequence of objects or looks up an attribute.
         This is useful when dealing with lists of objects but you are really
@@ -5310,6 +5540,7 @@ code sync_do_map:
 
 code sync_do_select:
   body: |
+    # inject-into: src/jinja2/filters.py
     def sync_do_select(context: 'Context', value: 't.Iterable[V]', *args: t.Any, **kwargs: t.Any):
         """Filters a sequence of objects by applying a test to each object,
         and only selecting the objects with the test succeeding.
@@ -5341,6 +5572,7 @@ code sync_do_select:
 
 code sync_do_reject:
   body: |
+    # inject-into: src/jinja2/filters.py
     def sync_do_reject(context: 'Context', value: 't.Iterable[V]', *args: t.Any, **kwargs: t.Any):
         """Filters a sequence of objects by applying a test to each object,
         and rejecting the objects with the test succeeding.
@@ -5367,6 +5599,7 @@ code sync_do_reject:
 
 code sync_do_selectattr:
   body: |
+    # inject-into: src/jinja2/filters.py
     def sync_do_selectattr(context: 'Context', value: 't.Iterable[V]', *args: t.Any, **kwargs: t.Any):
         """Filters a sequence of objects by applying a test to the specified
         attribute of each object, and only selecting the objects with the
@@ -5397,6 +5630,7 @@ code sync_do_selectattr:
 
 code sync_do_rejectattr:
   body: |
+    # inject-into: src/jinja2/filters.py
     def sync_do_rejectattr(context: 'Context', value: 't.Iterable[V]', *args: t.Any, **kwargs: t.Any):
         """Filters a sequence of objects by applying a test to the specified
         attribute of each object, and rejecting the objects with the test
@@ -5425,6 +5659,7 @@ code sync_do_rejectattr:
 
 code do_tojson:
   body: |
+    # inject-into: src/jinja2/filters.py
     def do_tojson(eval_ctx: 'EvalContext', value: t.Any, indent: t.Optional[int]=None):
         """Serialize an object to a string of JSON, and mark it safe to
         render in HTML. This filter is only for use in HTML documents.
@@ -5444,8 +5679,108 @@ code do_tojson:
         pass
 
 
+code do_first:
+  body: |
+    # inject-into: src/jinja2/filters.py
+    # dangling-name: append-if-missing
+    def do_first(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code do_groupby:
+  body: |
+    # inject-into: src/jinja2/filters.py
+    # dangling-name: append-if-missing
+    def do_groupby(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code do_join:
+  body: |
+    # inject-into: src/jinja2/filters.py
+    # dangling-name: append-if-missing
+    def do_join(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code do_list:
+  body: |
+    # inject-into: src/jinja2/filters.py
+    # dangling-name: append-if-missing
+    def do_list(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code do_map:
+  body: |
+    # inject-into: src/jinja2/filters.py
+    # dangling-name: append-if-missing
+    def do_map(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code do_reject:
+  body: |
+    # inject-into: src/jinja2/filters.py
+    # dangling-name: append-if-missing
+    def do_reject(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code do_rejectattr:
+  body: |
+    # inject-into: src/jinja2/filters.py
+    # dangling-name: append-if-missing
+    def do_rejectattr(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code do_select:
+  body: |
+    # inject-into: src/jinja2/filters.py
+    # dangling-name: append-if-missing
+    def do_select(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code do_selectattr:
+  body: |
+    # inject-into: src/jinja2/filters.py
+    # dangling-name: append-if-missing
+    def do_selectattr(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code do_slice:
+  body: |
+    # inject-into: src/jinja2/filters.py
+    # dangling-name: append-if-missing
+    def do_slice(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code do_sum:
+  body: |
+    # inject-into: src/jinja2/filters.py
+    # dangling-name: append-if-missing
+    def do_sum(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code FrameSymbolVisitor__visit_Name:
   body: |
+    # inject-into: src/jinja2/idtracking.py
     def visit_Name(self, node: nodes.Name, store_as_param: bool=False, **kwargs: t.Any):
         """All assignments to names go through this function."""
         pass
@@ -5453,6 +5788,7 @@ code FrameSymbolVisitor__visit_Name:
 
 code FrameSymbolVisitor__visit_Assign:
   body: |
+    # inject-into: src/jinja2/idtracking.py
     def visit_Assign(self, node: nodes.Assign, **kwargs: t.Any):
         """Visit assignments in the correct order."""
         pass
@@ -5460,6 +5796,7 @@ code FrameSymbolVisitor__visit_Assign:
 
 code FrameSymbolVisitor__visit_For:
   body: |
+    # inject-into: src/jinja2/idtracking.py
     def visit_For(self, node: nodes.For, **kwargs: t.Any):
         """Visiting stops at for blocks.  However the block sequence
             is visited as part of the outer scope.
@@ -5470,6 +5807,7 @@ code FrameSymbolVisitor__visit_For:
 
 code FrameSymbolVisitor__visit_AssignBlock:
   body: |
+    # inject-into: src/jinja2/idtracking.py
     def visit_AssignBlock(self, node: nodes.AssignBlock, **kwargs: t.Any):
         """Stop visiting at block assigns."""
         pass
@@ -5477,6 +5815,7 @@ code FrameSymbolVisitor__visit_AssignBlock:
 
 code FrameSymbolVisitor__visit_Scope:
   body: |
+    # inject-into: src/jinja2/idtracking.py
     def visit_Scope(self, node: nodes.Scope, **kwargs: t.Any):
         """Stop visiting at scopes."""
         pass
@@ -5484,6 +5823,7 @@ code FrameSymbolVisitor__visit_Scope:
 
 code FrameSymbolVisitor__visit_Block:
   body: |
+    # inject-into: src/jinja2/idtracking.py
     def visit_Block(self, node: nodes.Block, **kwargs: t.Any):
         """Stop visiting at blocks."""
         pass
@@ -5491,13 +5831,24 @@ code FrameSymbolVisitor__visit_Block:
 
 code FrameSymbolVisitor__visit_OverlayScope:
   body: |
+    # inject-into: src/jinja2/idtracking.py
     def visit_OverlayScope(self, node: nodes.OverlayScope, **kwargs: t.Any):
         """Do not visit into overlay scopes."""
         pass
 
 
+code _simple_visit:
+  body: |
+    # inject-into: src/jinja2/idtracking.py
+    # dangling-name: append-if-missing
+    def _simple_visit(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code split_template_path:
   body: |
+    # inject-into: src/jinja2/loaders.py
     def split_template_path(template: str):
         """Split a path into segments and perform a sanity check.  If it detects
         '..' in the path it will raise a `TemplateNotFound` error.
@@ -5508,6 +5859,7 @@ code split_template_path:
 
 code BaseLoader__get_source:
   body: |
+    # inject-into: src/jinja2/loaders.py
     def get_source(self, environment: 'Environment', template: str):
         """Get the template source, filename and reload helper for a template.
             It's passed the environment and template name and has to return a
@@ -5532,6 +5884,7 @@ code BaseLoader__get_source:
 
 code BaseLoader__list_templates:
   body: |
+    # inject-into: src/jinja2/loaders.py
     def list_templates(self):
         """Iterates over all templates.  If the loader does not support that
             it should raise a :exc:`TypeError` which is the default behavior.
@@ -5542,6 +5895,7 @@ code BaseLoader__list_templates:
 
 code BaseLoader__load:
   body: |
+    # inject-into: src/jinja2/loaders.py
     def load(self, environment: 'Environment', name: str, globals: t.Optional[t.MutableMapping[str, t.Any]]=None):
         """Loads a template.  This method looks up the template in the cache
             or loads one by calling :meth:`get_source`.  Subclasses should not
@@ -5555,6 +5909,7 @@ code BaseLoader__load:
 
 code TrackingCodeGenerator__write:
   body: |
+    # inject-into: src/jinja2/meta.py
     def write(self, x: str):
         """Don't write."""
         pass
@@ -5562,6 +5917,7 @@ code TrackingCodeGenerator__write:
 
 code TrackingCodeGenerator__enter_frame:
   body: |
+    # inject-into: src/jinja2/meta.py
     def enter_frame(self, frame: Frame):
         """Remember all undeclared identifiers."""
         pass
@@ -5569,6 +5925,7 @@ code TrackingCodeGenerator__enter_frame:
 
 code find_undeclared_variables:
   body: |
+    # inject-into: src/jinja2/meta.py
     def find_undeclared_variables(ast: nodes.Template):
         """Returns a set of all variables in the AST that will be looked up from
         the context at runtime.  Because at compile time it's not known which
@@ -5594,6 +5951,7 @@ code find_undeclared_variables:
 
 code find_referenced_templates:
   body: |
+    # inject-into: src/jinja2/meta.py
     def find_referenced_templates(ast: nodes.Template):
         """Finds all the referenced templates from the AST.  This will return an
         iterator over all the hardcoded template extensions, inclusions and
@@ -5615,6 +5973,7 @@ code find_referenced_templates:
 
 code native_concat:
   body: |
+    # inject-into: src/jinja2/nativetypes.py
     def native_concat(values: t.Iterable[t.Any]):
         """Return a native Python type from the list of compiled nodes. If
         the result is a single node, its value is returned. Otherwise, the
@@ -5630,6 +5989,7 @@ code native_concat:
 
 code NativeTemplate__render:
   body: |
+    # inject-into: src/jinja2/nativetypes.py
     def render(self, *args: t.Any, **kwargs: t.Any):
         """Render the template to produce a native Python type. If the
             result is a single node, its value is returned. Otherwise, the
@@ -5643,6 +6003,7 @@ code NativeTemplate__render:
 
 code optimize:
   body: |
+    # inject-into: src/jinja2/optimizer.py
     def optimize(node: nodes.Node, environment: 'Environment'):
         """The context hint can be used to perform an static optimization
         based on the context given.
@@ -5652,6 +6013,7 @@ code optimize:
 
 code Parser__fail:
   body: |
+    # inject-into: src/jinja2/parser.py
     def fail(self, msg: str, lineno: t.Optional[int]=None, exc: t.Type[TemplateSyntaxError]=TemplateSyntaxError):
         """Convenience method that raises `exc` with the message, passed
             line number or last line number as well as the current name and
@@ -5663,6 +6025,7 @@ code Parser__fail:
 
 code Parser__fail_unknown_tag:
   body: |
+    # inject-into: src/jinja2/parser.py
     def fail_unknown_tag(self, name: str, lineno: t.Optional[int]=None):
         """Called if the parser encounters an unknown tag.  Tries to fail
             with a human readable error message that could help to identify
@@ -5674,6 +6037,7 @@ code Parser__fail_unknown_tag:
 
 code Parser__fail_eof:
   body: |
+    # inject-into: src/jinja2/parser.py
     def fail_eof(self, end_tokens: t.Optional[t.Tuple[str, ...]]=None, lineno: t.Optional[int]=None):
         """Like fail_unknown_tag but for end of template situations."""
         pass
@@ -5681,6 +6045,7 @@ code Parser__fail_eof:
 
 code Parser__is_tuple_end:
   body: |
+    # inject-into: src/jinja2/parser.py
     def is_tuple_end(self, extra_end_rules: t.Optional[t.Tuple[str, ...]]=None):
         """Are we at the end of a tuple?"""
         pass
@@ -5688,6 +6053,7 @@ code Parser__is_tuple_end:
 
 code Parser__free_identifier:
   body: |
+    # inject-into: src/jinja2/parser.py
     def free_identifier(self, lineno: t.Optional[int]=None):
         """Return a new free identifier as :class:`~jinja2.nodes.InternalName`."""
         pass
@@ -5695,6 +6061,7 @@ code Parser__free_identifier:
 
 code Parser__parse_statement:
   body: |
+    # inject-into: src/jinja2/parser.py
     def parse_statement(self):
         """Parse a single statement."""
         pass
@@ -5702,6 +6069,7 @@ code Parser__parse_statement:
 
 code Parser__parse_statements:
   body: |
+    # inject-into: src/jinja2/parser.py
     def parse_statements(self, end_tokens: t.Tuple[str, ...], drop_needle: bool=False):
         """Parse multiple statements into a list until one of the end tokens
             is reached.  This is used to parse the body of statements as it also
@@ -5718,6 +6086,7 @@ code Parser__parse_statements:
 
 code Parser__parse_set:
   body: |
+    # inject-into: src/jinja2/parser.py
     def parse_set(self):
         """Parse an assign statement."""
         pass
@@ -5725,6 +6094,7 @@ code Parser__parse_set:
 
 code Parser__parse_for:
   body: |
+    # inject-into: src/jinja2/parser.py
     def parse_for(self):
         """Parse a for loop."""
         pass
@@ -5732,6 +6102,7 @@ code Parser__parse_for:
 
 code Parser__parse_if:
   body: |
+    # inject-into: src/jinja2/parser.py
     def parse_if(self):
         """Parse an if construct."""
         pass
@@ -5739,6 +6110,7 @@ code Parser__parse_if:
 
 code Parser__parse_assign_target:
   body: |
+    # inject-into: src/jinja2/parser.py
     def parse_assign_target(self, with_tuple: bool=True, name_only: bool=False, extra_end_rules: t.Optional[t.Tuple[str, ...]]=None, with_namespace: bool=False):
         """Parse an assignment target.  As Jinja allows assignments to
             tuples, this function can parse all allowed assignment targets.  Per
@@ -5754,6 +6126,7 @@ code Parser__parse_assign_target:
 
 code Parser__parse_expression:
   body: |
+    # inject-into: src/jinja2/parser.py
     def parse_expression(self, with_condexpr: bool=True):
         """Parse an expression.  Per default all expressions are parsed, if
             the optional `with_condexpr` parameter is set to `False` conditional
@@ -5765,6 +6138,7 @@ code Parser__parse_expression:
 
 code Parser__parse_tuple:
   body: |
+    # inject-into: src/jinja2/parser.py
     def parse_tuple(self, simplified: bool=False, with_condexpr: bool=True, extra_end_rules: t.Optional[t.Tuple[str, ...]]=None, explicit_parentheses: bool=False):
         """Works like `parse_expression` but if multiple expressions are
             delimited by a comma a :class:`~jinja2.nodes.Tuple` node is created.
@@ -5790,6 +6164,7 @@ code Parser__parse_tuple:
 
 code Parser__parse:
   body: |
+    # inject-into: src/jinja2/parser.py
     def parse(self):
         """Parse the whole template into a `Template` node."""
         pass
@@ -5797,6 +6172,7 @@ code Parser__parse:
 
 code identity:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def identity(x: V):
         """Returns its argument. Useful for certain things in the
         environment.
@@ -5807,6 +6183,7 @@ code identity:
 
 code markup_join:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def markup_join(seq: t.Iterable[t.Any]):
         """Concatenation that escapes if necessary and converts to string."""
         pass
@@ -5814,6 +6191,7 @@ code markup_join:
 
 code str_join:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def str_join(seq: t.Iterable[t.Any]):
         """Simple args to string conversion and concatenation."""
         pass
@@ -5821,6 +6199,7 @@ code str_join:
 
 code new_context:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def new_context(environment: 'Environment', template_name: t.Optional[str], blocks: t.Dict[str, t.Callable[['Context'], t.Iterator[str]]], vars: t.Optional[t.Dict[str, t.Any]]=None, shared: bool=False, globals: t.Optional[t.MutableMapping[str, t.Any]]=None, locals: t.Optional[t.Mapping[str, t.Any]]=None):
         """Internal helper for context creation."""
         pass
@@ -5828,6 +6207,7 @@ code new_context:
 
 code Context__super:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def super(self, name: str, current: t.Callable[['Context'], t.Iterator[str]]):
         """Render a parent block."""
         pass
@@ -5835,6 +6215,7 @@ code Context__super:
 
 code Context__get:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def get(self, key: str, default: t.Any=None):
         """Look up a variable by name, or return a default if the key is
             not found.
@@ -5848,6 +6229,7 @@ code Context__get:
 
 code Context__resolve:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def resolve(self, key: str):
         """Look up a variable by name, or return an :class:`Undefined`
             object if the key is not found.
@@ -5864,6 +6246,7 @@ code Context__resolve:
 
 code Context__resolve_or_missing:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def resolve_or_missing(self, key: str):
         """Look up a variable by name, or return a ``missing`` sentinel
             if the key is not found.
@@ -5880,6 +6263,7 @@ code Context__resolve_or_missing:
 
 code Context__get_exported:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def get_exported(self):
         """Get a new dict with the exported variables."""
         pass
@@ -5887,6 +6271,7 @@ code Context__get_exported:
 
 code Context__get_all:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def get_all(self):
         """Return the complete context as dict including the exported
             variables.  For optimizations reasons this might not return an
@@ -5898,6 +6283,7 @@ code Context__get_all:
 
 code Context__call:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def call(__self, __obj: t.Callable[..., t.Any], *args: t.Any, **kwargs: t.Any):
         """Call the callable with the arguments and keyword arguments
             provided but inject the active context or environment as first
@@ -5910,6 +6296,7 @@ code Context__call:
 
 code Context__derived:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def derived(self, locals: t.Optional[t.Dict[str, t.Any]]=None):
         """Internal helper function to create a derived context.  This is
             used in situations where the system needs a new context in the same
@@ -5921,6 +6308,7 @@ code Context__derived:
 
 code BlockReference__super:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def super(self):
         """Super the block."""
         pass
@@ -5928,6 +6316,7 @@ code BlockReference__super:
 
 code LoopContext__length:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def length(self):
         """Length of the iterable.
     
@@ -5940,6 +6329,7 @@ code LoopContext__length:
 
 code LoopContext__depth:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def depth(self):
         """How many levels deep a recursive loop currently is, starting at 1."""
         pass
@@ -5947,6 +6337,7 @@ code LoopContext__depth:
 
 code LoopContext__index:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def index(self):
         """Current iteration of the loop, starting at 1."""
         pass
@@ -5954,6 +6345,7 @@ code LoopContext__index:
 
 code LoopContext__revindex0:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def revindex0(self):
         """Number of iterations from the end of the loop, ending at 0.
     
@@ -5965,6 +6357,7 @@ code LoopContext__revindex0:
 
 code LoopContext__revindex:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def revindex(self):
         """Number of iterations from the end of the loop, ending at 1.
     
@@ -5976,6 +6369,7 @@ code LoopContext__revindex:
 
 code LoopContext__first:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def first(self):
         """Whether this is the first iteration of the loop."""
         pass
@@ -5983,6 +6377,7 @@ code LoopContext__first:
 
 code LoopContext___peek_next:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def _peek_next(self):
         """Return the next element in the iterable, or :data:`missing`
             if the iterable is exhausted. Only peeks one item ahead, caching
@@ -5995,6 +6390,7 @@ code LoopContext___peek_next:
 
 code LoopContext__last:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def last(self):
         """Whether this is the last iteration of the loop.
     
@@ -6008,6 +6404,7 @@ code LoopContext__last:
 
 code LoopContext__previtem:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def previtem(self):
         """The item in the previous iteration. Undefined during the
             first iteration.
@@ -6018,6 +6415,7 @@ code LoopContext__previtem:
 
 code LoopContext__nextitem:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def nextitem(self):
         """The item in the next iteration. Undefined during the last
             iteration.
@@ -6032,6 +6430,7 @@ code LoopContext__nextitem:
 
 code LoopContext__cycle:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def cycle(self, *args: V):
         """Return a value from the given args, cycling through based on
             the current :attr:`index0`.
@@ -6044,6 +6443,7 @@ code LoopContext__cycle:
 
 code LoopContext__changed:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def changed(self, *value: t.Any):
         """Return ``True`` if previously called with a different value
             (including when called for the first time).
@@ -6056,6 +6456,7 @@ code LoopContext__changed:
 
 code Undefined___undefined_message:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def _undefined_message(self):
         """Build a message about the undefined value based on how it was
             accessed.
@@ -6066,6 +6467,7 @@ code Undefined___undefined_message:
 
 code Undefined___fail_with_undefined_error:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def _fail_with_undefined_error(self, *args: t.Any, **kwargs: t.Any):
         """Raise an :exc:`UndefinedError` when operations are performed
             on the undefined value.
@@ -6076,6 +6478,7 @@ code Undefined___fail_with_undefined_error:
 
 code make_logging_undefined:
   body: |
+    # inject-into: src/jinja2/runtime.py
     def make_logging_undefined(logger: t.Optional['logging.Logger']=None, base: t.Type[Undefined]=Undefined):
         """Given a logger object this returns a new undefined class that will
         log certain failures.  It will log iterations and printing.  If no
@@ -6100,8 +6503,27 @@ code make_logging_undefined:
         pass
 
 
+code _dict_method_all:
+  body: |
+    # inject-into: src/jinja2/runtime.py
+    # dangling-name: append-if-missing
+    def _dict_method_all(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code _fail_with_undefined_error:
+  body: |
+    # inject-into: src/jinja2/runtime.py
+    # dangling-name: append-if-missing
+    def _fail_with_undefined_error(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code safe_range:
   body: |
+    # inject-into: src/jinja2/sandbox.py
     def safe_range(*args: int):
         """A range that can't generate ranges with a length of more than
         MAX_RANGE items.
@@ -6112,6 +6534,7 @@ code safe_range:
 
 code unsafe:
   body: |
+    # inject-into: src/jinja2/sandbox.py
     def unsafe(f: F):
         """Marks a function or method as unsafe.
     
@@ -6127,6 +6550,7 @@ code unsafe:
 
 code is_internal_attribute:
   body: |
+    # inject-into: src/jinja2/sandbox.py
     def is_internal_attribute(obj: t.Any, attr: str):
         """Test if the attribute given is an internal python attribute.  For
         example this function returns `True` for the `func_code` attribute of
@@ -6145,6 +6569,7 @@ code is_internal_attribute:
 
 code modifies_known_mutable:
   body: |
+    # inject-into: src/jinja2/sandbox.py
     def modifies_known_mutable(obj: t.Any, attr: str):
         """This function checks if an attribute on a builtin mutable object
         (list, dict, set or deque) or the corresponding ABCs would modify it
@@ -6170,6 +6595,7 @@ code modifies_known_mutable:
 
 code SandboxedEnvironment__is_safe_attribute:
   body: |
+    # inject-into: src/jinja2/sandbox.py
     def is_safe_attribute(self, obj: t.Any, attr: str, value: t.Any):
         """The sandboxed environment will call this method to check if the
             attribute of an object is safe to access.  Per default all attributes
@@ -6183,6 +6609,7 @@ code SandboxedEnvironment__is_safe_attribute:
 
 code SandboxedEnvironment__is_safe_callable:
   body: |
+    # inject-into: src/jinja2/sandbox.py
     def is_safe_callable(self, obj: t.Any):
         """Check if an object is safely callable. By default callables
             are considered safe unless decorated with :func:`unsafe`.
@@ -6196,6 +6623,7 @@ code SandboxedEnvironment__is_safe_callable:
 
 code SandboxedEnvironment__call_binop:
   body: |
+    # inject-into: src/jinja2/sandbox.py
     def call_binop(self, context: Context, operator: str, left: t.Any, right: t.Any):
         """For intercepted binary operator calls (:meth:`intercepted_binops`)
             this function is executed instead of the builtin operator.  This can
@@ -6209,6 +6637,7 @@ code SandboxedEnvironment__call_binop:
 
 code SandboxedEnvironment__call_unop:
   body: |
+    # inject-into: src/jinja2/sandbox.py
     def call_unop(self, context: Context, operator: str, arg: t.Any):
         """For intercepted unary operator calls (:meth:`intercepted_unops`)
             this function is executed instead of the builtin operator.  This can
@@ -6222,6 +6651,7 @@ code SandboxedEnvironment__call_unop:
 
 code SandboxedEnvironment__getitem:
   body: |
+    # inject-into: src/jinja2/sandbox.py
     def getitem(self, obj: t.Any, argument: t.Union[str, t.Any]):
         """Subscribe an object from sandboxed code."""
         pass
@@ -6229,6 +6659,7 @@ code SandboxedEnvironment__getitem:
 
 code SandboxedEnvironment__getattr:
   body: |
+    # inject-into: src/jinja2/sandbox.py
     def getattr(self, obj: t.Any, attribute: str):
         """Subscribe an object from sandboxed code and prefer the
             attribute.  The attribute passed *must* be a bytestring.
@@ -6239,6 +6670,7 @@ code SandboxedEnvironment__getattr:
 
 code SandboxedEnvironment__unsafe_undefined:
   body: |
+    # inject-into: src/jinja2/sandbox.py
     def unsafe_undefined(self, obj: t.Any, attribute: str):
         """Return an undefined object for unsafe attributes."""
         pass
@@ -6246,6 +6678,7 @@ code SandboxedEnvironment__unsafe_undefined:
 
 code SandboxedEnvironment__format_string:
   body: |
+    # inject-into: src/jinja2/sandbox.py
     def format_string(self, s: str, args: t.Tuple[t.Any, ...], kwargs: t.Dict[str, t.Any], format_func: t.Optional[t.Callable[..., t.Any]]=None):
         """If a format call is detected, then this is routed through this
             method so that our safety sandbox can be used for it.
@@ -6256,6 +6689,7 @@ code SandboxedEnvironment__format_string:
 
 code SandboxedEnvironment__call:
   body: |
+    # inject-into: src/jinja2/sandbox.py
     def call(__self, __context: Context, __obj: t.Any, *args: t.Any, **kwargs: t.Any):
         """Call an object from sandboxed code."""
         pass
@@ -6263,6 +6697,7 @@ code SandboxedEnvironment__call:
 
 code test_odd:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_odd(value: int):
         """Return true if the variable is odd."""
         pass
@@ -6270,6 +6705,7 @@ code test_odd:
 
 code test_even:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_even(value: int):
         """Return true if the variable is even."""
         pass
@@ -6277,6 +6713,7 @@ code test_even:
 
 code test_divisibleby:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_divisibleby(value: int, num: int):
         """Check if a variable is divisible by a number."""
         pass
@@ -6284,6 +6721,7 @@ code test_divisibleby:
 
 code test_defined:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_defined(value: t.Any):
         """Return true if the variable is defined:
     
@@ -6304,6 +6742,7 @@ code test_defined:
 
 code test_undefined:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_undefined(value: t.Any):
         """Like :func:`defined` but the other way round."""
         pass
@@ -6311,6 +6750,7 @@ code test_undefined:
 
 code test_filter:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_filter(env: 'Environment', value: str):
         """Check if a filter exists by name. Useful if a filter may be
         optionally available.
@@ -6331,6 +6771,7 @@ code test_filter:
 
 code test_test:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_test(env: 'Environment', value: str):
         """Check if a test exists by name. Useful if a test may be
         optionally available.
@@ -6355,6 +6796,7 @@ code test_test:
 
 code test_none:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_none(value: t.Any):
         """Return true if the variable is none."""
         pass
@@ -6362,6 +6804,7 @@ code test_none:
 
 code test_boolean:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_boolean(value: t.Any):
         """Return true if the object is a boolean value.
     
@@ -6373,6 +6816,7 @@ code test_boolean:
 
 code test_false:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_false(value: t.Any):
         """Return true if the object is False.
     
@@ -6384,6 +6828,7 @@ code test_false:
 
 code test_true:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_true(value: t.Any):
         """Return true if the object is True.
     
@@ -6395,6 +6840,7 @@ code test_true:
 
 code test_integer:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_integer(value: t.Any):
         """Return true if the object is an integer.
     
@@ -6406,6 +6852,7 @@ code test_integer:
 
 code test_float:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_float(value: t.Any):
         """Return true if the object is a float.
     
@@ -6417,6 +6864,7 @@ code test_float:
 
 code test_lower:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_lower(value: str):
         """Return true if the variable is lowercased."""
         pass
@@ -6424,6 +6872,7 @@ code test_lower:
 
 code test_upper:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_upper(value: str):
         """Return true if the variable is uppercased."""
         pass
@@ -6431,6 +6880,7 @@ code test_upper:
 
 code test_string:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_string(value: t.Any):
         """Return true if the object is a string."""
         pass
@@ -6438,6 +6888,7 @@ code test_string:
 
 code test_mapping:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_mapping(value: t.Any):
         """Return true if the object is a mapping (dict etc.).
     
@@ -6449,6 +6900,7 @@ code test_mapping:
 
 code test_number:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_number(value: t.Any):
         """Return true if the variable is a number."""
         pass
@@ -6456,6 +6908,7 @@ code test_number:
 
 code test_sequence:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_sequence(value: t.Any):
         """Return true if the variable is a sequence. Sequences are variables
         that are iterable.
@@ -6466,6 +6919,7 @@ code test_sequence:
 
 code test_sameas:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_sameas(value: t.Any, other: t.Any):
         """Check if an object points to the same memory address than another
         object:
@@ -6482,6 +6936,7 @@ code test_sameas:
 
 code test_iterable:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_iterable(value: t.Any):
         """Check if it's possible to iterate over an object."""
         pass
@@ -6489,6 +6944,7 @@ code test_iterable:
 
 code test_escaped:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_escaped(value: t.Any):
         """Check if the value is escaped."""
         pass
@@ -6496,6 +6952,7 @@ code test_escaped:
 
 code test_in:
   body: |
+    # inject-into: src/jinja2/tests.py
     def test_in(value: t.Any, seq: t.Container[t.Any]):
         """Check if value is in seq.
     
@@ -6507,6 +6964,7 @@ code test_in:
 
 code pass_context:
   body: |
+    # inject-into: src/jinja2/utils.py
     def pass_context(f: F):
         """Pass the :class:`~jinja2.runtime.Context` as the first argument
         to the decorated function when called while rendering a template.
@@ -6526,6 +6984,7 @@ code pass_context:
 
 code pass_eval_context:
   body: |
+    # inject-into: src/jinja2/utils.py
     def pass_eval_context(f: F):
         """Pass the :class:`~jinja2.nodes.EvalContext` as the first argument
         to the decorated function when called while rendering a template.
@@ -6545,6 +7004,7 @@ code pass_eval_context:
 
 code pass_environment:
   body: |
+    # inject-into: src/jinja2/utils.py
     def pass_environment(f: F):
         """Pass the :class:`~jinja2.Environment` as the first argument to
         the decorated function when called while rendering a template.
@@ -6560,6 +7020,7 @@ code pass_environment:
 
 code internalcode:
   body: |
+    # inject-into: src/jinja2/utils.py
     def internalcode(f: F):
         """Marks the function as internally used"""
         pass
@@ -6567,6 +7028,7 @@ code internalcode:
 
 code is_undefined:
   body: |
+    # inject-into: src/jinja2/utils.py
     def is_undefined(obj: t.Any):
         """Check if the object passed is undefined.  This does nothing more than
         performing an instance check against :class:`Undefined` but looks nicer.
@@ -6585,6 +7047,7 @@ code is_undefined:
 
 code consume:
   body: |
+    # inject-into: src/jinja2/utils.py
     def consume(iterable: t.Iterable[t.Any]):
         """Consumes an iterable without doing anything with it."""
         pass
@@ -6592,6 +7055,7 @@ code consume:
 
 code clear_caches:
   body: |
+    # inject-into: src/jinja2/utils.py
     def clear_caches():
         """Jinja keeps internal caches for environments and lexers.  These are
         used so that Jinja doesn't have to recreate environments and lexers all
@@ -6604,6 +7068,7 @@ code clear_caches:
 
 code import_string:
   body: |
+    # inject-into: src/jinja2/utils.py
     def import_string(import_name: str, silent: bool=False):
         """Imports an object based on a string.  This is useful if you want to
         use import paths as endpoints or something similar.  An import path can
@@ -6621,6 +7086,7 @@ code import_string:
 
 code open_if_exists:
   body: |
+    # inject-into: src/jinja2/utils.py
     def open_if_exists(filename: str, mode: str='rb'):
         """Returns a file descriptor for the filename if that file exists,
         otherwise ``None``.
@@ -6631,6 +7097,7 @@ code open_if_exists:
 
 code object_type_repr:
   body: |
+    # inject-into: src/jinja2/utils.py
     def object_type_repr(obj: t.Any):
         """Returns the name of the object's type.  For some recognized
         singletons the name of the object is returned instead. (For
@@ -6642,6 +7109,7 @@ code object_type_repr:
 
 code pformat:
   body: |
+    # inject-into: src/jinja2/utils.py
     def pformat(obj: t.Any):
         """Format an object using :func:`pprint.pformat`."""
         pass
@@ -6649,6 +7117,7 @@ code pformat:
 
 code urlize:
   body: |
+    # inject-into: src/jinja2/utils.py
     def urlize(text: str, trim_url_limit: t.Optional[int]=None, rel: t.Optional[str]=None, target: t.Optional[str]=None, extra_schemes: t.Optional[t.Iterable[str]]=None):
         """Convert URLs in text into clickable links.
     
@@ -6687,6 +7156,7 @@ code urlize:
 
 code generate_lorem_ipsum:
   body: |
+    # inject-into: src/jinja2/utils.py
     def generate_lorem_ipsum(n: int=5, html: bool=True, min: int=20, max: int=100):
         """Generate some lorem ipsum for the template."""
         pass
@@ -6694,6 +7164,7 @@ code generate_lorem_ipsum:
 
 code url_quote:
   body: |
+    # inject-into: src/jinja2/utils.py
     def url_quote(obj: t.Any, charset: str='utf-8', for_qs: bool=False):
         """Quote a string for use in a URL using the given charset.
     
@@ -6708,6 +7179,7 @@ code url_quote:
 
 code LRUCache__copy:
   body: |
+    # inject-into: src/jinja2/utils.py
     def copy(self):
         """Return a shallow copy of the instance."""
         pass
@@ -6715,6 +7187,7 @@ code LRUCache__copy:
 
 code LRUCache__get:
   body: |
+    # inject-into: src/jinja2/utils.py
     def get(self, key: t.Any, default: t.Any=None):
         """Return an item from the cache dict or `default`"""
         pass
@@ -6722,6 +7195,7 @@ code LRUCache__get:
 
 code LRUCache__setdefault:
   body: |
+    # inject-into: src/jinja2/utils.py
     def setdefault(self, key: t.Any, default: t.Any=None):
         """Set `default` if the key is not in the cache otherwise
             leave unchanged. Return the value of this key.
@@ -6732,6 +7206,7 @@ code LRUCache__setdefault:
 
 code LRUCache__clear:
   body: |
+    # inject-into: src/jinja2/utils.py
     def clear(self):
         """Clear the cache."""
         pass
@@ -6739,6 +7214,7 @@ code LRUCache__clear:
 
 code LRUCache__items:
   body: |
+    # inject-into: src/jinja2/utils.py
     def items(self):
         """Return a list of items."""
         pass
@@ -6746,6 +7222,7 @@ code LRUCache__items:
 
 code LRUCache__values:
   body: |
+    # inject-into: src/jinja2/utils.py
     def values(self):
         """Return a list of all values."""
         pass
@@ -6753,6 +7230,7 @@ code LRUCache__values:
 
 code LRUCache__keys:
   body: |
+    # inject-into: src/jinja2/utils.py
     def keys(self):
         """Return a list of all keys ordered by most recent usage."""
         pass
@@ -6760,6 +7238,7 @@ code LRUCache__keys:
 
 code select_autoescape:
   body: |
+    # inject-into: src/jinja2/utils.py
     def select_autoescape(enabled_extensions: t.Collection[str]=('html', 'htm', 'xml'), disabled_extensions: t.Collection[str]=(), default_for_string: bool=True, default: bool=False):
         """Intelligently sets the initial value of autoescaping based on the
         filename of the template.  This is the recommended way to configure
@@ -6801,6 +7280,7 @@ code select_autoescape:
 
 code htmlsafe_json_dumps:
   body: |
+    # inject-into: src/jinja2/utils.py
     def htmlsafe_json_dumps(obj: t.Any, dumps: t.Optional[t.Callable[..., str]]=None, **kwargs: t.Any):
         """Serialize an object to a string of JSON with :func:`json.dumps`,
         then replace HTML-unsafe characters with Unicode escapes and mark
@@ -6833,6 +7313,7 @@ code htmlsafe_json_dumps:
 
 code Cycler__reset:
   body: |
+    # inject-into: src/jinja2/utils.py
     def reset(self):
         """Resets the current item to the first item."""
         pass
@@ -6840,6 +7321,7 @@ code Cycler__reset:
 
 code Cycler__current:
   body: |
+    # inject-into: src/jinja2/utils.py
     def current(self):
         """Return the current item. Equivalent to the item that will be
             returned next time :meth:`next` is called.
@@ -6850,6 +7332,7 @@ code Cycler__current:
 
 code Cycler__next:
   body: |
+    # inject-into: src/jinja2/utils.py
     def next(self):
         """Return the current item, then advance :attr:`current` to the
             next item.
@@ -6858,8 +7341,18 @@ code Cycler__next:
         pass
 
 
+code copy:
+  body: |
+    # inject-into: src/jinja2/utils.py
+    # dangling-name: append-if-missing
+    def copy(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code NodeVisitor__get_visitor:
   body: |
+    # inject-into: src/jinja2/visitor.py
     def get_visitor(self, node: Node):
         """Return the visitor function for this node or `None` if no visitor
             exists for this node.  In that case the generic visit function is
@@ -6871,6 +7364,7 @@ code NodeVisitor__get_visitor:
 
 code NodeVisitor__visit:
   body: |
+    # inject-into: src/jinja2/visitor.py
     def visit(self, node: Node, *args: t.Any, **kwargs: t.Any):
         """Visit a node."""
         pass
@@ -6878,6 +7372,7 @@ code NodeVisitor__visit:
 
 code NodeVisitor__generic_visit:
   body: |
+    # inject-into: src/jinja2/visitor.py
     def generic_visit(self, node: Node, *args: t.Any, **kwargs: t.Any):
         """Called if no explicit visitor function exists for a node."""
         pass
@@ -6885,9 +7380,46 @@ code NodeVisitor__generic_visit:
 
 code NodeTransformer__visit_list:
   body: |
+    # inject-into: src/jinja2/visitor.py
     def visit_list(self, node: Node, *args: t.Any, **kwargs: t.Any):
         """As transformers may return lists in some places this method
             can be used to enforce a list as return value.
             
         """
+        pass
+
+
+code async_variant:
+  body: |
+    # inject-into: src/jinja2/async_utils.py
+    # dangling-name: append-if-missing
+    def async_variant(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code auto_aiter:
+  body: |
+    # inject-into: src/jinja2/async_utils.py
+    # dangling-name: append-if-missing
+    def auto_aiter(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code auto_await:
+  body: |
+    # inject-into: src/jinja2/async_utils.py
+    # dangling-name: append-if-missing
+    def auto_await(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code auto_to_list:
+  body: |
+    # inject-into: src/jinja2/async_utils.py
+    # dangling-name: append-if-missing
+    def auto_to_list(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
         pass

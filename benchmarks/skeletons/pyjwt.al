@@ -492,6 +492,7 @@ flow pyjwt_lib:
     - api_jws_group
     - api_jwt_group
     - help_group
+    - utils_group
 
 
 flow algorithms_group:
@@ -526,8 +527,22 @@ flow help_group:
     - main
 
 
+flow utils_group:
+  steps:
+    - base64url_decode
+    - base64url_encode
+    - der_to_raw_signature
+    - force_bytes
+    - from_base64url_uint
+    - is_pem_format
+    - is_ssh_key
+    - raw_to_der_signature
+    - to_base64url_uint
+
+
 code get_default_algorithms:
   body: |
+    # inject-into: jwt/algorithms.py
     def get_default_algorithms():
         """
         Returns the algorithms that are implemented by the library.
@@ -538,6 +553,7 @@ code get_default_algorithms:
 
 code Algorithm__compute_hash_digest:
   body: |
+    # inject-into: jwt/algorithms.py
     def compute_hash_digest(self, bytestr: bytes):
         """
             Compute a hash digest using the specified algorithm's hash algorithm.
@@ -550,6 +566,7 @@ code Algorithm__compute_hash_digest:
 
 code Algorithm__prepare_key:
   body: |
+    # inject-into: jwt/algorithms.py
     def prepare_key(self, key: Any):
         """
             Performs necessary validation and conversions on the key and returns
@@ -561,6 +578,7 @@ code Algorithm__prepare_key:
 
 code Algorithm__sign:
   body: |
+    # inject-into: jwt/algorithms.py
     def sign(self, msg: bytes, key: Any):
         """
             Returns a digital signature for the specified message
@@ -572,6 +590,7 @@ code Algorithm__sign:
 
 code Algorithm__verify:
   body: |
+    # inject-into: jwt/algorithms.py
     def verify(self, msg: bytes, key: Any, sig: bytes):
         """
             Verifies that the specified digital signature is valid
@@ -583,6 +602,7 @@ code Algorithm__verify:
 
 code Algorithm__to_jwk:
   body: |
+    # inject-into: jwt/algorithms.py
     def to_jwk(key_obj, as_dict: bool=False):
         """
             Serializes a given key into a JWK
@@ -593,6 +613,7 @@ code Algorithm__to_jwk:
 
 code Algorithm__from_jwk:
   body: |
+    # inject-into: jwt/algorithms.py
     def from_jwk(jwk: str | JWKDict):
         """
             Deserializes a given key from JWK back into a key object
@@ -603,6 +624,7 @@ code Algorithm__from_jwk:
 
 code PyJWS__register_algorithm:
   body: |
+    # inject-into: jwt/api_jws.py
     def register_algorithm(self, alg_id: str, alg_obj: Algorithm):
         """
             Registers a new Algorithm for use when creating and verifying tokens.
@@ -613,6 +635,7 @@ code PyJWS__register_algorithm:
 
 code PyJWS__unregister_algorithm:
   body: |
+    # inject-into: jwt/api_jws.py
     def unregister_algorithm(self, alg_id: str):
         """
             Unregisters an Algorithm for use when creating and verifying tokens
@@ -624,6 +647,7 @@ code PyJWS__unregister_algorithm:
 
 code PyJWS__get_algorithms:
   body: |
+    # inject-into: jwt/api_jws.py
     def get_algorithms(self):
         """
             Returns a list of supported values for the 'alg' parameter.
@@ -634,6 +658,7 @@ code PyJWS__get_algorithms:
 
 code PyJWS__get_algorithm_by_name:
   body: |
+    # inject-into: jwt/api_jws.py
     def get_algorithm_by_name(self, alg_name: str):
         """
             For a given string name, return the matching Algorithm object.
@@ -648,6 +673,7 @@ code PyJWS__get_algorithm_by_name:
 
 code PyJWS__get_unverified_header:
   body: |
+    # inject-into: jwt/api_jws.py
     def get_unverified_header(self, jwt: str | bytes):
         """Returns back the JWT header parameters as a dict()
     
@@ -660,6 +686,7 @@ code PyJWS__get_unverified_header:
 
 code PyJWT___encode_payload:
   body: |
+    # inject-into: jwt/api_jwt.py
     def _encode_payload(self, payload: dict[str, Any], headers: dict[str, Any] | None=None, json_encoder: type[json.JSONEncoder] | None=None):
         """
             Encode a given payload to the bytes to be signed.
@@ -673,6 +700,7 @@ code PyJWT___encode_payload:
 
 code PyJWT___decode_payload:
   body: |
+    # inject-into: jwt/api_jwt.py
     def _decode_payload(self, decoded: dict[str, Any]):
         """
             Decode the payload from a JWS dictionary (payload, signature, header).
@@ -687,6 +715,7 @@ code PyJWT___decode_payload:
 
 code info:
   body: |
+    # inject-into: jwt/help.py
     def info():
         """
         Generate information for a bug report.
@@ -698,6 +727,88 @@ code info:
 
 code main:
   body: |
+    # inject-into: jwt/help.py
     def main():
         """Pretty-print the bug information as JSON."""
+        pass
+
+
+code base64url_decode:
+  body: |
+    # inject-into: jwt/utils.py
+    # dangling-name: append-if-missing
+    def base64url_decode(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code base64url_encode:
+  body: |
+    # inject-into: jwt/utils.py
+    # dangling-name: append-if-missing
+    def base64url_encode(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code der_to_raw_signature:
+  body: |
+    # inject-into: jwt/utils.py
+    # dangling-name: append-if-missing
+    def der_to_raw_signature(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code force_bytes:
+  body: |
+    # inject-into: jwt/utils.py
+    # dangling-name: append-if-missing
+    def force_bytes(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code from_base64url_uint:
+  body: |
+    # inject-into: jwt/utils.py
+    # dangling-name: append-if-missing
+    def from_base64url_uint(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code is_pem_format:
+  body: |
+    # inject-into: jwt/utils.py
+    # dangling-name: append-if-missing
+    def is_pem_format(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code is_ssh_key:
+  body: |
+    # inject-into: jwt/utils.py
+    # dangling-name: append-if-missing
+    def is_ssh_key(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code raw_to_der_signature:
+  body: |
+    # inject-into: jwt/utils.py
+    # dangling-name: append-if-missing
+    def raw_to_der_signature(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code to_base64url_uint:
+  body: |
+    # inject-into: jwt/utils.py
+    # dangling-name: append-if-missing
+    def to_base64url_uint(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
         pass

@@ -392,6 +392,7 @@ preamble utils:
 flow portalocker_lib:
   steps:
     - utils_group
+    - portalocker_group
 
 
 flow utils_group:
@@ -405,8 +406,15 @@ flow utils_group:
     - Lock___prepare_fh
 
 
+flow portalocker_group:
+  steps:
+    - lock
+    - unlock
+
+
 code coalesce:
   body: |
+    # inject-into: portalocker/utils.py
     def coalesce(*args: typing.Any, test_value: typing.Any=None):
         """Simple coalescing function that returns the first value that is not
         equal to the `test_value`. Or `None` if no value is valid. Usually this
@@ -435,6 +443,7 @@ code coalesce:
 
 code open_atomic:
   body: |
+    # inject-into: portalocker/utils.py
     def open_atomic(filename: Filename, binary: bool=True):
         """Open a file for atomic writing. Instead of locking this method allows
         you to write the entire file and move it to the actual location. Note that
@@ -466,6 +475,7 @@ code open_atomic:
 
 code Lock__acquire:
   body: |
+    # inject-into: portalocker/utils.py
     def acquire(self, timeout: typing.Optional[float]=None, check_interval: typing.Optional[float]=None, fail_when_locked: typing.Optional[bool]=None):
         """Acquire the locked filehandle"""
         pass
@@ -473,6 +483,7 @@ code Lock__acquire:
 
 code Lock__release:
   body: |
+    # inject-into: portalocker/utils.py
     def release(self):
         """Releases the currently locked file handle"""
         pass
@@ -480,6 +491,7 @@ code Lock__release:
 
 code Lock___get_fh:
   body: |
+    # inject-into: portalocker/utils.py
     def _get_fh(self):
         """Get a new filehandle"""
         pass
@@ -487,6 +499,7 @@ code Lock___get_fh:
 
 code Lock___get_lock:
   body: |
+    # inject-into: portalocker/utils.py
     def _get_lock(self, fh: typing.IO):
         """
             Try to lock the given filehandle
@@ -498,6 +511,7 @@ code Lock___get_lock:
 
 code Lock___prepare_fh:
   body: |
+    # inject-into: portalocker/utils.py
     def _prepare_fh(self, fh: typing.IO):
         """
             Prepare the filehandle for usage
@@ -506,4 +520,22 @@ code Lock___prepare_fh:
             bytes
             
         """
+        pass
+
+
+code lock:
+  body: |
+    # inject-into: portalocker/portalocker.py
+    # dangling-name: append-if-missing
+    def lock(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code unlock:
+  body: |
+    # inject-into: portalocker/portalocker.py
+    # dangling-name: append-if-missing
+    def unlock(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
         pass

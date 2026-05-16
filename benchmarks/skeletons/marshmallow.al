@@ -1,5 +1,5 @@
 preamble __init__:
-  source: marshmallow/__init__.py
+  source: src/marshmallow/__init__.py
   imports: |
     from __future__ import annotations
     import importlib.metadata
@@ -15,7 +15,7 @@ preamble __init__:
 
 
 preamble base:
-  source: marshmallow/base.py
+  source: src/marshmallow/base.py
   imports: |
     from __future__ import annotations
     from abc import ABC, abstractmethod
@@ -31,7 +31,7 @@ preamble base:
 
 
 preamble class_registry:
-  source: marshmallow/class_registry.py
+  source: src/marshmallow/class_registry.py
   imports: |
     from __future__ import annotations
     import typing
@@ -46,7 +46,7 @@ preamble class_registry:
 
 
 preamble decorators:
-  source: marshmallow/decorators.py
+  source: src/marshmallow/decorators.py
   imports: |
     from __future__ import annotations
     import functools
@@ -65,7 +65,7 @@ preamble decorators:
 
 
 preamble error_store:
-  source: marshmallow/error_store.py
+  source: src/marshmallow/error_store.py
   imports: |
     from marshmallow.exceptions import SCHEMA
   body: |
@@ -77,7 +77,7 @@ preamble error_store:
 
 
 preamble exceptions:
-  source: marshmallow/exceptions.py
+  source: src/marshmallow/exceptions.py
   imports: |
     from __future__ import annotations
     import typing
@@ -118,7 +118,7 @@ preamble exceptions:
 
 
 preamble fields:
-  source: marshmallow/fields.py
+  source: src/marshmallow/fields.py
   imports: |
     from __future__ import annotations
     import collections
@@ -966,7 +966,7 @@ preamble fields:
 
 
 preamble orderedset:
-  source: marshmallow/orderedset.py
+  source: src/marshmallow/orderedset.py
   imports: |
     from collections.abc import MutableSet
   body: |
@@ -1017,7 +1017,7 @@ preamble orderedset:
 
 
 preamble schema:
-  source: marshmallow/schema.py
+  source: src/marshmallow/schema.py
   imports: |
     from __future__ import annotations
     import copy
@@ -1307,7 +1307,7 @@ preamble schema:
 
 
 preamble types:
-  source: marshmallow/types.py
+  source: src/marshmallow/types.py
   imports: |
     import typing
   constants: |
@@ -1319,7 +1319,7 @@ preamble types:
 
 
 preamble utils:
-  source: marshmallow/utils.py
+  source: src/marshmallow/utils.py
   imports: |
     from __future__ import annotations
     import collections
@@ -1363,7 +1363,7 @@ preamble utils:
 
 
 preamble validate:
-  source: marshmallow/validate.py
+  source: src/marshmallow/validate.py
   imports: |
     from __future__ import annotations
     import re
@@ -1766,7 +1766,7 @@ preamble validate:
 
 
 preamble warnings:
-  source: marshmallow/warnings.py
+  source: src/marshmallow/warnings.py
   body: |
     class RemovedInMarshmallow4Warning(DeprecationWarning):
         pass
@@ -1824,6 +1824,7 @@ flow fields_group:
     - Number___format_num
     - Number___validated
     - Number___serialize
+    - SECONDS
 
 
 flow schema_group:
@@ -1873,16 +1874,26 @@ flow utils_group:
     - get_func_args
     - resolve_field_instance
     - timedelta_to_microseconds
+    - is_aware
+    - validate_unknown_parameter_value
+    - timestamp_ms
+    - to_iso_time
+    - from_timestamp
+    - to_iso_date
+    - timestamp
+    - from_timestamp_ms
 
 
 flow validate_group:
   steps:
     - Validator___repr_args
     - OneOf__options
+    - RegexMemoizer
 
 
 code register:
   body: |
+    # inject-into: src/marshmallow/class_registry.py
     def register(classname: str, cls: SchemaType):
         """Add a class to the registry of serializer classes. When a class is
         registered, an entry for both its classname and its full, module-qualified
@@ -1908,6 +1919,7 @@ code register:
 
 code get_class:
   body: |
+    # inject-into: src/marshmallow/class_registry.py
     def get_class(classname: str, all: bool=False):
         """Retrieve a class from the registry.
     
@@ -1920,6 +1932,7 @@ code get_class:
 
 code validates:
   body: |
+    # inject-into: src/marshmallow/decorators.py
     def validates(field_name: str):
         """Register a field validator.
     
@@ -1931,6 +1944,7 @@ code validates:
 
 code validates_schema:
   body: |
+    # inject-into: src/marshmallow/decorators.py
     def validates_schema(fn: Callable[..., Any] | None=None, pass_many: bool=False, pass_original: bool=False, skip_on_field_errors: bool=True):
         """Register a schema-level validator.
     
@@ -1957,6 +1971,7 @@ code validates_schema:
 
 code pre_dump:
   body: |
+    # inject-into: src/marshmallow/decorators.py
     def pre_dump(fn: Callable[..., Any] | None=None, pass_many: bool=False):
         """Register a method to invoke before serializing an object. The method
         receives the object to be serialized and returns the processed object.
@@ -1974,6 +1989,7 @@ code pre_dump:
 
 code post_dump:
   body: |
+    # inject-into: src/marshmallow/decorators.py
     def post_dump(fn: Callable[..., Any] | None=None, pass_many: bool=False, pass_original: bool=False):
         """Register a method to invoke after serializing an object. The method
         receives the serialized object and returns the processed object.
@@ -1994,6 +2010,7 @@ code post_dump:
 
 code pre_load:
   body: |
+    # inject-into: src/marshmallow/decorators.py
     def pre_load(fn: Callable[..., Any] | None=None, pass_many: bool=False):
         """Register a method to invoke before deserializing an object. The method
         receives the data to be deserialized and returns the processed data.
@@ -2012,6 +2029,7 @@ code pre_load:
 
 code post_load:
   body: |
+    # inject-into: src/marshmallow/decorators.py
     def post_load(fn: Callable[..., Any] | None=None, pass_many: bool=False, pass_original: bool=False):
         """Register a method to invoke after deserializing an object. The method
         receives the deserialized data and returns the processed data.
@@ -2033,6 +2051,7 @@ code post_load:
 
 code set_hook:
   body: |
+    # inject-into: src/marshmallow/decorators.py
     def set_hook(fn: Callable[..., Any] | None, key: tuple[str, bool] | str, **kwargs: Any):
         """Mark decorated function as a hook to be picked up later.
         You should not need to use this method directly.
@@ -2050,6 +2069,7 @@ code set_hook:
 
 code merge_errors:
   body: |
+    # inject-into: src/marshmallow/error_store.py
     def merge_errors(errors1, errors2):
         """Deeply merge two error messages.
     
@@ -2062,6 +2082,7 @@ code merge_errors:
 
 code Field__get_value:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def get_value(self, obj, attr, accessor=None, default=missing_):
         """Return the value for a given key from an object.
     
@@ -2076,6 +2097,7 @@ code Field__get_value:
 
 code Field___validate:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def _validate(self, value):
         """Perform validation on ``value``. Raise a :exc:`ValidationError` if validation
             does not succeed.
@@ -2086,6 +2108,7 @@ code Field___validate:
 
 code Field__make_error:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def make_error(self, key: str, **kwargs):
         """Helper method to make a `ValidationError` with an error message
             from ``self.error_messages``.
@@ -2096,6 +2119,7 @@ code Field__make_error:
 
 code Field__fail:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def fail(self, key: str, **kwargs):
         """Helper method that raises a `ValidationError` with an error message
             from ``self.error_messages``.
@@ -2109,6 +2133,7 @@ code Field__fail:
 
 code Field___validate_missing:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def _validate_missing(self, value):
         """Validate missing values. Raise a :exc:`ValidationError` if
             `value` should be considered missing.
@@ -2119,6 +2144,7 @@ code Field___validate_missing:
 
 code Field__serialize:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def serialize(self, attr: str, obj: typing.Any, accessor: typing.Callable[[typing.Any, str, typing.Any], typing.Any] | None=None, **kwargs):
         """Pulls the value for the given key from the object, applies the
             field's formatting and returns the result.
@@ -2134,6 +2160,7 @@ code Field__serialize:
 
 code Field__deserialize:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def deserialize(self, value: typing.Any, attr: str | None=None, data: typing.Mapping[str, typing.Any] | None=None, **kwargs):
         """Deserialize ``value``.
     
@@ -2150,6 +2177,7 @@ code Field__deserialize:
 
 code Field___bind_to_schema:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def _bind_to_schema(self, field_name, schema):
         """Update field with values from its parent schema. Called by
             :meth:`Schema._bind_field <marshmallow.Schema._bind_field>`.
@@ -2163,6 +2191,7 @@ code Field___bind_to_schema:
 
 code Field___serialize:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def _serialize(self, value: typing.Any, attr: str | None, obj: typing.Any, **kwargs):
         """Serializes ``value`` to a basic Python datatype. Noop by default.
             Concrete :class:`Field` classes should implement this method.
@@ -2187,6 +2216,7 @@ code Field___serialize:
 
 code Field___deserialize:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def _deserialize(self, value: typing.Any, attr: str | None, data: typing.Mapping[str, typing.Any] | None, **kwargs):
         """Deserialize value. Concrete :class:`Field` classes should implement this method.
     
@@ -2209,6 +2239,7 @@ code Field___deserialize:
 
 code Field__context:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def context(self):
         """The context dictionary for the parent :class:`Schema`."""
         pass
@@ -2216,6 +2247,7 @@ code Field__context:
 
 code Nested__schema:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def schema(self):
         """The nested Schema object.
     
@@ -2228,6 +2260,7 @@ code Nested__schema:
 
 code Nested___deserialize:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def _deserialize(self, value, attr, data, partial=None, **kwargs):
         """Same as :meth:`Field._deserialize` with additional ``partial`` argument.
     
@@ -2243,6 +2276,7 @@ code Nested___deserialize:
 
 code UUID___validated:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def _validated(self, value):
         """Format the value or raise a :exc:`ValidationError` if an error occurs."""
         pass
@@ -2250,6 +2284,7 @@ code UUID___validated:
 
 code Number___format_num:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def _format_num(self, value):
         """Return the number value for value, given this field's `num_type`."""
         pass
@@ -2257,6 +2292,7 @@ code Number___format_num:
 
 code Number___validated:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def _validated(self, value):
         """Format the value or raise a :exc:`ValidationError` if an error occurs."""
         pass
@@ -2264,13 +2300,24 @@ code Number___validated:
 
 code Number___serialize:
   body: |
+    # inject-into: src/marshmallow/fields.py
     def _serialize(self, value, attr, obj, **kwargs):
         """Return a string if `self.as_string=True`, otherwise return this field's `num_type`."""
         pass
 
 
+code SECONDS:
+  body: |
+    # inject-into: src/marshmallow/fields.py
+    # dangling-name: append-if-missing
+    def SECONDS(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code _get_fields:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def _get_fields(attrs):
         """Get fields from a class
     
@@ -2282,6 +2329,7 @@ code _get_fields:
 
 code _get_fields_by_mro:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def _get_fields_by_mro(klass):
         """Collect fields from a class, following its method resolution order. The
         class itself is excluded from the search; only its parents are checked. Get
@@ -2295,6 +2343,7 @@ code _get_fields_by_mro:
 
 code SchemaMeta__get_declared_fields:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def get_declared_fields(mcs, klass: type, cls_fields: list, inherited_fields: list, dict_cls: type=dict):
         """Returns a dictionary of field_name => `Field` pairs declared on the class.
             This is exposed mainly so that plugins can add additional fields, e.g. fields
@@ -2312,6 +2361,7 @@ code SchemaMeta__get_declared_fields:
 
 code SchemaMeta__resolve_hooks:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def resolve_hooks(cls):
         """Add in the decorated processors
     
@@ -2324,6 +2374,7 @@ code SchemaMeta__resolve_hooks:
 
 code Schema__from_dict:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def from_dict(cls, fields: dict[str, ma_fields.Field | type], *, name: str='GeneratedSchema'):
         """Generate a `Schema` class given a dictionary of fields.
     
@@ -2349,6 +2400,7 @@ code Schema__from_dict:
 
 code Schema__handle_error:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def handle_error(self, error: ValidationError, data: typing.Any, *, many: bool, **kwargs):
         """Custom error handler function for the schema.
     
@@ -2368,6 +2420,7 @@ code Schema__handle_error:
 
 code Schema__get_attribute:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def get_attribute(self, obj: typing.Any, attr: str, default: typing.Any):
         """Defines how to pull values from an object to serialize.
     
@@ -2382,6 +2435,7 @@ code Schema__get_attribute:
 
 code Schema___call_and_store:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def _call_and_store(getter_func, data, *, field_name, error_store, index=None):
         """Call ``getter_func`` with ``data`` as its argument, and store any `ValidationErrors`.
     
@@ -2398,6 +2452,7 @@ code Schema___call_and_store:
 
 code Schema___serialize:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def _serialize(self, obj: _T | typing.Iterable[_T], *, many: bool=False):
         """Serialize ``obj``.
     
@@ -2414,6 +2469,7 @@ code Schema___serialize:
 
 code Schema__dump:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def dump(self, obj: typing.Any, *, many: bool | None=None):
         """Serialize an object to native Python data types according to this
             Schema's fields.
@@ -2437,6 +2493,7 @@ code Schema__dump:
 
 code Schema__dumps:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def dumps(self, obj: typing.Any, *args, many: bool | None=None, **kwargs):
         """Same as :meth:`dump`, except return a JSON-encoded string.
     
@@ -2457,6 +2514,7 @@ code Schema__dumps:
 
 code Schema___deserialize:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def _deserialize(self, data: typing.Mapping[str, typing.Any] | typing.Iterable[typing.Mapping[str, typing.Any]], *, error_store: ErrorStore, many: bool=False, partial=None, unknown=RAISE, index=None):
         """Deserialize ``data``.
     
@@ -2479,6 +2537,7 @@ code Schema___deserialize:
 
 code Schema__load:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def load(self, data: typing.Mapping[str, typing.Any] | typing.Iterable[typing.Mapping[str, typing.Any]], *, many: bool | None=None, partial: bool | types.StrSequenceOrSet | None=None, unknown: str | None=None):
         """Deserialize a data structure to an object defined by this Schema's fields.
     
@@ -2506,6 +2565,7 @@ code Schema__load:
 
 code Schema__loads:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def loads(self, json_data: str, *, many: bool | None=None, partial: bool | types.StrSequenceOrSet | None=None, unknown: str | None=None, **kwargs):
         """Same as :meth:`load`, except it takes a JSON string as input.
     
@@ -2533,6 +2593,7 @@ code Schema__loads:
 
 code Schema__validate:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def validate(self, data: typing.Mapping[str, typing.Any] | typing.Iterable[typing.Mapping[str, typing.Any]], *, many: bool | None=None, partial: bool | types.StrSequenceOrSet | None=None):
         """Validate `data` against the schema, returning a dictionary of
             validation errors.
@@ -2554,6 +2615,7 @@ code Schema__validate:
 
 code Schema___do_load:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def _do_load(self, data: typing.Mapping[str, typing.Any] | typing.Iterable[typing.Mapping[str, typing.Any]], *, many: bool | None=None, partial: bool | types.StrSequenceOrSet | None=None, unknown: str | None=None, postprocess: bool=True):
         """Deserialize `data`, returning the deserialized result.
             This method is private API.
@@ -2577,6 +2639,7 @@ code Schema___do_load:
 
 code Schema___normalize_nested_options:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def _normalize_nested_options(self):
         """Apply then flatten nested schema options.
             This method is private API.
@@ -2587,6 +2650,7 @@ code Schema___normalize_nested_options:
 
 code Schema____apply_nested_option:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def __apply_nested_option(self, option_name, field_names, set_operation):
         """Apply nested options to nested fields"""
         pass
@@ -2594,6 +2658,7 @@ code Schema____apply_nested_option:
 
 code Schema___init_fields:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def _init_fields(self):
         """Update self.fields, self.load_fields, and self.dump_fields based on schema options.
             This method is private API.
@@ -2604,6 +2669,7 @@ code Schema___init_fields:
 
 code Schema__on_bind_field:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def on_bind_field(self, field_name: str, field_obj: ma_fields.Field):
         """Hook to modify a field when it is bound to the `Schema`.
     
@@ -2615,6 +2681,7 @@ code Schema__on_bind_field:
 
 code Schema___bind_field:
   body: |
+    # inject-into: src/marshmallow/schema.py
     def _bind_field(self, field_name: str, field_obj: ma_fields.Field):
         """Bind field to the schema, setting any necessary attributes on the
             field (e.g. parent and name).
@@ -2628,6 +2695,7 @@ code Schema___bind_field:
 
 code is_generator:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def is_generator(obj):
         """Return True if ``obj`` is a generator"""
         pass
@@ -2635,6 +2703,7 @@ code is_generator:
 
 code is_iterable_but_not_string:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def is_iterable_but_not_string(obj):
         """Return True if ``obj`` is an iterable object that isn't a string."""
         pass
@@ -2642,6 +2711,7 @@ code is_iterable_but_not_string:
 
 code is_collection:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def is_collection(obj):
         """Return True if ``obj`` is a collection type, e.g list, tuple, queryset."""
         pass
@@ -2649,6 +2719,7 @@ code is_collection:
 
 code is_instance_or_subclass:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def is_instance_or_subclass(val, class_):
         """Return True if ``val`` is either a subclass or instance of ``class_``."""
         pass
@@ -2656,6 +2727,7 @@ code is_instance_or_subclass:
 
 code is_keyed_tuple:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def is_keyed_tuple(obj):
         """Return True if ``obj`` has keyed tuple behavior, such as
         namedtuples or SQLAlchemy's KeyedTuples.
@@ -2666,6 +2738,7 @@ code is_keyed_tuple:
 
 code pprint:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def pprint(obj, *args, **kwargs):
         """Pretty-printing function that can pretty-print OrderedDicts
         like regular dictionaries. Useful for printing the output of
@@ -2680,6 +2753,7 @@ code pprint:
 
 code from_rfc:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def from_rfc(datestring: str):
         """Parse a RFC822-formatted datetime string and return a datetime object.
     
@@ -2691,6 +2765,7 @@ code from_rfc:
 
 code rfcformat:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def rfcformat(datetime: dt.datetime):
         """Return the RFC822-formatted representation of a datetime object.
     
@@ -2702,6 +2777,7 @@ code rfcformat:
 
 code get_fixed_timezone:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def get_fixed_timezone(offset: int | float | dt.timedelta):
         """Return a tzinfo instance with a fixed offset from UTC."""
         pass
@@ -2709,6 +2785,7 @@ code get_fixed_timezone:
 
 code from_iso_datetime:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def from_iso_datetime(value):
         """Parse a string and return a datetime.datetime.
     
@@ -2721,6 +2798,7 @@ code from_iso_datetime:
 
 code from_iso_time:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def from_iso_time(value):
         """Parse a string and return a datetime.time.
     
@@ -2732,6 +2810,7 @@ code from_iso_time:
 
 code from_iso_date:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def from_iso_date(value):
         """Parse a string and return a datetime.date."""
         pass
@@ -2739,6 +2818,7 @@ code from_iso_date:
 
 code isoformat:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def isoformat(datetime: dt.datetime):
         """Return the ISO8601-formatted representation of a datetime object.
     
@@ -2750,6 +2830,7 @@ code isoformat:
 
 code pluck:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def pluck(dictlist: list[dict[str, typing.Any]], key: str):
         """Extracts a list of dictionary values from a list of dictionaries.
         ::
@@ -2764,6 +2845,7 @@ code pluck:
 
 code get_value:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def get_value(obj, key: int | str, default=missing):
         """Helper for pulling a keyed value off various types of objects. Fields use
         this method by default to access attributes of the source object. For object `x`
@@ -2781,6 +2863,7 @@ code get_value:
 
 code set_value:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def set_value(dct: dict[str, typing.Any], key: str, value: typing.Any):
         """Set a value in a dict. If `key` contains a '.', it is assumed
         be a path (i.e. dot-delimited string) to the value's location.
@@ -2798,6 +2881,7 @@ code set_value:
 
 code callable_or_raise:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def callable_or_raise(obj):
         """Check that an object is callable, else raise a :exc:`TypeError`."""
         pass
@@ -2805,6 +2889,7 @@ code callable_or_raise:
 
 code get_func_args:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def get_func_args(func: typing.Callable):
         """Given a callable, return a list of argument names. Handles
         `functools.partial` objects and class-based callables.
@@ -2818,6 +2903,7 @@ code get_func_args:
 
 code resolve_field_instance:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def resolve_field_instance(cls_or_instance):
         """Return a Schema instance from a Schema class or instance.
     
@@ -2829,6 +2915,7 @@ code resolve_field_instance:
 
 code timedelta_to_microseconds:
   body: |
+    # inject-into: src/marshmallow/utils.py
     def timedelta_to_microseconds(value: dt.timedelta):
         """Compute the total microseconds of a timedelta
     
@@ -2838,8 +2925,81 @@ code timedelta_to_microseconds:
         pass
 
 
+code is_aware:
+  body: |
+    # inject-into: src/marshmallow/utils.py
+    # dangling-name: append-if-missing
+    def is_aware(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code validate_unknown_parameter_value:
+  body: |
+    # inject-into: src/marshmallow/utils.py
+    # dangling-name: append-if-missing
+    def validate_unknown_parameter_value(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code timestamp_ms:
+  body: |
+    # inject-into: src/marshmallow/utils.py
+    # dangling-name: append-if-missing
+    def timestamp_ms(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code to_iso_time:
+  body: |
+    # inject-into: src/marshmallow/utils.py
+    # dangling-name: append-if-missing
+    def to_iso_time(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code from_timestamp:
+  body: |
+    # inject-into: src/marshmallow/utils.py
+    # dangling-name: append-if-missing
+    def from_timestamp(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code to_iso_date:
+  body: |
+    # inject-into: src/marshmallow/utils.py
+    # dangling-name: append-if-missing
+    def to_iso_date(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code timestamp:
+  body: |
+    # inject-into: src/marshmallow/utils.py
+    # dangling-name: append-if-missing
+    def timestamp(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code from_timestamp_ms:
+  body: |
+    # inject-into: src/marshmallow/utils.py
+    # dangling-name: append-if-missing
+    def from_timestamp_ms(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code Validator___repr_args:
   body: |
+    # inject-into: src/marshmallow/validate.py
     def _repr_args(self):
         """A string representation of the args passed to this validator. Used by
             `__repr__`.
@@ -2850,6 +3010,7 @@ code Validator___repr_args:
 
 code OneOf__options:
   body: |
+    # inject-into: src/marshmallow/validate.py
     def options(self, valuegetter: str | typing.Callable[[typing.Any], typing.Any]=str):
         """Return a generator over the (value, label) pairs, where value
             is a string associated with each choice. This convenience method
@@ -2862,4 +3023,13 @@ code OneOf__options:
                 or `str()`.
             
         """
+        pass
+
+
+code RegexMemoizer:
+  body: |
+    # inject-into: src/marshmallow/validate.py
+    # dangling-name: append-if-missing
+    def RegexMemoizer(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
         pass

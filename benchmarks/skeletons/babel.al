@@ -1533,6 +1533,8 @@ flow localedata_group:
 flow localtime__helpers_group:
   steps:
     - _get_tzinfo
+    - _get_tzinfo_from_file
+    - _get_tzinfo_or_raise
 
 
 flow localtime__unix_group:
@@ -1564,6 +1566,13 @@ flow messages_catalog_group:
     - Catalog___to_fuzzy_match_key
     - Catalog___key_for
     - Catalog__is_identical
+    - _get_header_comment
+    - _get_locale
+    - _get_locale_identifier
+    - _get_mime_headers
+    - _set_header_comment
+    - _set_locale
+    - _set_mime_headers
 
 
 flow messages_checkers_group:
@@ -1571,6 +1580,7 @@ flow messages_checkers_group:
     - num_plurals
     - python_format
     - _validate_format
+    - _find_checkers
 
 
 flow messages_extract_group:
@@ -1594,6 +1604,7 @@ flow messages_frontend_group:
     - CommandLineInterface___configure_command
     - parse_mapping
     - parse_keywords
+    - main
 
 
 flow messages_jslexer_group:
@@ -1705,6 +1716,10 @@ flow support_group:
     - Translations__add
     - Translations__merge
     - _locales_to_names
+    - udgettext
+    - udngettext
+    - udnpgettext
+    - udpgettext
 
 
 flow units_group:
@@ -1723,10 +1738,12 @@ flow util_group:
     - parse_future_flags
     - pathmatch
     - wraptext
+    - _cmp
 
 
 code _get_dt_and_tzinfo:
   body: |
+    # inject-into: babel/dates.py
     def _get_dt_and_tzinfo(dt_or_tzinfo: _DtOrTzinfo):
         """
         Parse a `dt_or_tzinfo` value into a datetime and a tzinfo.
@@ -1741,6 +1758,7 @@ code _get_dt_and_tzinfo:
 
 code _get_tz_name:
   body: |
+    # inject-into: babel/dates.py
     def _get_tz_name(dt_or_tzinfo: _DtOrTzinfo):
         """
         Get the timezone name out of a time, datetime, or tzinfo object.
@@ -1753,6 +1771,7 @@ code _get_tz_name:
 
 code _get_datetime:
   body: |
+    # inject-into: babel/dates.py
     def _get_datetime(instant: _Instant):
         """
         Get a datetime out of an "instant" (date, time, datetime, number).
@@ -1790,6 +1809,7 @@ code _get_datetime:
 
 code _ensure_datetime_tzinfo:
   body: |
+    # inject-into: babel/dates.py
     def _ensure_datetime_tzinfo(dt: datetime.datetime, tzinfo: datetime.tzinfo | None=None):
         """
         Ensure the datetime passed has an attached tzinfo.
@@ -1817,6 +1837,7 @@ code _ensure_datetime_tzinfo:
 
 code _get_time:
   body: |
+    # inject-into: babel/dates.py
     def _get_time(time: datetime.time | datetime.datetime | None, tzinfo: datetime.tzinfo | None=None):
         """
         Get a timezoned time from a given instant.
@@ -1832,6 +1853,7 @@ code _get_time:
 
 code get_timezone:
   body: |
+    # inject-into: babel/dates.py
     def get_timezone(zone: str | datetime.tzinfo | None=None):
         """Looks up a timezone by name and returns it.  The timezone object
         returned comes from ``pytz`` or ``zoneinfo``, whichever is available.
@@ -1850,6 +1872,7 @@ code get_timezone:
 
 code get_period_names:
   body: |
+    # inject-into: babel/dates.py
     def get_period_names(width: Literal['abbreviated', 'narrow', 'wide']='wide', context: _Context='stand-alone', locale: Locale | str | None=LC_TIME):
         """Return the names for day periods (AM/PM) used by the locale.
     
@@ -1866,6 +1889,7 @@ code get_period_names:
 
 code get_day_names:
   body: |
+    # inject-into: babel/dates.py
     def get_day_names(width: Literal['abbreviated', 'narrow', 'short', 'wide']='wide', context: _Context='format', locale: Locale | str | None=LC_TIME):
         """Return the day names used by the locale for the specified format.
     
@@ -1888,6 +1912,7 @@ code get_day_names:
 
 code get_month_names:
   body: |
+    # inject-into: babel/dates.py
     def get_month_names(width: Literal['abbreviated', 'narrow', 'wide']='wide', context: _Context='format', locale: Locale | str | None=LC_TIME):
         """Return the month names used by the locale for the specified format.
     
@@ -1908,6 +1933,7 @@ code get_month_names:
 
 code get_quarter_names:
   body: |
+    # inject-into: babel/dates.py
     def get_quarter_names(width: Literal['abbreviated', 'narrow', 'wide']='wide', context: _Context='format', locale: Locale | str | None=LC_TIME):
         """Return the quarter names used by the locale for the specified format.
     
@@ -1928,6 +1954,7 @@ code get_quarter_names:
 
 code get_era_names:
   body: |
+    # inject-into: babel/dates.py
     def get_era_names(width: Literal['abbreviated', 'narrow', 'wide']='wide', locale: Locale | str | None=LC_TIME):
         """Return the era names used by the locale for the specified format.
     
@@ -1945,6 +1972,7 @@ code get_era_names:
 
 code get_date_format:
   body: |
+    # inject-into: babel/dates.py
     def get_date_format(format: _PredefinedTimeFormat='medium', locale: Locale | str | None=LC_TIME):
         """Return the date formatting patterns used by the locale for the specified
         format.
@@ -1964,6 +1992,7 @@ code get_date_format:
 
 code get_datetime_format:
   body: |
+    # inject-into: babel/dates.py
     def get_datetime_format(format: _PredefinedTimeFormat='medium', locale: Locale | str | None=LC_TIME):
         """Return the datetime formatting patterns used by the locale for the
         specified format.
@@ -1981,6 +2010,7 @@ code get_datetime_format:
 
 code get_time_format:
   body: |
+    # inject-into: babel/dates.py
     def get_time_format(format: _PredefinedTimeFormat='medium', locale: Locale | str | None=LC_TIME):
         """Return the time formatting patterns used by the locale for the specified
         format.
@@ -2000,6 +2030,7 @@ code get_time_format:
 
 code get_timezone_gmt:
   body: |
+    # inject-into: babel/dates.py
     def get_timezone_gmt(datetime: _Instant=None, width: Literal['long', 'short', 'iso8601', 'iso8601_short']='long', locale: Locale | str | None=LC_TIME, return_z: bool=False):
         """Return the timezone associated with the given `datetime` object formatted
         as string indicating the offset from GMT.
@@ -2042,6 +2073,7 @@ code get_timezone_gmt:
 
 code get_timezone_location:
   body: |
+    # inject-into: babel/dates.py
     def get_timezone_location(dt_or_tzinfo: _DtOrTzinfo=None, locale: Locale | str | None=LC_TIME, return_city: bool=False):
         """Return a representation of the given timezone using "location format".
     
@@ -2083,6 +2115,7 @@ code get_timezone_location:
 
 code get_timezone_name:
   body: |
+    # inject-into: babel/dates.py
     def get_timezone_name(dt_or_tzinfo: _DtOrTzinfo=None, width: Literal['long', 'short']='long', uncommon: bool=False, locale: Locale | str | None=LC_TIME, zone_variant: Literal['generic', 'daylight', 'standard'] | None=None, return_zone: bool=False):
         """Return the localized display name for the given timezone. The timezone
         may be specified using a ``datetime`` or `tzinfo` object.
@@ -2160,6 +2193,7 @@ code get_timezone_name:
 
 code format_date:
   body: |
+    # inject-into: babel/dates.py
     def format_date(date: datetime.date | None=None, format: _PredefinedTimeFormat | str='medium', locale: Locale | str | None=LC_TIME):
         """Return a date formatted according to the given pattern.
     
@@ -2188,6 +2222,7 @@ code format_date:
 
 code format_datetime:
   body: |
+    # inject-into: babel/dates.py
     def format_datetime(datetime: _Instant=None, format: _PredefinedTimeFormat | str='medium', tzinfo: datetime.tzinfo | None=None, locale: Locale | str | None=LC_TIME):
         """Return a date formatted according to the given pattern.
     
@@ -2218,6 +2253,7 @@ code format_datetime:
 
 code format_time:
   body: |
+    # inject-into: babel/dates.py
     def format_time(time: datetime.time | datetime.datetime | float | None=None, format: _PredefinedTimeFormat | str='medium', tzinfo: datetime.tzinfo | None=None, locale: Locale | str | None=LC_TIME):
         """Return a time formatted according to the given pattern.
     
@@ -2280,6 +2316,7 @@ code format_time:
 
 code format_skeleton:
   body: |
+    # inject-into: babel/dates.py
     def format_skeleton(skeleton: str, datetime: _Instant=None, tzinfo: datetime.tzinfo | None=None, fuzzy: bool=True, locale: Locale | str | None=LC_TIME):
         """Return a time and/or date formatted according to the given pattern.
     
@@ -2318,6 +2355,7 @@ code format_skeleton:
 
 code format_timedelta:
   body: |
+    # inject-into: babel/dates.py
     def format_timedelta(delta: datetime.timedelta | int, granularity: Literal['year', 'month', 'week', 'day', 'hour', 'minute', 'second']='second', threshold: float=0.85, add_direction: bool=False, format: Literal['narrow', 'short', 'medium', 'long']='long', locale: Locale | str | None=LC_TIME):
         """Return a time delta according to the rules of the given locale.
     
@@ -2380,6 +2418,7 @@ code format_timedelta:
 
 code format_interval:
   body: |
+    # inject-into: babel/dates.py
     def format_interval(start: _Instant, end: _Instant, skeleton: str | None=None, tzinfo: datetime.tzinfo | None=None, fuzzy: bool=True, locale: Locale | str | None=LC_TIME):
         """
         Format an interval between two instants according to the locale's rules.
@@ -2428,6 +2467,7 @@ code format_interval:
 
 code get_period_id:
   body: |
+    # inject-into: babel/dates.py
     def get_period_id(time: _Instant, tzinfo: datetime.tzinfo | None=None, type: Literal['selection'] | None=None, locale: Locale | str | None=LC_TIME):
         """
         Get the day period ID for a given time.
@@ -2458,6 +2498,7 @@ code get_period_id:
 
 code parse_date:
   body: |
+    # inject-into: babel/dates.py
     def parse_date(string: str, locale: Locale | str | None=LC_TIME, format: _PredefinedTimeFormat='medium'):
         """Parse a date from a string.
     
@@ -2484,6 +2525,7 @@ code parse_date:
 
 code parse_time:
   body: |
+    # inject-into: babel/dates.py
     def parse_time(string: str, locale: Locale | str | None=LC_TIME, format: _PredefinedTimeFormat='medium'):
         """Parse a time from a string.
     
@@ -2505,6 +2547,7 @@ code parse_time:
 
 code DateTimeFormat__format_weekday:
   body: |
+    # inject-into: babel/dates.py
     def format_weekday(self, char: str='E', num: int=4):
         """
             Return weekday from parsed datetime according to format pattern.
@@ -2539,6 +2582,7 @@ code DateTimeFormat__format_weekday:
 
 code DateTimeFormat__format_period:
   body: |
+    # inject-into: babel/dates.py
     def format_period(self, char: str, num: int):
         """
             Return period from parsed datetime according to format pattern.
@@ -2574,6 +2618,7 @@ code DateTimeFormat__format_period:
 
 code DateTimeFormat__format_frac_seconds:
   body: |
+    # inject-into: babel/dates.py
     def format_frac_seconds(self, num: int):
         """ Return fractional seconds.
     
@@ -2585,6 +2630,7 @@ code DateTimeFormat__format_frac_seconds:
 
 code DateTimeFormat__get_week_number:
   body: |
+    # inject-into: babel/dates.py
     def get_week_number(self, day_of_period: int, day_of_week: int | None=None):
         """Return the number of the week of a day within a period. This may be
             the week number in a year or the week number in a month.
@@ -2610,6 +2656,7 @@ code DateTimeFormat__get_week_number:
 
 code parse_pattern:
   body: |
+    # inject-into: babel/dates.py
     def parse_pattern(pattern: str | DateTimePattern):
         """Parse date, time, and datetime format patterns.
     
@@ -2637,6 +2684,7 @@ code parse_pattern:
 
 code tokenize_pattern:
   body: |
+    # inject-into: babel/dates.py
     def tokenize_pattern(pattern: str):
         """
         Tokenize date format patterns.
@@ -2659,6 +2707,7 @@ code tokenize_pattern:
 
 code untokenize_pattern:
   body: |
+    # inject-into: babel/dates.py
     def untokenize_pattern(tokens: Iterable[tuple[str, str | tuple[str, int]]]):
         """
         Turn a date format pattern token stream back into a string.
@@ -2674,6 +2723,7 @@ code untokenize_pattern:
 
 code split_interval_pattern:
   body: |
+    # inject-into: babel/dates.py
     def split_interval_pattern(pattern: str):
         """
         Split an interval-describing datetime pattern into multiple pieces.
@@ -2703,6 +2753,7 @@ code split_interval_pattern:
 
 code match_skeleton:
   body: |
+    # inject-into: babel/dates.py
     def match_skeleton(skeleton: str, options: Iterable[str], allow_different_fields: bool=False):
         """
         Find the closest match for the given datetime skeleton among the options given.
@@ -2733,6 +2784,7 @@ code match_skeleton:
 
 code get_official_languages:
   body: |
+    # inject-into: babel/languages.py
     def get_official_languages(territory: str, regional: bool=False, de_facto: bool=False):
         """
         Get the official language(s) for the given territory.
@@ -2761,6 +2813,7 @@ code get_official_languages:
 
 code get_territory_language_info:
   body: |
+    # inject-into: babel/languages.py
     def get_territory_language_info(territory: str):
         """
         Get a dictionary of language information for a territory.
@@ -2792,6 +2845,7 @@ code get_territory_language_info:
 
 code format_list:
   body: |
+    # inject-into: babel/lists.py
     def format_list(lst: Sequence[str], style: Literal['standard', 'standard-short', 'or', 'or-short', 'unit', 'unit-short', 'unit-narrow']='standard', locale: Locale | str | None=DEFAULT_LOCALE):
         """
         Format the items in `lst` as a list.
@@ -2840,6 +2894,7 @@ code format_list:
 
 code normalize_locale:
   body: |
+    # inject-into: babel/localedata.py
     def normalize_locale(name: str):
         """Normalize a locale ID by stripping spaces and apply proper casing.
     
@@ -2852,6 +2907,7 @@ code normalize_locale:
 
 code resolve_locale_filename:
   body: |
+    # inject-into: babel/localedata.py
     def resolve_locale_filename(name: os.PathLike[str] | str):
         """
         Resolve a locale identifier to a `.dat` path on disk.
@@ -2862,6 +2918,7 @@ code resolve_locale_filename:
 
 code exists:
   body: |
+    # inject-into: babel/localedata.py
     def exists(name: str):
         """Check whether locale data is available for the given locale.
     
@@ -2875,6 +2932,7 @@ code exists:
 
 code locale_identifiers:
   body: |
+    # inject-into: babel/localedata.py
     def locale_identifiers():
         """Return a list of all locale identifiers for which locale data is
         available.
@@ -2892,6 +2950,7 @@ code locale_identifiers:
 
 code load:
   body: |
+    # inject-into: babel/localedata.py
     def load(name: os.PathLike[str] | str, merge_inherited: bool=True):
         """Load the locale data for the given locale.
     
@@ -2923,6 +2982,7 @@ code load:
 
 code merge:
   body: |
+    # inject-into: babel/localedata.py
     def merge(dict1: MutableMapping[Any, Any], dict2: Mapping[Any, Any]):
         """Merge the data from `dict2` into the `dict1` dictionary, making copies
         of nested dictionaries.
@@ -2941,6 +3001,7 @@ code merge:
 
 code Alias__resolve:
   body: |
+    # inject-into: babel/localedata.py
     def resolve(self, data: Mapping[str | int | None, Any]):
         """Resolve the alias based on the given data.
     
@@ -2956,6 +3017,7 @@ code Alias__resolve:
 
 code _get_tzinfo:
   body: |
+    # inject-into: babel/localtime/_helpers.py
     def _get_tzinfo(tzenv: str):
         """Get the tzinfo from `zoneinfo` or `pytz`
     
@@ -2966,8 +3028,27 @@ code _get_tzinfo:
         pass
 
 
+code _get_tzinfo_from_file:
+  body: |
+    # inject-into: babel/localtime/_helpers.py
+    # dangling-name: append-if-missing
+    def _get_tzinfo_from_file(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code _get_tzinfo_or_raise:
+  body: |
+    # inject-into: babel/localtime/_helpers.py
+    # dangling-name: append-if-missing
+    def _get_tzinfo_or_raise(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code _get_localzone:
   body: |
+    # inject-into: babel/localtime/_unix.py
     def _get_localzone(_root: str='/'):
         """Tries to find the local timezone configuration.
         This method prefers finding the timezone name and passing that to
@@ -2983,6 +3064,7 @@ code _get_localzone:
 
 code valuestodict:
   body: |
+    # inject-into: babel/localtime/_win32.py
     def valuestodict(key):
         """Convert a registry key's values to a dictionary."""
         pass
@@ -2990,6 +3072,7 @@ code valuestodict:
 
 code get_close_matches:
   body: |
+    # inject-into: babel/messages/catalog.py
     def get_close_matches(word, possibilities, n=3, cutoff=0.6):
         """A modified version of ``difflib.get_close_matches``.
     
@@ -3002,6 +3085,7 @@ code get_close_matches:
 
 code Message__is_identical:
   body: |
+    # inject-into: babel/messages/catalog.py
     def is_identical(self, other: Message):
         """Checks whether messages are identical, taking into account all
             properties.
@@ -3012,6 +3096,7 @@ code Message__is_identical:
 
 code Message__check:
   body: |
+    # inject-into: babel/messages/catalog.py
     def check(self, catalog: Catalog | None=None):
         """Run various validation checks on the message.  Some validations
             are only performed if the catalog is provided.  This method returns
@@ -3028,6 +3113,7 @@ code Message__check:
 
 code Message__fuzzy:
   body: |
+    # inject-into: babel/messages/catalog.py
     def fuzzy(self):
         """Whether the translation is fuzzy.
     
@@ -3046,6 +3132,7 @@ code Message__fuzzy:
 
 code Message__pluralizable:
   body: |
+    # inject-into: babel/messages/catalog.py
     def pluralizable(self):
         """Whether the message is plurizable.
     
@@ -3061,6 +3148,7 @@ code Message__pluralizable:
 
 code Message__python_format:
   body: |
+    # inject-into: babel/messages/catalog.py
     def python_format(self):
         """Whether the message contains Python-style parameters.
     
@@ -3076,6 +3164,7 @@ code Message__python_format:
 
 code Catalog__num_plurals:
   body: |
+    # inject-into: babel/messages/catalog.py
     def num_plurals(self):
         """The number of plurals used by the catalog or locale.
     
@@ -3091,6 +3180,7 @@ code Catalog__num_plurals:
 
 code Catalog__plural_expr:
   body: |
+    # inject-into: babel/messages/catalog.py
     def plural_expr(self):
         """The plural expression used by the catalog or locale.
     
@@ -3108,6 +3198,7 @@ code Catalog__plural_expr:
 
 code Catalog__plural_forms:
   body: |
+    # inject-into: babel/messages/catalog.py
     def plural_forms(self):
         """Return the plural forms declaration for the locale.
     
@@ -3123,6 +3214,7 @@ code Catalog__plural_forms:
 
 code Catalog__add:
   body: |
+    # inject-into: babel/messages/catalog.py
     def add(self, id: _MessageID, string: _MessageID | None=None, locations: Iterable[tuple[str, int]]=(), flags: Iterable[str]=(), auto_comments: Iterable[str]=(), user_comments: Iterable[str]=(), previous_id: _MessageID=(), lineno: int | None=None, context: str | None=None):
         """Add or update the message with the specified ID.
     
@@ -3155,6 +3247,7 @@ code Catalog__add:
 
 code Catalog__check:
   body: |
+    # inject-into: babel/messages/catalog.py
     def check(self):
         """Run various validation checks on the translations in the catalog.
     
@@ -3170,6 +3263,7 @@ code Catalog__check:
 
 code Catalog__get:
   body: |
+    # inject-into: babel/messages/catalog.py
     def get(self, id: _MessageID, context: str | None=None):
         """Return the message with the specified ID and context.
     
@@ -3182,6 +3276,7 @@ code Catalog__get:
 
 code Catalog__delete:
   body: |
+    # inject-into: babel/messages/catalog.py
     def delete(self, id: _MessageID, context: str | None=None):
         """Delete the message with the specified ID and context.
     
@@ -3194,6 +3289,7 @@ code Catalog__delete:
 
 code Catalog__update:
   body: |
+    # inject-into: babel/messages/catalog.py
     def update(self, template: Catalog, no_fuzzy_matching: bool=False, update_header_comment: bool=False, keep_user_comments: bool=True, update_creation_date: bool=True):
         """Update the catalog based on the given template catalog.
     
@@ -3253,6 +3349,7 @@ code Catalog__update:
 
 code Catalog___to_fuzzy_match_key:
   body: |
+    # inject-into: babel/messages/catalog.py
     def _to_fuzzy_match_key(self, key: tuple[str, str] | str):
         """Converts a message key to a string suitable for fuzzy matching."""
         pass
@@ -3260,6 +3357,7 @@ code Catalog___to_fuzzy_match_key:
 
 code Catalog___key_for:
   body: |
+    # inject-into: babel/messages/catalog.py
     def _key_for(self, id: _MessageID, context: str | None=None):
         """The key for a message is just the singular ID even for pluralizable
             messages, but is a ``(msgid, msgctxt)`` tuple for context-specific
@@ -3271,6 +3369,7 @@ code Catalog___key_for:
 
 code Catalog__is_identical:
   body: |
+    # inject-into: babel/messages/catalog.py
     def is_identical(self, other: Catalog):
         """Checks if catalogs are identical, taking into account messages and
             headers.
@@ -3279,8 +3378,72 @@ code Catalog__is_identical:
         pass
 
 
+code _get_header_comment:
+  body: |
+    # inject-into: babel/messages/catalog.py
+    # dangling-name: append-if-missing
+    def _get_header_comment(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code _get_locale:
+  body: |
+    # inject-into: babel/messages/catalog.py
+    # dangling-name: append-if-missing
+    def _get_locale(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code _get_locale_identifier:
+  body: |
+    # inject-into: babel/messages/catalog.py
+    # dangling-name: append-if-missing
+    def _get_locale_identifier(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code _get_mime_headers:
+  body: |
+    # inject-into: babel/messages/catalog.py
+    # dangling-name: append-if-missing
+    def _get_mime_headers(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code _set_header_comment:
+  body: |
+    # inject-into: babel/messages/catalog.py
+    # dangling-name: append-if-missing
+    def _set_header_comment(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code _set_locale:
+  body: |
+    # inject-into: babel/messages/catalog.py
+    # dangling-name: append-if-missing
+    def _set_locale(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code _set_mime_headers:
+  body: |
+    # inject-into: babel/messages/catalog.py
+    # dangling-name: append-if-missing
+    def _set_mime_headers(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code num_plurals:
   body: |
+    # inject-into: babel/messages/checkers.py
     def num_plurals(catalog: Catalog | None, message: Message):
         """Verify the number of plurals in the translation."""
         pass
@@ -3288,6 +3451,7 @@ code num_plurals:
 
 code python_format:
   body: |
+    # inject-into: babel/messages/checkers.py
     def python_format(catalog: Catalog | None, message: Message):
         """Verify the format string placeholders in the translation."""
         pass
@@ -3295,6 +3459,7 @@ code python_format:
 
 code _validate_format:
   body: |
+    # inject-into: babel/messages/checkers.py
     def _validate_format(format: str, alternative: str):
         """Test format string `alternative` against `format`.  `format` can be the
         msgid of a message and `alternative` one of the `msgstr`\s.  The two
@@ -3330,8 +3495,18 @@ code _validate_format:
         pass
 
 
+code _find_checkers:
+  body: |
+    # inject-into: babel/messages/checkers.py
+    # dangling-name: append-if-missing
+    def _find_checkers(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code _strip_comment_tags:
   body: |
+    # inject-into: babel/messages/extract.py
     def _strip_comment_tags(comments: MutableSequence[str], tags: Iterable[str]):
         """Helper function for `extract` that strips comment tags from strings
         in a list of comment lines.  This functions operates in-place.
@@ -3342,6 +3517,7 @@ code _strip_comment_tags:
 
 code extract_from_dir:
   body: |
+    # inject-into: babel/messages/extract.py
     def extract_from_dir(dirname: str | os.PathLike[str] | None=None, method_map: Iterable[tuple[str, str]]=DEFAULT_MAPPING, options_map: SupportsItems[str, dict[str, Any]] | None=None, keywords: Mapping[str, _Keyword]=DEFAULT_KEYWORDS, comment_tags: Collection[str]=(), callback: Callable[[str, str, dict[str, Any]], object] | None=None, strip_comment_tags: bool=False, directory_filter: Callable[[str], bool] | None=None):
         """Extract messages from any source files found in the given directory.
     
@@ -3418,6 +3594,7 @@ code extract_from_dir:
 
 code check_and_call_extract_file:
   body: |
+    # inject-into: babel/messages/extract.py
     def check_and_call_extract_file(filepath: str | os.PathLike[str], method_map: Iterable[tuple[str, str]], options_map: SupportsItems[str, dict[str, Any]], callback: Callable[[str, str, dict[str, Any]], object] | None, keywords: Mapping[str, _Keyword], comment_tags: Collection[str], strip_comment_tags: bool, dirpath: str | os.PathLike[str] | None=None):
         """Checks if the given file matches an extraction method mapping, and if so, calls extract_from_file.
     
@@ -3454,6 +3631,7 @@ code check_and_call_extract_file:
 
 code extract_from_file:
   body: |
+    # inject-into: babel/messages/extract.py
     def extract_from_file(method: _ExtractionMethod, filename: str | os.PathLike[str], keywords: Mapping[str, _Keyword]=DEFAULT_KEYWORDS, comment_tags: Collection[str]=(), options: Mapping[str, Any] | None=None, strip_comment_tags: bool=False):
         """Extract messages from a specific file.
     
@@ -3479,6 +3657,7 @@ code extract_from_file:
 
 code extract:
   body: |
+    # inject-into: babel/messages/extract.py
     def extract(method: _ExtractionMethod, fileobj: _FileObj, keywords: Mapping[str, _Keyword]=DEFAULT_KEYWORDS, comment_tags: Collection[str]=(), options: Mapping[str, Any] | None=None, strip_comment_tags: bool=False):
         """Extract messages from the given file-like object using the specified
         extraction method.
@@ -3525,6 +3704,7 @@ code extract:
 
 code extract_nothing:
   body: |
+    # inject-into: babel/messages/extract.py
     def extract_nothing(fileobj: _FileObj, keywords: Mapping[str, _Keyword], comment_tags: Collection[str], options: Mapping[str, Any]):
         """Pseudo extractor that does not actually extract anything, but simply
         returns an empty list.
@@ -3535,6 +3715,7 @@ code extract_nothing:
 
 code extract_python:
   body: |
+    # inject-into: babel/messages/extract.py
     def extract_python(fileobj: IO[bytes], keywords: Mapping[str, _Keyword], comment_tags: Collection[str], options: _PyOptions):
         """Extract messages from Python source code.
     
@@ -3556,6 +3737,7 @@ code extract_python:
 
 code extract_javascript:
   body: |
+    # inject-into: babel/messages/extract.py
     def extract_javascript(fileobj: _FileObj, keywords: Mapping[str, _Keyword], comment_tags: Collection[str], options: _JSOptions, lineno: int=1):
         """Extract messages from JavaScript source code.
     
@@ -3580,6 +3762,7 @@ code extract_javascript:
 
 code parse_template_string:
   body: |
+    # inject-into: babel/messages/extract.py
     def parse_template_string(template_string: str, keywords: Mapping[str, _Keyword], comment_tags: Collection[str], options: _JSOptions, lineno: int=1):
         """Parse JavaScript template string.
     
@@ -3597,6 +3780,7 @@ code parse_template_string:
 
 code listify_value:
   body: |
+    # inject-into: babel/messages/frontend.py
     def listify_value(arg, split=None):
         """
         Make a list out of an argument.
@@ -3629,6 +3813,7 @@ code listify_value:
 
 code _make_directory_filter:
   body: |
+    # inject-into: babel/messages/frontend.py
     def _make_directory_filter(ignore_patterns):
         """
         Build a directory_filter function based on a list of ignore patterns.
@@ -3639,6 +3824,7 @@ code _make_directory_filter:
 
 code CommandLineInterface__run:
   body: |
+    # inject-into: babel/messages/frontend.py
     def run(self, argv=None):
         """Main entry point of the command-line interface.
     
@@ -3650,6 +3836,7 @@ code CommandLineInterface__run:
 
 code CommandLineInterface___configure_command:
   body: |
+    # inject-into: babel/messages/frontend.py
     def _configure_command(self, cmdname, argv):
         """
             :type cmdname: str
@@ -3661,6 +3848,7 @@ code CommandLineInterface___configure_command:
 
 code parse_mapping:
   body: |
+    # inject-into: babel/messages/frontend.py
     def parse_mapping(fileobj, filename=None):
         """Parse an extraction method mapping from a file-like object.
     
@@ -3716,6 +3904,7 @@ code parse_mapping:
 
 code parse_keywords:
   body: |
+    # inject-into: babel/messages/frontend.py
     def parse_keywords(strings: Iterable[str]=()):
         """Parse keywords specifications from the given list of strings.
     
@@ -3749,8 +3938,18 @@ code parse_keywords:
         pass
 
 
+code main:
+  body: |
+    # inject-into: babel/messages/frontend.py
+    # dangling-name: append-if-missing
+    def main(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code get_rules:
   body: |
+    # inject-into: babel/messages/jslexer.py
     def get_rules(jsx: bool, dotted: bool, template_string: bool):
         """
         Get a tokenization rule list given the passed syntax options.
@@ -3763,6 +3962,7 @@ code get_rules:
 
 code indicates_division:
   body: |
+    # inject-into: babel/messages/jslexer.py
     def indicates_division(token: Token):
         """A helper function that helps the tokenizer to decide if the current
         token may be followed by a division operator.
@@ -3773,6 +3973,7 @@ code indicates_division:
 
 code unquote_string:
   body: |
+    # inject-into: babel/messages/jslexer.py
     def unquote_string(string: str):
         """Unquote a string with JavaScript rules.  The string has to start with
         string delimiters (``'``, ``"`` or the back-tick/grave accent (for template strings).)
@@ -3783,6 +3984,7 @@ code unquote_string:
 
 code tokenize:
   body: |
+    # inject-into: babel/messages/jslexer.py
     def tokenize(source: str, jsx: bool=True, dotted: bool=True, template_string: bool=True, lineno: int=1):
         """
         Tokenize JavaScript/JSX source.  Returns a generator of tokens.
@@ -3798,6 +4000,7 @@ code tokenize:
 
 code read_mo:
   body: |
+    # inject-into: babel/messages/mofile.py
     def read_mo(fileobj: SupportsRead[bytes]):
         """Read a binary MO file from the given file-like object and return a
         corresponding `Catalog` object.
@@ -3814,6 +4017,7 @@ code read_mo:
 
 code write_mo:
   body: |
+    # inject-into: babel/messages/mofile.py
     def write_mo(fileobj: SupportsWrite[bytes], catalog: Catalog, use_fuzzy: bool=False):
         """Write a catalog to the specified file-like object using the GNU MO file
         format.
@@ -3868,6 +4072,7 @@ code write_mo:
 
 code get_plural:
   body: |
+    # inject-into: babel/messages/plurals.py
     def get_plural(locale: str | None=LC_CTYPE):
         """A tuple with the information catalogs need to perform proper
         pluralization.  The first item of the tuple is the number of plural
@@ -3900,6 +4105,7 @@ code get_plural:
 
 code unescape:
   body: |
+    # inject-into: babel/messages/pofile.py
     def unescape(string: str):
         """Reverse `escape` the given string.
     
@@ -3916,6 +4122,7 @@ code unescape:
 
 code denormalize:
   body: |
+    # inject-into: babel/messages/pofile.py
     def denormalize(string: str):
         """Reverse the normalization done by the `normalize` function.
     
@@ -3943,6 +4150,7 @@ code denormalize:
 
 code PoFileParser___add_message:
   body: |
+    # inject-into: babel/messages/pofile.py
     def _add_message(self):
         """
             Add a message to the catalog based on the current parser state and
@@ -3954,6 +4162,7 @@ code PoFileParser___add_message:
 
 code PoFileParser__parse:
   body: |
+    # inject-into: babel/messages/pofile.py
     def parse(self, fileobj: IO[AnyStr]):
         """
             Reads from the file-like object `fileobj` and adds any po file
@@ -3965,6 +4174,7 @@ code PoFileParser__parse:
 
 code read_po:
   body: |
+    # inject-into: babel/messages/pofile.py
     def read_po(fileobj: IO[AnyStr], locale: str | Locale | None=None, domain: str | None=None, ignore_obsolete: bool=False, charset: str | None=None, abort_invalid: bool=False):
         """Read messages from a ``gettext`` PO (portable object) file from the given
         file-like object and return a `Catalog`.
@@ -4018,6 +4228,7 @@ code read_po:
 
 code escape:
   body: |
+    # inject-into: babel/messages/pofile.py
     def escape(string: str):
         """Escape the given string so that it can be included in double-quoted
         strings in ``PO`` files.
@@ -4035,6 +4246,7 @@ code escape:
 
 code normalize:
   body: |
+    # inject-into: babel/messages/pofile.py
     def normalize(string: str, prefix: str='', width: int=76):
         """Convert a string into a format that is appropriate for .po files.
     
@@ -4065,6 +4277,7 @@ code normalize:
 
 code write_po:
   body: |
+    # inject-into: babel/messages/pofile.py
     def write_po(fileobj: SupportsWrite[bytes], catalog: Catalog, width: int=76, no_location: bool=False, omit_header: bool=False, sort_output: bool=False, sort_by_file: bool=False, ignore_obsolete: bool=False, include_previous: bool=False, include_lineno: bool=True):
         """Write a ``gettext`` PO (portable object) template file for a given
         message catalog to the provided file-like object.
@@ -4115,6 +4328,7 @@ code write_po:
 
 code _sort_messages:
   body: |
+    # inject-into: babel/messages/pofile.py
     def _sort_messages(messages: Iterable[Message], sort_by: Literal['message', 'location']):
         """
         Sort the given message iterable by the given criteria.
@@ -4131,6 +4345,7 @@ code _sort_messages:
 
 code check_message_extractors:
   body: |
+    # inject-into: babel/messages/setuptools_frontend.py
     def check_message_extractors(dist, name, value):
         """Validate the ``message_extractors`` keyword argument to ``setup()``.
     
@@ -4146,6 +4361,7 @@ code check_message_extractors:
 
 code list_currencies:
   body: |
+    # inject-into: babel/numbers.py
     def list_currencies(locale: Locale | str | None=None):
         """ Return a `set` of normalized currency codes.
     
@@ -4162,6 +4378,7 @@ code list_currencies:
 
 code validate_currency:
   body: |
+    # inject-into: babel/numbers.py
     def validate_currency(currency: str, locale: Locale | str | None=None):
         """ Check the currency code is recognized by Babel.
     
@@ -4176,6 +4393,7 @@ code validate_currency:
 
 code is_currency:
   body: |
+    # inject-into: babel/numbers.py
     def is_currency(currency: str, locale: Locale | str | None=None):
         """ Returns `True` only if a currency is recognized by Babel.
     
@@ -4187,6 +4405,7 @@ code is_currency:
 
 code normalize_currency:
   body: |
+    # inject-into: babel/numbers.py
     def normalize_currency(currency: str, locale: Locale | str | None=None):
         """Returns the normalized identifier of any currency code.
     
@@ -4201,6 +4420,7 @@ code normalize_currency:
 
 code get_currency_name:
   body: |
+    # inject-into: babel/numbers.py
     def get_currency_name(currency: str, count: float | decimal.Decimal | None=None, locale: Locale | str | None=LC_NUMERIC):
         """Return the name used by the locale for the specified currency.
     
@@ -4220,6 +4440,7 @@ code get_currency_name:
 
 code get_currency_symbol:
   body: |
+    # inject-into: babel/numbers.py
     def get_currency_symbol(currency: str, locale: Locale | str | None=LC_NUMERIC):
         """Return the symbol used by the locale for the specified currency.
     
@@ -4235,6 +4456,7 @@ code get_currency_symbol:
 
 code get_currency_precision:
   body: |
+    # inject-into: babel/numbers.py
     def get_currency_precision(currency: str):
         """Return currency's precision.
     
@@ -4251,6 +4473,7 @@ code get_currency_precision:
 
 code get_currency_unit_pattern:
   body: |
+    # inject-into: babel/numbers.py
     def get_currency_unit_pattern(currency: str, count: float | decimal.Decimal | None=None, locale: Locale | str | None=LC_NUMERIC):
         """
         Return the unit pattern used for long display of a currency value
@@ -4275,6 +4498,7 @@ code get_currency_unit_pattern:
 
 code get_territory_currencies:
   body: |
+    # inject-into: babel/numbers.py
     def get_territory_currencies(territory: str, start_date: datetime.date | None=None, end_date: datetime.date | None=None, tender: bool=True, non_tender: bool=False, include_details: bool=False):
         """Returns the list of currencies for the given territory that are valid for
         the given date range.  In addition to that the currency database
@@ -4331,6 +4555,7 @@ code get_territory_currencies:
 
 code get_decimal_symbol:
   body: |
+    # inject-into: babel/numbers.py
     def get_decimal_symbol(locale: Locale | str | None=LC_NUMERIC, *, numbering_system: Literal['default'] | str='latn'):
         """Return the symbol used by the locale to separate decimal fractions.
     
@@ -4352,6 +4577,7 @@ code get_decimal_symbol:
 
 code get_plus_sign_symbol:
   body: |
+    # inject-into: babel/numbers.py
     def get_plus_sign_symbol(locale: Locale | str | None=LC_NUMERIC, *, numbering_system: Literal['default'] | str='latn'):
         """Return the plus sign symbol used by the current locale.
     
@@ -4373,6 +4599,7 @@ code get_plus_sign_symbol:
 
 code get_minus_sign_symbol:
   body: |
+    # inject-into: babel/numbers.py
     def get_minus_sign_symbol(locale: Locale | str | None=LC_NUMERIC, *, numbering_system: Literal['default'] | str='latn'):
         """Return the plus sign symbol used by the current locale.
     
@@ -4394,6 +4621,7 @@ code get_minus_sign_symbol:
 
 code get_exponential_symbol:
   body: |
+    # inject-into: babel/numbers.py
     def get_exponential_symbol(locale: Locale | str | None=LC_NUMERIC, *, numbering_system: Literal['default'] | str='latn'):
         """Return the symbol used by the locale to separate mantissa and exponent.
     
@@ -4415,6 +4643,7 @@ code get_exponential_symbol:
 
 code get_group_symbol:
   body: |
+    # inject-into: babel/numbers.py
     def get_group_symbol(locale: Locale | str | None=LC_NUMERIC, *, numbering_system: Literal['default'] | str='latn'):
         """Return the symbol used by the locale to separate groups of thousands.
     
@@ -4436,6 +4665,7 @@ code get_group_symbol:
 
 code get_infinity_symbol:
   body: |
+    # inject-into: babel/numbers.py
     def get_infinity_symbol(locale: Locale | str | None=LC_NUMERIC, *, numbering_system: Literal['default'] | str='latn'):
         """Return the symbol used by the locale to represent infinity.
     
@@ -4457,6 +4687,7 @@ code get_infinity_symbol:
 
 code format_number:
   body: |
+    # inject-into: babel/numbers.py
     def format_number(number: float | decimal.Decimal | str, locale: Locale | str | None=LC_NUMERIC):
         """Return the given number formatted for a specific locale.
     
@@ -4480,6 +4711,7 @@ code format_number:
 
 code get_decimal_precision:
   body: |
+    # inject-into: babel/numbers.py
     def get_decimal_precision(number: decimal.Decimal):
         """Return maximum precision of a decimal instance's fractional part.
     
@@ -4491,6 +4723,7 @@ code get_decimal_precision:
 
 code get_decimal_quantum:
   body: |
+    # inject-into: babel/numbers.py
     def get_decimal_quantum(precision: int | decimal.Decimal):
         """Return minimal quantum of a number, as defined by precision."""
         pass
@@ -4498,6 +4731,7 @@ code get_decimal_quantum:
 
 code format_decimal:
   body: |
+    # inject-into: babel/numbers.py
     def format_decimal(number: float | decimal.Decimal | str, format: str | NumberPattern | None=None, locale: Locale | str | None=LC_NUMERIC, decimal_quantization: bool=True, group_separator: bool=True, *, numbering_system: Literal['default'] | str='latn'):
         """Return the given decimal number formatted for a specific locale.
     
@@ -4552,6 +4786,7 @@ code format_decimal:
 
 code format_compact_decimal:
   body: |
+    # inject-into: babel/numbers.py
     def format_compact_decimal(number: float | decimal.Decimal | str, *, format_type: Literal['short', 'long']='short', locale: Locale | str | None=LC_NUMERIC, fraction_digits: int=0, numbering_system: Literal['default'] | str='latn'):
         """Return the given decimal number formatted for a specific locale in compact form.
     
@@ -4584,6 +4819,7 @@ code format_compact_decimal:
 
 code _get_compact_format:
   body: |
+    # inject-into: babel/numbers.py
     def _get_compact_format(number: float | decimal.Decimal | str, compact_format: LocaleDataDict, locale: Locale, fraction_digits: int):
         """Returns the number after dividing by the unit and the format pattern to use.
         The algorithm is described here:
@@ -4595,6 +4831,7 @@ code _get_compact_format:
 
 code format_currency:
   body: |
+    # inject-into: babel/numbers.py
     def format_currency(number: float | decimal.Decimal | str, currency: str, format: str | NumberPattern | None=None, locale: Locale | str | None=LC_NUMERIC, currency_digits: bool=True, format_type: Literal['name', 'standard', 'accounting']='standard', decimal_quantization: bool=True, group_separator: bool=True, *, numbering_system: Literal['default'] | str='latn'):
         """Return formatted currency value.
     
@@ -4693,6 +4930,7 @@ code format_currency:
 
 code format_compact_currency:
   body: |
+    # inject-into: babel/numbers.py
     def format_compact_currency(number: float | decimal.Decimal | str, currency: str, *, format_type: Literal['short']='short', locale: Locale | str | None=LC_NUMERIC, fraction_digits: int=0, numbering_system: Literal['default'] | str='latn'):
         """Format a number as a currency value in compact form.
     
@@ -4718,6 +4956,7 @@ code format_compact_currency:
 
 code format_percent:
   body: |
+    # inject-into: babel/numbers.py
     def format_percent(number: float | decimal.Decimal | str, format: str | NumberPattern | None=None, locale: Locale | str | None=LC_NUMERIC, decimal_quantization: bool=True, group_separator: bool=True, *, numbering_system: Literal['default'] | str='latn'):
         """Return formatted percent value for a specific locale.
     
@@ -4767,6 +5006,7 @@ code format_percent:
 
 code format_scientific:
   body: |
+    # inject-into: babel/numbers.py
     def format_scientific(number: float | decimal.Decimal | str, format: str | NumberPattern | None=None, locale: Locale | str | None=LC_NUMERIC, decimal_quantization: bool=True, *, numbering_system: Literal['default'] | str='latn'):
         """Return value formatted in scientific notation for a specific locale.
     
@@ -4804,6 +5044,7 @@ code format_scientific:
 
 code parse_number:
   body: |
+    # inject-into: babel/numbers.py
     def parse_number(string: str, locale: Locale | str | None=LC_NUMERIC, *, numbering_system: Literal['default'] | str='latn'):
         """Parse localized number string into an integer.
     
@@ -4833,6 +5074,7 @@ code parse_number:
 
 code parse_decimal:
   body: |
+    # inject-into: babel/numbers.py
     def parse_decimal(string: str, locale: Locale | str | None=LC_NUMERIC, strict: bool=False, *, numbering_system: Literal['default'] | str='latn'):
         """Parse localized decimal string into a decimal.
     
@@ -4881,6 +5123,7 @@ code parse_decimal:
 
 code _remove_trailing_zeros_after_decimal:
   body: |
+    # inject-into: babel/numbers.py
     def _remove_trailing_zeros_after_decimal(string: str, decimal_symbol: str):
         """
         Remove trailing zeros from the decimal part of a numeric string.
@@ -4911,6 +5154,7 @@ code _remove_trailing_zeros_after_decimal:
 
 code parse_grouping:
   body: |
+    # inject-into: babel/numbers.py
     def parse_grouping(p: str):
         """Parse primary and secondary digit grouping
     
@@ -4927,6 +5171,7 @@ code parse_grouping:
 
 code parse_pattern:
   body: |
+    # inject-into: babel/numbers.py
     def parse_pattern(pattern: NumberPattern | str):
         """Parse number format patterns"""
         pass
@@ -4934,6 +5179,7 @@ code parse_pattern:
 
 code NumberPattern__compute_scale:
   body: |
+    # inject-into: babel/numbers.py
     def compute_scale(self):
         """Return the scaling factor to apply to the number before rendering.
     
@@ -4947,6 +5193,7 @@ code NumberPattern__compute_scale:
 
 code NumberPattern__scientific_notation_elements:
   body: |
+    # inject-into: babel/numbers.py
     def scientific_notation_elements(self, value: decimal.Decimal, locale: Locale | str | None, *, numbering_system: Literal['default'] | str='latn'):
         """ Returns normalized scientific notation components of a value.
             
@@ -4956,6 +5203,7 @@ code NumberPattern__scientific_notation_elements:
 
 code NumberPattern__apply:
   body: |
+    # inject-into: babel/numbers.py
     def apply(self, value: float | decimal.Decimal | str, locale: Locale | str | None, currency: str | None=None, currency_digits: bool=True, decimal_quantization: bool=True, force_frac: tuple[int, int] | None=None, group_separator: bool=True, *, numbering_system: Literal['default'] | str='latn'):
         """Renders into a string a number following the defined pattern.
     
@@ -4991,6 +5239,7 @@ code NumberPattern__apply:
 
 code Format__date:
   body: |
+    # inject-into: babel/support.py
     def date(self, date: datetime.date | None=None, format: _PredefinedTimeFormat | str='medium'):
         """Return a date formatted according to the given pattern.
     
@@ -5005,6 +5254,7 @@ code Format__date:
 
 code Format__datetime:
   body: |
+    # inject-into: babel/support.py
     def datetime(self, datetime: datetime.date | None=None, format: _PredefinedTimeFormat | str='medium'):
         """Return a date and time formatted according to the given pattern.
     
@@ -5020,6 +5270,7 @@ code Format__datetime:
 
 code Format__time:
   body: |
+    # inject-into: babel/support.py
     def time(self, time: datetime.time | datetime.datetime | None=None, format: _PredefinedTimeFormat | str='medium'):
         """Return a time formatted according to the given pattern.
     
@@ -5035,6 +5286,7 @@ code Format__time:
 
 code Format__timedelta:
   body: |
+    # inject-into: babel/support.py
     def timedelta(self, delta: datetime.timedelta | int, granularity: Literal['year', 'month', 'week', 'day', 'hour', 'minute', 'second']='second', threshold: float=0.85, format: Literal['narrow', 'short', 'medium', 'long']='long', add_direction: bool=False):
         """Return a time delta according to the rules of the given locale.
     
@@ -5049,6 +5301,7 @@ code Format__timedelta:
 
 code Format__number:
   body: |
+    # inject-into: babel/support.py
     def number(self, number: float | decimal.Decimal | str):
         """Return an integer number formatted for the locale.
     
@@ -5062,6 +5315,7 @@ code Format__number:
 
 code Format__decimal:
   body: |
+    # inject-into: babel/support.py
     def decimal(self, number: float | decimal.Decimal | str, format: str | None=None):
         """Return a decimal number formatted for the locale.
     
@@ -5075,6 +5329,7 @@ code Format__decimal:
 
 code Format__compact_decimal:
   body: |
+    # inject-into: babel/support.py
     def compact_decimal(self, number: float | decimal.Decimal | str, format_type: Literal['short', 'long']='short', fraction_digits: int=0):
         """Return a number formatted in compact form for the locale.
     
@@ -5090,6 +5345,7 @@ code Format__compact_decimal:
 
 code Format__currency:
   body: |
+    # inject-into: babel/support.py
     def currency(self, number: float | decimal.Decimal | str, currency: str):
         """Return a number in the given currency formatted for the locale.
             
@@ -5099,6 +5355,7 @@ code Format__currency:
 
 code Format__compact_currency:
   body: |
+    # inject-into: babel/support.py
     def compact_currency(self, number: float | decimal.Decimal | str, currency: str, format_type: Literal['short']='short', fraction_digits: int=0):
         """Return a number in the given currency formatted for the locale
             using the compact number format.
@@ -5112,6 +5369,7 @@ code Format__compact_currency:
 
 code Format__percent:
   body: |
+    # inject-into: babel/support.py
     def percent(self, number: float | decimal.Decimal | str, format: str | None=None):
         """Return a number formatted as percentage for the locale.
     
@@ -5125,6 +5383,7 @@ code Format__percent:
 
 code Format__scientific:
   body: |
+    # inject-into: babel/support.py
     def scientific(self, number: float | decimal.Decimal | str):
         """Return a number formatted using scientific notation for the locale.
             
@@ -5134,6 +5393,7 @@ code Format__scientific:
 
 code NullTranslations__dgettext:
   body: |
+    # inject-into: babel/support.py
     def dgettext(self, domain: str, message: str):
         """Like ``gettext()``, but look the message up in the specified
             domain.
@@ -5144,6 +5404,7 @@ code NullTranslations__dgettext:
 
 code NullTranslations__ldgettext:
   body: |
+    # inject-into: babel/support.py
     def ldgettext(self, domain: str, message: str):
         """Like ``lgettext()``, but look the message up in the specified
             domain.
@@ -5154,6 +5415,7 @@ code NullTranslations__ldgettext:
 
 code NullTranslations__udgettext:
   body: |
+    # inject-into: babel/support.py
     def udgettext(self, domain: str, message: str):
         """Like ``ugettext()``, but look the message up in the specified
             domain.
@@ -5164,6 +5426,7 @@ code NullTranslations__udgettext:
 
 code NullTranslations__dngettext:
   body: |
+    # inject-into: babel/support.py
     def dngettext(self, domain: str, singular: str, plural: str, num: int):
         """Like ``ngettext()``, but look the message up in the specified
             domain.
@@ -5174,6 +5437,7 @@ code NullTranslations__dngettext:
 
 code NullTranslations__ldngettext:
   body: |
+    # inject-into: babel/support.py
     def ldngettext(self, domain: str, singular: str, plural: str, num: int):
         """Like ``lngettext()``, but look the message up in the specified
             domain.
@@ -5184,6 +5448,7 @@ code NullTranslations__ldngettext:
 
 code NullTranslations__udngettext:
   body: |
+    # inject-into: babel/support.py
     def udngettext(self, domain: str, singular: str, plural: str, num: int):
         """Like ``ungettext()`` but look the message up in the specified
             domain.
@@ -5194,6 +5459,7 @@ code NullTranslations__udngettext:
 
 code NullTranslations__pgettext:
   body: |
+    # inject-into: babel/support.py
     def pgettext(self, context: str, message: str):
         """Look up the `context` and `message` id in the catalog and return the
             corresponding message string, as an 8-bit string encoded with the
@@ -5208,6 +5474,7 @@ code NullTranslations__pgettext:
 
 code NullTranslations__lpgettext:
   body: |
+    # inject-into: babel/support.py
     def lpgettext(self, context: str, message: str):
         """Equivalent to ``pgettext()``, but the translation is returned in the
             preferred system encoding, if no other encoding was explicitly set with
@@ -5219,6 +5486,7 @@ code NullTranslations__lpgettext:
 
 code NullTranslations__npgettext:
   body: |
+    # inject-into: babel/support.py
     def npgettext(self, context: str, singular: str, plural: str, num: int):
         """Do a plural-forms lookup of a message id.  `singular` is used as the
             message id for purposes of lookup in the catalog, while `num` is used to
@@ -5236,6 +5504,7 @@ code NullTranslations__npgettext:
 
 code NullTranslations__lnpgettext:
   body: |
+    # inject-into: babel/support.py
     def lnpgettext(self, context: str, singular: str, plural: str, num: int):
         """Equivalent to ``npgettext()``, but the translation is returned in the
             preferred system encoding, if no other encoding was explicitly set with
@@ -5247,6 +5516,7 @@ code NullTranslations__lnpgettext:
 
 code NullTranslations__upgettext:
   body: |
+    # inject-into: babel/support.py
     def upgettext(self, context: str, message: str):
         """Look up the `context` and `message` id in the catalog and return the
             corresponding message string, as a Unicode string.  If there is no entry
@@ -5260,6 +5530,7 @@ code NullTranslations__upgettext:
 
 code NullTranslations__unpgettext:
   body: |
+    # inject-into: babel/support.py
     def unpgettext(self, context: str, singular: str, plural: str, num: int):
         """Do a plural-forms lookup of a message id.  `singular` is used as the
             message id for purposes of lookup in the catalog, while `num` is used to
@@ -5277,6 +5548,7 @@ code NullTranslations__unpgettext:
 
 code NullTranslations__dpgettext:
   body: |
+    # inject-into: babel/support.py
     def dpgettext(self, domain: str, context: str, message: str):
         """Like `pgettext()`, but look the message up in the specified
             `domain`.
@@ -5287,6 +5559,7 @@ code NullTranslations__dpgettext:
 
 code NullTranslations__udpgettext:
   body: |
+    # inject-into: babel/support.py
     def udpgettext(self, domain: str, context: str, message: str):
         """Like `upgettext()`, but look the message up in the specified
             `domain`.
@@ -5297,6 +5570,7 @@ code NullTranslations__udpgettext:
 
 code NullTranslations__ldpgettext:
   body: |
+    # inject-into: babel/support.py
     def ldpgettext(self, domain: str, context: str, message: str):
         """Equivalent to ``dpgettext()``, but the translation is returned in the
             preferred system encoding, if no other encoding was explicitly set with
@@ -5308,6 +5582,7 @@ code NullTranslations__ldpgettext:
 
 code NullTranslations__dnpgettext:
   body: |
+    # inject-into: babel/support.py
     def dnpgettext(self, domain: str, context: str, singular: str, plural: str, num: int):
         """Like ``npgettext``, but look the message up in the specified
             `domain`.
@@ -5318,6 +5593,7 @@ code NullTranslations__dnpgettext:
 
 code NullTranslations__udnpgettext:
   body: |
+    # inject-into: babel/support.py
     def udnpgettext(self, domain: str, context: str, singular: str, plural: str, num: int):
         """Like ``unpgettext``, but look the message up in the specified
             `domain`.
@@ -5328,6 +5604,7 @@ code NullTranslations__udnpgettext:
 
 code NullTranslations__ldnpgettext:
   body: |
+    # inject-into: babel/support.py
     def ldnpgettext(self, domain: str, context: str, singular: str, plural: str, num: int):
         """Equivalent to ``dnpgettext()``, but the translation is returned in
             the preferred system encoding, if no other encoding was explicitly set
@@ -5339,6 +5616,7 @@ code NullTranslations__ldnpgettext:
 
 code Translations__load:
   body: |
+    # inject-into: babel/support.py
     def load(cls, dirname: str | os.PathLike[str] | None=None, locales: Iterable[str | Locale] | str | Locale | None=None, domain: str | None=None):
         """Load translations from the given directory.
     
@@ -5354,6 +5632,7 @@ code Translations__load:
 
 code Translations__add:
   body: |
+    # inject-into: babel/support.py
     def add(self, translations: Translations, merge: bool=True):
         """Add the given translations to the catalog.
     
@@ -5373,6 +5652,7 @@ code Translations__add:
 
 code Translations__merge:
   body: |
+    # inject-into: babel/support.py
     def merge(self, translations: Translations):
         """Merge the given translations into the catalog.
     
@@ -5388,6 +5668,7 @@ code Translations__merge:
 
 code _locales_to_names:
   body: |
+    # inject-into: babel/support.py
     def _locales_to_names(locales: Iterable[str | Locale] | str | Locale | None):
         """Normalize a `locales` argument to a list of locale names.
     
@@ -5399,8 +5680,45 @@ code _locales_to_names:
         pass
 
 
+code udgettext:
+  body: |
+    # inject-into: babel/support.py
+    # dangling-name: append-if-missing
+    def udgettext(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code udngettext:
+  body: |
+    # inject-into: babel/support.py
+    # dangling-name: append-if-missing
+    def udngettext(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code udnpgettext:
+  body: |
+    # inject-into: babel/support.py
+    # dangling-name: append-if-missing
+    def udnpgettext(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code udpgettext:
+  body: |
+    # inject-into: babel/support.py
+    # dangling-name: append-if-missing
+    def udpgettext(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code get_unit_name:
   body: |
+    # inject-into: babel/units.py
     def get_unit_name(measurement_unit: str, length: Literal['short', 'long', 'narrow']='long', locale: Locale | str | None=LC_NUMERIC):
         """
         Get the display name for a measurement unit in the given locale.
@@ -5429,6 +5747,7 @@ code get_unit_name:
 
 code _find_unit_pattern:
   body: |
+    # inject-into: babel/units.py
     def _find_unit_pattern(unit_id: str, locale: Locale | str | None=LC_NUMERIC):
         """
         Expand a unit into a qualified form.
@@ -5452,6 +5771,7 @@ code _find_unit_pattern:
 
 code format_unit:
   body: |
+    # inject-into: babel/units.py
     def format_unit(value: str | float | decimal.Decimal, measurement_unit: str, length: Literal['short', 'long', 'narrow']='long', format: str | None=None, locale: Locale | str | None=LC_NUMERIC, *, numbering_system: Literal['default'] | str='latn'):
         """Format a value of a given unit.
     
@@ -5510,6 +5830,7 @@ code format_unit:
 
 code _find_compound_unit:
   body: |
+    # inject-into: babel/units.py
     def _find_compound_unit(numerator_unit: str, denominator_unit: str, locale: Locale | str | None=LC_NUMERIC):
         """
         Find a predefined compound unit pattern.
@@ -5540,6 +5861,7 @@ code _find_compound_unit:
 
 code format_compound_unit:
   body: |
+    # inject-into: babel/units.py
     def format_compound_unit(numerator_value: str | float | decimal.Decimal, numerator_unit: str | None=None, denominator_value: str | float | decimal.Decimal=1, denominator_unit: str | None=None, length: Literal['short', 'long', 'narrow']='long', format: str | None=None, locale: Locale | str | None=LC_NUMERIC, *, numbering_system: Literal['default'] | str='latn'):
         """
         Format a compound number value, i.e. "kilometers per hour" or similar.
@@ -5597,6 +5919,7 @@ code format_compound_unit:
 
 code distinct:
   body: |
+    # inject-into: babel/util.py
     def distinct(iterable: Iterable[_T]):
         """Yield all items in an iterable collection that are distinct.
     
@@ -5616,6 +5939,7 @@ code distinct:
 
 code parse_encoding:
   body: |
+    # inject-into: babel/util.py
     def parse_encoding(fp: IO[bytes]):
         """Deduce the encoding of a source file from magic comment.
     
@@ -5633,6 +5957,7 @@ code parse_encoding:
 
 code parse_future_flags:
   body: |
+    # inject-into: babel/util.py
     def parse_future_flags(fp: IO[bytes], encoding: str='latin-1'):
         """Parse the compiler flags by :mod:`__future__` from the given Python
         code.
@@ -5643,6 +5968,7 @@ code parse_future_flags:
 
 code pathmatch:
   body: |
+    # inject-into: babel/util.py
     def pathmatch(pattern: str, filename: str):
         """Extended pathname pattern matching.
     
@@ -5687,6 +6013,7 @@ code pathmatch:
 
 code wraptext:
   body: |
+    # inject-into: babel/util.py
     def wraptext(text: str, width: int=70, initial_indent: str='', subsequent_indent: str=''):
         """Simple wrapper around the ``textwrap.wrap`` function in the standard
         library. This version does not wrap lines on hyphens in words.
@@ -5699,4 +6026,13 @@ code wraptext:
                                   the first of wrapped output
         
         """
+        pass
+
+
+code _cmp:
+  body: |
+    # inject-into: babel/util.py
+    # dangling-name: append-if-missing
+    def _cmp(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
         pass

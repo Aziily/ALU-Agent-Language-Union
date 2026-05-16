@@ -131,6 +131,7 @@ def inject_filled_al(
         # File hint from comment + class hint from node name
         file_hint = _extract_file_hint(body_text)
         class_hint = _class_hint_from_node_name(d.name)
+        dangling = _extract_dangling_marker(body_text)
 
         matched = _find_and_inject(
             workdir=workdir,
@@ -139,6 +140,16 @@ def inject_filled_al(
             file_hint=file_hint,
             class_hint=class_hint,
         )
+        if matched is None and dangling and file_hint:
+            # H12: no stripped target exists because the source removed
+            # the def entirely. Append the new function to the hinted
+            # file so subsequent imports resolve it.
+            appended = _append_to_file(
+                workdir=workdir, file_hint=file_hint, body_ast=body_ast,
+                fn_name=target_fn_name,
+            )
+            if appended is not None:
+                matched = appended
         if matched is None:
             report.skipped[d.name] = (
                 f"no stripped target for {target_fn_name!r}"
@@ -183,6 +194,118 @@ def _extract_file_hint(body_text: str) -> str | None:
     """Look for ``# inject-into: <path>`` comment anywhere in body."""
     m = _INJECT_INTO_RE.search(body_text)
     return m.group(1) if m else None
+
+
+_DANGLING_MARKER_RE = re.compile(r"#\s*dangling-name:\s*append-if-missing", re.IGNORECASE)
+
+
+def _extract_dangling_marker(body_text: str) -> bool:
+    """Detect H12's ``# dangling-name: append-if-missing`` marker.
+
+    Tells ``inject_filled_al`` that the function is expected to NOT be
+    present in workdir yet — instead of failing with "no stripped
+    target", append the def at the end of the hinted source file so
+    other modules' imports can resolve it.
+    """
+    return bool(_DANGLING_MARKER_RE.search(body_text))
+
+
+def _append_to_file(
+    *,
+    workdir: Path,
+    file_hint: str,
+    body_ast: ast.AST,
+    fn_name: str,
+) -> Path | None:
+    """Insert ``body_ast`` (unparsed) into ``workdir/file_hint`` BEFORE
+    its first downstream reference at module level.
+
+    Used by the H12 dangling-name path: if the AL filled .al contains a
+    ``code <name>:`` node whose body has a ``# dangling-name:`` marker
+    and no stripped target was found at injection time, we add the new
+    function to the hinted file so that:
+
+      (a) ``from <module> import <name>`` resolves at import time,
+      (b) class-body references like ``__setitem__ = <name>`` see
+          ``<name>`` already bound when the class is constructed.
+
+    To satisfy (b), the def MUST be inserted BEFORE its first
+    module-level use. We find the latest of (last top-level import,
+    last top-level future import) and insert immediately after that
+    block; this puts the new def before any class / module-level
+    assignment that might reference it.
+
+    Returns the relative path of the file written, or None on failure.
+    """
+    target = workdir / file_hint
+    if not target.exists():
+        return None
+    src_text = target.read_text(encoding="utf-8")
+    try:
+        existing_tree = ast.parse(src_text)
+    except (SyntaxError, UnicodeDecodeError):
+        return None
+    # If already defined at top level, fall through to the standard
+    # replace path (only triggers when iter > 0 revert wasn't clean).
+    for node in existing_tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == fn_name:
+            _replace_function_in_file(target, node, body_ast)
+            return target.relative_to(workdir)
+    try:
+        rendered = ast.unparse(body_ast)
+    except Exception:
+        return None
+
+    # Find the insertion line — directly after the last top-level
+    # ``import`` / ``from ... import`` statement (skipping initial
+    # docstring), or position 0 if the file has no imports.
+    src_lines = src_text.splitlines(keepends=True)
+    insert_lineno = 0  # ast line numbers are 1-indexed; 0 = top of file
+    for node in existing_tree.body:
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            # node.end_lineno is the last line of this statement (1-indexed)
+            end = getattr(node, "end_lineno", node.lineno)
+            insert_lineno = max(insert_lineno, end)
+        elif isinstance(node, ast.Expr) \
+                and isinstance(node.value, ast.Constant) \
+                and isinstance(node.value.value, str):
+            # Module docstring — keep at top, advance insertion past it.
+            end = getattr(node, "end_lineno", node.lineno)
+            insert_lineno = max(insert_lineno, end)
+        elif isinstance(node, ast.Try) and _is_import_only_try(node):
+            # try/except-import wrapper — also part of the import block
+            end = getattr(node, "end_lineno", node.lineno)
+            insert_lineno = max(insert_lineno, end)
+        else:
+            # Stop at first non-import / non-docstring / non-import-try
+            break
+    # Splice in our rendered def at insert_lineno (0-indexed list pos).
+    new_block = "\n\n" + rendered + "\n"
+    src_lines.insert(insert_lineno, new_block)
+    target.write_text("".join(src_lines), encoding="utf-8")
+    return target.relative_to(workdir)
+
+
+def _is_import_only_try(node: ast.Try) -> bool:
+    """True when a top-level try/except block contains ONLY import
+    statements (the common ``try: import C except ImportError: ...``
+    pattern). Used by ``_append_to_file`` to extend the import-block
+    boundary so dangling-name defs land below it.
+    """
+    def _all_imports(stmts: list[ast.stmt]) -> bool:
+        return bool(stmts) and all(
+            isinstance(s, (ast.Import, ast.ImportFrom)) for s in stmts
+        )
+    if not _all_imports(node.body):
+        return False
+    for h in node.handlers:
+        if not _all_imports(h.body):
+            return False
+    if node.orelse and not _all_imports(node.orelse):
+        return False
+    if node.finalbody and not _all_imports(node.finalbody):
+        return False
+    return True
 
 
 def _class_hint_from_node_name(node_name: str) -> str | None:

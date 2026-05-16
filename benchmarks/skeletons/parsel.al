@@ -353,6 +353,8 @@ flow selector_group:
     - Selector__remove
     - Selector__drop
     - Selector__attrib
+    - get
+    - getall
 
 
 flow utils_group:
@@ -368,10 +370,12 @@ flow xpathfuncs_group:
   steps:
     - set_xpathfunc
     - has_class
+    - setup
 
 
 code TranslatorMixin__xpath_pseudo_element:
   body: |
+    # inject-into: parsel/csstranslator.py
     def xpath_pseudo_element(self, xpath: OriginalXPathExpr, pseudo_element: PseudoElement):
         """
             Dispatch method that transforms XPath to support pseudo-element
@@ -382,6 +386,7 @@ code TranslatorMixin__xpath_pseudo_element:
 
 code TranslatorMixin__xpath_attr_functional_pseudo_element:
   body: |
+    # inject-into: parsel/csstranslator.py
     def xpath_attr_functional_pseudo_element(self, xpath: OriginalXPathExpr, function: FunctionalPseudoElement):
         """Support selecting attribute values using ::attr() pseudo-element"""
         pass
@@ -389,6 +394,7 @@ code TranslatorMixin__xpath_attr_functional_pseudo_element:
 
 code TranslatorMixin__xpath_text_simple_pseudo_element:
   body: |
+    # inject-into: parsel/csstranslator.py
     def xpath_text_simple_pseudo_element(self, xpath: OriginalXPathExpr):
         """Support selecting text nodes using ::text pseudo-element"""
         pass
@@ -396,6 +402,7 @@ code TranslatorMixin__xpath_text_simple_pseudo_element:
 
 code css2xpath:
   body: |
+    # inject-into: parsel/csstranslator.py
     def css2xpath(query: str):
         """Return translated XPath version of a given CSS query"""
         pass
@@ -403,6 +410,7 @@ code css2xpath:
 
 code create_root_node:
   body: |
+    # inject-into: parsel/selector.py
     def create_root_node(text: str, parser_cls: Type[_ParserType], base_url: Optional[str]=None, huge_tree: bool=LXML_SUPPORTS_HUGE_TREE, body: bytes=b'', encoding: str='utf8'):
         """Create root node for text using given parser class."""
         pass
@@ -410,18 +418,21 @@ code create_root_node:
 
 code SelectorList____getitem__:
   body: |
+    # inject-into: parsel/selector.py
     def __getitem__(self, pos: 'SupportsIndex'):
         pass
 
 
 code SelectorList____getitem__:
   body: |
+    # inject-into: parsel/selector.py
     def __getitem__(self, pos: slice):
         pass
 
 
 code SelectorList__jmespath:
   body: |
+    # inject-into: parsel/selector.py
     def jmespath(self, query: str, **kwargs: Any):
         """
             Call the ``.jmespath()`` method for each element in this list and return
@@ -440,6 +451,7 @@ code SelectorList__jmespath:
 
 code SelectorList__xpath:
   body: |
+    # inject-into: parsel/selector.py
     def xpath(self, xpath: str, namespaces: Optional[Mapping[str, str]]=None, **kwargs: Any):
         """
             Call the ``.xpath()`` method for each element in this list and return
@@ -463,6 +475,7 @@ code SelectorList__xpath:
 
 code SelectorList__css:
   body: |
+    # inject-into: parsel/selector.py
     def css(self, query: str):
         """
             Call the ``.css()`` method for each element in this list and return
@@ -476,6 +489,7 @@ code SelectorList__css:
 
 code SelectorList__re:
   body: |
+    # inject-into: parsel/selector.py
     def re(self, regex: Union[str, Pattern[str]], replace_entities: bool=True):
         """
             Call the ``.re()`` method for each element in this list and return
@@ -492,6 +506,7 @@ code SelectorList__re:
 
 code SelectorList__re_first:
   body: |
+    # inject-into: parsel/selector.py
     def re_first(self, regex: Union[str, Pattern[str]], default: Optional[str]=None, replace_entities: bool=True):
         """
             Call the ``.re()`` method for the first element in this list and
@@ -510,6 +525,7 @@ code SelectorList__re_first:
 
 code SelectorList__getall:
   body: |
+    # inject-into: parsel/selector.py
     def getall(self):
         """
             Call the ``.get()`` method for each element is this list and return
@@ -521,6 +537,7 @@ code SelectorList__getall:
 
 code SelectorList__get:
   body: |
+    # inject-into: parsel/selector.py
     def get(self, default: Optional[str]=None):
         """
             Return the result of ``.get()`` for the first element in this list.
@@ -532,6 +549,7 @@ code SelectorList__get:
 
 code SelectorList__attrib:
   body: |
+    # inject-into: parsel/selector.py
     def attrib(self):
         """Return the attributes dictionary for the first element.
             If the list is empty, return an empty dict.
@@ -542,6 +560,7 @@ code SelectorList__attrib:
 
 code SelectorList__remove:
   body: |
+    # inject-into: parsel/selector.py
     def remove(self):
         """
             Remove matched nodes from the parent for each element in this list.
@@ -552,6 +571,7 @@ code SelectorList__remove:
 
 code SelectorList__drop:
   body: |
+    # inject-into: parsel/selector.py
     def drop(self):
         """
             Drop matched nodes from the parent for each element in this list.
@@ -562,6 +582,7 @@ code SelectorList__drop:
 
 code Selector__jmespath:
   body: |
+    # inject-into: parsel/selector.py
     def jmespath(self: _SelectorType, query: str, **kwargs: Any):
         """
             Find objects matching the JMESPath ``query`` and return the result as a
@@ -582,6 +603,7 @@ code Selector__jmespath:
 
 code Selector__xpath:
   body: |
+    # inject-into: parsel/selector.py
     def xpath(self: _SelectorType, query: str, namespaces: Optional[Mapping[str, str]]=None, **kwargs: Any):
         """
             Find nodes matching the xpath ``query`` and return the result as a
@@ -606,6 +628,7 @@ code Selector__xpath:
 
 code Selector__css:
   body: |
+    # inject-into: parsel/selector.py
     def css(self: _SelectorType, query: str):
         """
             Apply the given CSS selector and return a :class:`SelectorList` instance.
@@ -623,6 +646,7 @@ code Selector__css:
 
 code Selector__re:
   body: |
+    # inject-into: parsel/selector.py
     def re(self, regex: Union[str, Pattern[str]], replace_entities: bool=True):
         """
             Apply the given regex and return a list of strings with the
@@ -642,6 +666,7 @@ code Selector__re:
 
 code Selector__re_first:
   body: |
+    # inject-into: parsel/selector.py
     def re_first(self, regex: Union[str, Pattern[str]], default: Optional[str]=None, replace_entities: bool=True):
         """
             Apply the given regex and return the first string which matches. If
@@ -659,6 +684,7 @@ code Selector__re_first:
 
 code Selector__get:
   body: |
+    # inject-into: parsel/selector.py
     def get(self):
         """
             Serialize and return the matched nodes.
@@ -672,6 +698,7 @@ code Selector__get:
 
 code Selector__getall:
   body: |
+    # inject-into: parsel/selector.py
     def getall(self):
         """
             Serialize and return the matched node in a 1-element list of strings.
@@ -682,6 +709,7 @@ code Selector__getall:
 
 code Selector__register_namespace:
   body: |
+    # inject-into: parsel/selector.py
     def register_namespace(self, prefix: str, uri: str):
         """
             Register the given namespace to be used in this :class:`Selector`.
@@ -694,6 +722,7 @@ code Selector__register_namespace:
 
 code Selector__remove_namespaces:
   body: |
+    # inject-into: parsel/selector.py
     def remove_namespaces(self):
         """
             Remove all namespaces, allowing to traverse the document using
@@ -705,6 +734,7 @@ code Selector__remove_namespaces:
 
 code Selector__remove:
   body: |
+    # inject-into: parsel/selector.py
     def remove(self):
         """
             Remove matched nodes from the parent element.
@@ -715,6 +745,7 @@ code Selector__remove:
 
 code Selector__drop:
   body: |
+    # inject-into: parsel/selector.py
     def drop(self):
         """
             Drop matched nodes from the parent element.
@@ -725,13 +756,33 @@ code Selector__drop:
 
 code Selector__attrib:
   body: |
+    # inject-into: parsel/selector.py
     def attrib(self):
         """Return the attributes dictionary for underlying element."""
         pass
 
 
+code get:
+  body: |
+    # inject-into: parsel/selector.py
+    # dangling-name: append-if-missing
+    def get(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
+code getall:
+  body: |
+    # inject-into: parsel/selector.py
+    # dangling-name: append-if-missing
+    def getall(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
+        pass
+
+
 code flatten:
   body: |
+    # inject-into: parsel/utils.py
     def flatten(x: Iterable[Any]):
         """flatten(sequence) -> list
         Returns a single, flat list which contains all elements retrieved
@@ -753,6 +804,7 @@ code flatten:
 
 code iflatten:
   body: |
+    # inject-into: parsel/utils.py
     def iflatten(x: Iterable[Any]):
         """iflatten(sequence) -> Iterator
         Similar to ``.flatten()``, but returns iterator instead
@@ -762,6 +814,7 @@ code iflatten:
 
 code _is_listlike:
   body: |
+    # inject-into: parsel/utils.py
     def _is_listlike(x: Any):
         """
         >>> _is_listlike("foo")
@@ -789,6 +842,7 @@ code _is_listlike:
 
 code extract_regex:
   body: |
+    # inject-into: parsel/utils.py
     def extract_regex(regex: Union[str, Pattern[str]], text: str, replace_entities: bool=True):
         """Extract a list of strings from the given text/encoding using the following policies:
         * if the regex contains a named group called "extract" that will be returned
@@ -801,6 +855,7 @@ code extract_regex:
 
 code shorten:
   body: |
+    # inject-into: parsel/utils.py
     def shorten(text: str, width: int, suffix: str='...'):
         """Truncate the given text to fit in the given width."""
         pass
@@ -808,6 +863,7 @@ code shorten:
 
 code set_xpathfunc:
   body: |
+    # inject-into: parsel/xpathfuncs.py
     def set_xpathfunc(fname: str, func: Optional[Callable]):
         """Register a custom extension function to use in XPath expressions.
     
@@ -828,6 +884,7 @@ code set_xpathfunc:
 
 code has_class:
   body: |
+    # inject-into: parsel/xpathfuncs.py
     def has_class(context: Any, *classes: str):
         """has-class function.
     
@@ -835,4 +892,13 @@ code has_class:
     
         
         """
+        pass
+
+
+code setup:
+  body: |
+    # inject-into: parsel/xpathfuncs.py
+    # dangling-name: append-if-missing
+    def setup(*args, **kwargs):
+        """Auto-detected dangling name: referenced at module scope or imported elsewhere but never defined in the stripped source. Reconstruct from usage context."""
         pass

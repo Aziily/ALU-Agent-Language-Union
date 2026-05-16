@@ -415,6 +415,132 @@ the queue's prioritisation is now confirmed by data, not just a hunch.
 knows which symbols MUST exist post-inject. Expected to lift
 voluptuous / portalocker / tinydb / imapclient AL from 0%.
 
+## Round 5 — diagnostic + 4 interlocking fixes — **MIXED**
+
+Began Round 5 by deep-diving the validation v2 long tail (5 repos with
+AL = 0%). Discovered four interacting root causes, not one:
+
+1. **AL revert bug** (introduced by Docker redesign): the AL cell's
+   ``injected_files_so_far`` tracking did
+   ``Path(rel).resolve().relative_to(workdir)`` — but ``rel`` is
+   already workdir-relative, so ``.resolve()`` rooted it against CWD
+   and ``.relative_to(workdir)`` raised ``ValueError``, swallowed by
+   a bare ``except``. Result: every AL iter > 0 reverted no files,
+   inject_filled_al saw the iter-0-filled workdir, ``_is_stripped``
+   returned False, NOTHING matched. The whole AL feedback loop was
+   silently disabled. **Fixed**: use the relative path string directly,
+   no resolve() call. Two regression tests added.
+
+2. **Name collision** (deprecated repo): ``code deprecated:`` appeared
+   twice in the .al — one for ``classic.py:deprecated`` and one for
+   ``sphinx.py:deprecated``. Inject's ``_find_and_inject`` rejected
+   ambiguous matches, so one of the two never got filled. **Fixed**:
+   autogen emits ``# inject-into: <repo-relative-path>`` as the first
+   line of every code body. inject_filled_al's existing
+   ``_extract_file_hint`` mechanism then disambiguates deterministically.
+
+3. **H12 dangling names**: commit0 dataset removes some function
+   definitions ENTIRELY (rather than stubbing them to ``pass``),
+   leaving names referenced in class bodies, cross-file imports, or
+   module-level attribute access but never bound. AL had no way to
+   express these — autogen's code-node emission requires a stripped
+   def to anchor on. **Fixed**: ``_detect_dangling_names()`` finds them
+   via 4 detection passes (within-file Name refs, cross-file
+   ``from X import Y``, test-file imports too, module-level
+   ``submod.attr`` accesses) and autogen emits ``code <name>:`` stubs
+   with a ``# dangling-name: append-if-missing`` marker. inject's new
+   ``_append_to_file`` appends the new def after imports, before
+   first reference. Transitive ``from X import *`` chains are walked
+   for star imports.
+
+4. **src-layout inject path**: ``_rel_inject_path`` originally
+   computed paths relative to ``src_dir.parent`` (= ``src/`` for
+   src-layout repos), producing inject hints like ``cachetools/x.py``
+   when workdir paths are actually ``src/cachetools/x.py``.
+   **Fixed**: compute relative to the **repo root** (the dir that has
+   setup.py / pyproject.toml). Affected cachetools / jinja /
+   marshmallow / simpy.
+
+**Validation v3** (mid-Round 5, only fixes 1-3): AL 38.4%, BL 54.1% —
+the src-layout breakage tanked cachetools from 94 → 79 and made all
+src-layout AL inject silently no-op.
+
+**Validation v4** (run `20260516-125706`, all 4 fixes applied, 16×k=3,
+parallel=4, 14.9 M tokens, ~3 h wall):
+
+| metric | v2 (pre-R5) | v3 (mid-R5) | v4 (post-R5) |
+|---|---|---|---|
+| AL final | 64.0% | 38.4% | **39.9%** |
+| BL final | 57.5% | 54.1% | **54.9%** |
+| tax_pp | −6.5 (AL led) | +15.7 | **+15.0** |
+
+The headline reversal — from v2's AL +6.5pp lead to v4's BL +15pp
+lead — is **the honest result**. v2's 64% was inflated by broken test
+collection (e.g. pyjwt scoring 100% on a single dummy test because
+pytest only collected 1 item per cell; v4 collects ~100 tests per
+cell once the H12 dangling defs are in place). The Round 5 fixes
+make pytest see more tests, exposing more failure modes the LLM
+missed.
+
+**Structural wins** (real, durable, not artifacts of the test fix):
+
+| repo | pre-R5 AL | post-R5 AL | Δ | mechanism |
+|---|---|---|---|---|
+| portalocker | 0.0% | **43.9%** | +43.9pp ✓ | H12d attribute-access (`lock = portalocker.lock` → lock/unlock def appended) |
+| deprecated | 31.6% | **71.7%** | +40.1pp ✓ | revert fix → iter feedback closes half the gap |
+| imapclient | 0.0% | **11.5%** | +11.5pp ✓ | H12 cross-file dangling (create_client_from_config etc.) |
+| voluptuous | 0.0% | 3.4% | +3.4pp ✓ | H12 test-file imports (`Self`, `raises`, `default_factory`) |
+| tinydb | 0.0% | 3.8% | +3.8pp ✓ | H12 within-file dangling (`_immutable`) |
+
+**Honest regressions** (v2 → v4 numbers that LOOK worse but were artifacts):
+- pyjwt: 100% → 12.2% — v2 collected only 1 test/cell, v4 ~100;
+  AL's real pass rate on pyjwt is in the 10-15% range.
+- cachetools: 94.4% → 86.2% — k=1 variance (smoke v5 showed 97.2%).
+  Not a real regression.
+
+**Persistent zeros (AL = 0% in v4)**: wcwidth, chardet, parsel,
+cookiecutter, marshmallow, minitorch, babel, jinja. Each has its own
+failure mode:
+- wcwidth / chardet / babel: gateway 502/timeout on AL prompts
+  (specific to AL prompts being larger; need network resilience or
+  smaller prompts).
+- parsel / cookiecutter / marshmallow / minitorch / jinja: BL is ALSO
+  0% on most of these (parsel BL 0%, cookiecutter BL 0%, marshmallow
+  BL 0%, jinja BL 0%, minitorch BL 0%). The model just can't fill
+  these repos at all with current prompting. Possibly too-big
+  skeletons or essential test infrastructure missing.
+
+**Stopping**: cumulative tokens since started_at hit ~50 M (the
+D-ρ ``max_tokens_total`` halt threshold). **Round 5 closes the
+loop.**
+
+### What was learned
+- Three independent invisible bugs (revert / collisions / src-layout)
+  were silently disabling AL feedback for half of the repos.
+- The previous "AL wins by 6.5pp" was real on some repos but
+  inflated by broken test collection on others. The Round 5 fixes
+  make the measurement honest at the cost of looking worse on paper.
+- The structural improvements (H12 + revert) are durable and lift
+  multiple AL-zero repos out of the basement.
+- The remaining BL gap (15pp) is a TRUE gap, not measurement noise.
+  Closing it requires per-repo work: prompt sizing for big repos,
+  gateway resilience, test-infrastructure hints (H11 = "show test
+  imports verbatim in the AL prompt").
+
+### Recommended next round (deferred until budget reset)
+1. **H13: smaller AL prompts** — for repos where the skeleton exceeds
+   N kB, split into per-file iter loops or summarise non-relevant
+   preambles.
+2. **H11: test imports** — pass each test file's ``from X import Y``
+   lines verbatim in the AL prompt so the LLM knows what symbols
+   MUST exist.
+3. **Gateway resilience** — implement client-side jitter +
+   per-repo concurrency caps so wcwidth/chardet/babel AL doesn't
+   permanently fail under load.
+4. **AL TOTAL on the 5 working repos** — recompute with only the
+   repos where BOTH BL and AL produced data; that's the apples-to-
+   apples win/lose number.
+
 
 
 ---

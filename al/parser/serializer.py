@@ -12,7 +12,9 @@ from al.parser.ast_nodes import (
     Program,
     Definition,
     Field,
+    ImportDecl,
     InlineText,
+    TypedAnnotation,
     BlockScalar,
     FieldGroup,
     StepList,
@@ -22,6 +24,7 @@ from al.parser.ast_nodes import (
     ParallelStep,
     EachStep,
     IfStep,
+    ReturnStep,
     CANONICAL_FIELD_ORDER,
 )
 
@@ -39,6 +42,11 @@ def serialize(program: Program) -> str:
     constants appear at the top of a real source file.
     """
     out = StringIO()
+    # v0.7: imports come first, before any Definition.
+    for imp in program.imports:
+        _emit_import(imp, out)
+    if program.imports:
+        out.write("\n")
     # Stable partition: preambles in original order, then the rest.
     preambles = [d for d in program.defs if d.kind == "preamble"]
     others = [d for d in program.defs if d.kind != "preamble"]
@@ -49,6 +57,19 @@ def serialize(program: Program) -> str:
         _emit_definition(d, out)
     out.write("\n")  # trailing newline
     return out.getvalue()
+
+
+def _emit_import(imp: ImportDecl, out: StringIO) -> None:
+    """Emit one v0.7 ImportDecl as text."""
+    if imp.kind == "import":
+        if imp.alias:
+            out.write(f"import {imp.module} as {imp.alias}\n")
+        else:
+            out.write(f"import {imp.module}\n")
+    elif imp.kind == "from":
+        out.write(f"from {imp.module} import {', '.join(imp.names)}\n")
+    else:
+        raise TypeError(f"unknown ImportDecl kind: {imp.kind!r}")
 
 
 def _emit_definition(d: Definition, out: StringIO) -> None:
@@ -79,6 +100,14 @@ def _emit_field(f: Field, depth: int, out: StringIO) -> None:
 
     if isinstance(v, InlineText):
         out.write(f"{pad}{f.name}: {v.text}\n")
+        return
+
+    if isinstance(v, TypedAnnotation):
+        # v0.7: emit ``T(description)`` form; bare ``T`` when no description.
+        if v.description:
+            out.write(f"{pad}{f.name}: {v.type_ann}({v.description})\n")
+        else:
+            out.write(f"{pad}{f.name}: {v.type_ann}\n")
         return
 
     if isinstance(v, Reference):
@@ -146,6 +175,11 @@ def _emit_step_item(it, depth: int, out: StringIO) -> None:
             out.write(f"{pad}  else:\n")
             for c in it.else_:
                 _emit_step_item(c, depth=depth + 2, out=out)
+        return
+
+    if isinstance(it, ReturnStep):
+        # v0.7: ``- return <target>`` — single-line, no colon, no nested body.
+        out.write(f"{pad}- return {it.target}\n")
         return
 
     raise TypeError(f"unknown StepItem type: {type(it).__name__}")

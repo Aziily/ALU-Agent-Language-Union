@@ -91,23 +91,30 @@ def _use_list(d: Definition) -> list[str]:
 def _output_spec(d: Definition) -> str:
     """Render ``output:`` as a single string for mock synthesis.
 
-    InlineText → its text verbatim.
+    InlineText → its text verbatim (legacy v0.6).
+    TypedAnnotation → ``type_ann`` (description dropped for mock keyword sniff).
     FieldGroup → "{ k1: v1, k2: v2 }" style (just enough for MockBridge
     keyword sniffing to hit "dict-shaped").
     Missing → "".
     """
+    from al.parser.ast_nodes import TypedAnnotation  # local import to avoid cycle
     for f in d.fields:
         if f.name != "output":
             continue
         v = f.value
         if isinstance(v, InlineText):
             return v.text
+        if isinstance(v, TypedAnnotation):
+            return v.type_ann
         if isinstance(v, FieldGroup):
             parts = []
             for sub in v.fields:
-                sub_text = (
-                    sub.value.text if isinstance(sub.value, InlineText) else ""
-                )
+                if isinstance(sub.value, InlineText):
+                    sub_text = sub.value.text
+                elif isinstance(sub.value, TypedAnnotation):
+                    sub_text = sub.value.type_ann
+                else:
+                    sub_text = ""
                 parts.append(f"{sub.name}: {sub_text}")
             return "{ " + ", ".join(parts) + " }"
     return ""

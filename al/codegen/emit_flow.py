@@ -60,7 +60,7 @@ def _steps_repr(d: Definition) -> str:
 
 def _step_to_dict(s) -> dict:
     """Recursively convert a StepItem to a JSON-friendly dict."""
-    from al.parser.ast_nodes import RefStep, ParallelStep, EachStep, IfStep
+    from al.parser.ast_nodes import RefStep, ParallelStep, EachStep, IfStep, ReturnStep
 
     if isinstance(s, RefStep):
         return {"kind": "ref", "name": s.name}
@@ -79,4 +79,8 @@ def _step_to_dict(s) -> dict:
             "then": [_step_to_dict(c) for c in s.then],
             "else": [_step_to_dict(c) for c in s.else_] if s.else_ else None,
         }
+    if isinstance(s, ReturnStep):
+        # v0.7: marker for flow's explicit output. flow_call runtime can
+        # use it to know which child's return value bubbles up.
+        return {"kind": "return", "target": s.target}
     raise TypeError(f"unknown StepItem: {type(s).__name__}")

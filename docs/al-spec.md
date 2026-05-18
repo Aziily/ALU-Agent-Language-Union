@@ -1,6 +1,7 @@
-# Agent Language — Spec v0.6
+# Agent Language — Spec v0.7
 
 > 当前版本。前序版本归档在 `docs/spec/history/`。
+> v0.7 收紧两件事：① **input/output 必须是结构化 Python 类型注解**（自由英语单独出现 → parser reject），可选 `(description)` 后缀承载自然语言描述；② **新增多文件支持**——顶层 `import` / `from ... import ...` 把另一个 .al 的顶层定义引入当前作用域；③ **新增 `return:` 块头**用于 `steps:` 内的 flow 显式输出。
 > v0.6 在 v0.5 基础上做了两件事：① **新增 `set` 节点**，作为 agent 的能力包（tools / skills / extensions / memory）；② **明确 host 语言锁死 Python**（移除关于"future host"的伸缩点）。
 
 ---
@@ -111,9 +112,19 @@ flow  <name>:
 agent <name>:
 code  <name>:
 set   <name>:
+preamble <name>:        # 模块级 Python 上下文（v0.7：第 5 个声明符）
 ```
 
 名字遵循 Python identifier 规则：`[A-Za-z_][A-Za-z0-9_]*`（snake_case 推荐；PascalCase 在节点名上也被接受，用于桥接 PascalCase Python 风格的项目如 voluptuous）。
+
+**`import` / `from` —— v0.7 多文件声明**（不是 Definition，而是 `Program.imports`）：
+
+```al
+import other_module
+from utils import normalize, parse_date
+```
+
+语义对齐 Python `import`，但解析的是 `<project_root>/<module>.al`（不是 .py）。详见 §4.12。
 
 ### 4.4 字段语法
 
@@ -145,8 +156,8 @@ Block scalar 按其 body 的最小公共缩进 dedent。`prompt:`（free text）
 |-------------|-----------------|---------------------------------------------------------------------------------------|
 | `intent:`   | 全部             | 一行 plain-English 描述。**单一真源**——UI 编辑 intent 字段映射到这里                    |
 | `schedule:` | flow             | 何时跑（如 `daily 09:00`、`cron 0 9 * * *`）                                           |
-| `input:`    | flow / code / agent | 输入形状（自由 English 或嵌套类型）                                                  |
-| `output:`   | flow / code / agent | 输出形状                                                                              |
+| `input:`    | flow / code / agent | 输入形状（v0.7：**Python 类型注解 + 可选 `(description)` 后缀**；或嵌套 FieldGroup）   |
+| `output:`   | flow / code / agent | 输出形状（同上）                                                                       |
 | `steps:`    | flow             | 有序子步骤引用列表 — flow 的 body                                                      |
 | `prompt:`   | agent            | 给 agent 的自然语言指令的 block scalar                                                |
 | `body:`     | code             | 字面 Python 源的 block scalar                                                          |
@@ -164,8 +175,9 @@ Block scalar 按其 body 的最小公共缩进 dedent。`prompt:`（free text）
 | `parallel:`       | 嵌套列表中的项目并发执行                                        |
 | `each <X>:`       | 嵌套列表中的项目按 X 的每个元素跑一次（map）                     |
 | `if <cond>:`      | 条件。可配 `else:`                                              |
+| `return <ref>`    | **v0.7：** flow 的显式输出。引用 `steps:` 内先前出现的节点名，标记其返回值作为本 flow 的 output。必须是 `steps:` 列表的最后一项，且**整个 flow 至多一个 `return`**。无 `return` 时 flow 输出 = `None`（与 v0.6 行为一致） |
 
-这些是**块头**——必须 `:` 结尾且后面接缩进的 `- ` 列表。
+这些是**块头**——`parallel:` / `each X:` / `if X:` 必须 `:` 结尾且后面接缩进的 `- ` 列表。`return <ref>` 是**单行项**，不带 `:`。
 
 ### 4.7 列表、注释、引用
 
@@ -258,6 +270,106 @@ agent extract_article:
 - **明确** host 语言只支持 Python（去掉 v0.5 §1, §2 中关于"v1 host language"的措辞，直接说"host language"）
 - **重申** parser / codegen / runtime 全部 Python 实现，不再有 TS/JS 部分
 
+### 4.12 I/O 语法（v0.7 新规则）
+
+`input:` 和 `output:` 字段的值有两种合法形态：
+
+**(a) Inline 形式 — `TypedAnnotation`**
+
+```bnf
+io_value     := type_expr  ('(' description ')')?
+type_expr    := <Python type annotation>
+                # 例: str, int, list[str], dict[str, int],
+                #     Optional[bytes], tuple[str, int]
+description  := <任意字符直到匹配的 ')'，可含空格、英文、`,`、`->`>
+```
+
+例子：
+
+```al
+input: list[str]                          # 纯类型
+input: list[str](article urls)            # 类型 + 描述
+output: dict[str, str](title->body, English text)
+output: bytes(raw HTML, UTF-8 or latin-1)
+```
+
+**(b) Nested FieldGroup — 多字段输出**
+
+适合 output 是多键 record：
+
+```al
+output:
+  title: str
+  author: str
+  body: str
+  published_at: datetime
+```
+
+每个内部字段值也遵循 `type_expr ('(' description ')')?` 规则。
+
+**v0.6 兼容性 — 破坏性变更**：v0.6 接受的自由英语（`input: raw HTML`、`output: list of articles`）在 v0.7 **被 parser reject**。迁移路径：
+- `input: raw HTML` → `input: str(raw HTML)` 或 `input: bytes(raw HTML)`
+- `output: list of articles` → `output: list[Article](articles)`（如果 `Article` 是 preamble 里的类型别名）
+
+**为什么收紧？** v0.6 让 LLM 同时面对两种风格，输出 I/O 标注漂移（有时写自由英语、有时写类型）。强制结构化让模型有稳定先验，且 codegen / inject 可以用类型推断验证形状。
+
+### 4.13 多文件 / `import`（v0.7 新规则）
+
+#### 4.13.1 顶层 import 声明
+
+合法形态（**必须出现在文件顶部**，先于任何 Definition）：
+
+```al
+import other_module
+import other_module as om
+from utils import normalize, parse_date
+from data_models import Article, Source
+```
+
+语法 BNF：
+
+```bnf
+import_decl  := 'import' MODULE_PATH ('as' IDENT)?
+              | 'from' MODULE_PATH 'import' NAMES
+NAMES        := IDENT (',' IDENT)*
+MODULE_PATH  := IDENT ('.' IDENT)*
+```
+
+#### 4.13.2 模块解析
+
+- `import foo` → 加载 `<project_root>/foo.al`
+- `import pkg.sub` → 加载 `<project_root>/pkg/sub.al`
+- `from utils import x, y` → 加载 `<project_root>/utils.al` 并把 `x`、`y` 引入当前作用域
+
+`project_root` 解析顺序：(1) 包含 `.al-project` 标记文件的最近祖先目录，否则 (2) 当前 .al 文件所在目录。
+
+#### 4.13.3 名字解析
+
+`steps:` / `fallback:` / `use:` / `tools:` 内的裸名按以下顺序解析：
+
+1. 当前文件 Definition.name 命名空间
+2. `import X` 引入的限定名（`X.name` 形式访问）
+3. `from X import Y` 直接引入到当前作用域（裸名 `Y` 可用）
+
+冲突规则：本地 Definition 永远优先；多个 `from X import Y` 冲突 → parser ParseError。
+
+#### 4.13.4 循环 import 检测
+
+Parser DFS 检测：A 文件 `import B` 且 B 文件 `import A` → `ImportCycleError`。这与 Python 不同（Python 用 lazy 解析容忍循环），但 AL 是 declarative 编排层，循环 import 几乎总是建模错误，因此早 fail。
+
+#### 4.13.5 单文件子集（v0.6 兼容）
+
+**无 import 的 .al 文件是合法的 v0.7 程序**，行为与 v0.6 完全一致。这保证：
+- 16 个 benchmark skeleton 不需要立刻迁移到多文件
+- v0.6 单文件示例 `examples/daily_news.al` 在 v0.7 解析器下仍然解析（只需 I/O 标注按 §4.12 迁移）
+
+### 4.14 v0.7 相对 v0.6 的变更
+
+- **破坏性**：`input:` / `output:` 自由英语单独出现 → ParseError。必须用 `T(description)` 或嵌套 FieldGroup。详见 §4.12。
+- **新增** 顶层 `import` / `from ... import ...` 声明 + 多文件解析 + 循环检测。详见 §4.13。
+- **新增** `return <ref>` 控制项（用在 `steps:` 内尾部）。flow 显式输出。详见 §4.6。
+- **不变** 其它 v0.6 语义、关键字、节点种类。
+
 ---
 
 ## 5. 端到端示例（与 v0.5 example 一致 + set）
@@ -313,7 +425,15 @@ v1 是单用户原型。以下**有意**不做：
 
 ---
 
-## 10. v0.6 changelog
+## 10. v0.7 changelog
+
+vs v0.6：
+- **I/O 收紧**：input/output 必须是 `T(description)` 或嵌套 FieldGroup；自由英语 reject。详见 §4.12。
+- **多文件支持**：顶层 `import` / `from X import Y`，跨 .al 文件引用。详见 §4.13。
+- **`return <ref>`**：flow 显式输出。详见 §4.6。
+- **Pipeline C**：benchmark 新增 greenfield AL 写作 pipeline——给模型 stripped Python，要求它从零写 .al（可多文件）。Pipeline B（skeleton-based）保留做对照。详见 `docs/design/benchmark.md`。
+
+## 11. v0.6 changelog（历史）
 
 vs v0.5：
 - **新增 4 类节点之一：`set`**（agent 装备槽：tools / skills / extensions / memory）
@@ -324,10 +444,11 @@ vs v0.5：
 
 ---
 
-## 11. History
+## 12. History
 
 - **v0.2** — symbol-heavy（`-> ~ || ?>`）。已废弃。
 - **v0.3** — 自然 English 短语。冗长。已废弃。
 - **v0.4** — 单词关键字集，结构仍模糊。已废弃。
 - **v0.5** — 正式 Python/YAML 缩进 grammar，Python 锁定为 host。已废弃，归档在 `history/`。
-- **v0.6** — 加入 `set` 节点，全栈 Python 化。**当前。**
+- **v0.6** — 加入 `set` 节点，全栈 Python 化。已废弃，归档在 `history/`。
+- **v0.7** — I/O 收紧、多文件 import、flow `return`、greenfield benchmark pipeline。**当前。**

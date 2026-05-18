@@ -1,4 +1,4 @@
-"""AST dataclasses for agent-lang v0.6.
+"""AST dataclasses for agent-lang v0.7.
 
 Public contract — consumed by codegen, runtime, and external tools.
 Modify with caution; bumping the AST shape requires a parser version bump
@@ -7,10 +7,15 @@ and migration note (see docs/ARCHITECTURE.md § 3.1).
 Design notes:
 - All nodes carry a ``loc: Loc`` (1-indexed line/col) for editor mapping.
 - ``FieldValue`` is a sealed family of variants distinguished by class.
-- ``StepItem`` likewise — RefStep / ParallelStep / EachStep / IfStep.
+- ``StepItem`` likewise — RefStep / ParallelStep / EachStep / IfStep / ReturnStep.
 - v0.6 adds ``set`` as a Definition.kind, plus ``ReferenceList`` for
   multi-value reference fields (``tools:``, ``skills:``, ``extensions:``,
   ``use:`` with list form).
+- v0.7 adds ``TypedAnnotation`` for ``input:`` / ``output:`` values
+  (``T(description)`` form), ``ImportDecl`` for top-level cross-file
+  imports, and ``ReturnStep`` for flow-explicit output references.
+  See ``docs/al-spec.md`` § 4.12 (I/O grammar), § 4.13 (multi-file),
+  § 4.6 (return).
 """
 
 from __future__ import annotations
@@ -44,6 +49,28 @@ class InlineText:
     """A single-line value after a ``key:`` (e.g. ``intent: top news``)."""
 
     text: str
+    loc: Loc
+
+
+@dataclass
+class TypedAnnotation:
+    """v0.7 value for ``input:`` / ``output:`` fields.
+
+    Form ``T(description)``: ``type_ann`` is the textual Python type
+    annotation (``str``, ``list[str]``, ``dict[str, int]`` etc.) and
+    ``description`` is the optional natural-language hint between the
+    parentheses (``article urls``, ``title->body, English``). Both are
+    stored as raw strings — type validity is checked by a separate
+    pass (see ``al.parser.validate.validate_typed_annotations``), not at
+    parse time, so legacy v0.6 free-English values still parse (with
+    ``description=None`` and ``type_ann`` carrying the whole line).
+
+    The serializer round-trips by writing ``type_ann`` + (if description)
+    ``(description)``. See spec § 4.12.
+    """
+
+    type_ann: str
+    description: str | None
     loc: Loc
 
 
@@ -100,6 +127,7 @@ class ReferenceList:
 
 FieldValue = Union[
     InlineText,
+    TypedAnnotation,
     BlockScalar,
     FieldGroup,
     StepList,
@@ -148,7 +176,21 @@ class IfStep:
     loc: Loc
 
 
-StepItem = Union[RefStep, ParallelStep, EachStep, IfStep]
+@dataclass
+class ReturnStep:
+    """v0.7: ``- return <ref>`` — flow's explicit output.
+
+    ``target`` is the bare name of a previously-listed step (RefStep,
+    or any node referenced earlier in this flow). Semantically marks
+    that step's return value as the flow's overall output. Must be the
+    last item in ``steps:`` and at most one ReturnStep per flow.
+    """
+
+    target: str
+    loc: Loc
+
+
+StepItem = Union[RefStep, ParallelStep, EachStep, IfStep, ReturnStep]
 
 
 # ---------------------------------------------------------------------------
@@ -184,10 +226,37 @@ class Definition:
 
 
 @dataclass
+class ImportDecl:
+    """v0.7: top-level ``import X`` or ``from X import Y, Z`` declaration.
+
+    Lives in ``Program.imports`` (not ``Program.defs``) — imports are
+    not Definition nodes; they're a separate top-level category that
+    must appear before the first Definition. See spec § 4.13.
+
+    For ``import foo`` / ``import foo as bar``:
+        kind="import", module="foo", names=[], alias=None|"bar"
+    For ``from foo import x, y``:
+        kind="from", module="foo", names=["x","y"], alias=None
+    """
+
+    kind: Literal["import", "from"]
+    module: str
+    names: list[str] = field(default_factory=list)
+    alias: str | None = None
+    loc: Loc = field(default_factory=lambda: Loc(1, 1))
+
+
+@dataclass
 class Program:
-    """Root AST node — a list of top-level definitions in source order."""
+    """Root AST node — a list of top-level definitions in source order.
+
+    v0.7: ``imports`` carries top-level ``import``/``from`` declarations
+    appearing before any Definition. Empty list = v0.6-compatible single
+    file with no cross-file references.
+    """
 
     defs: list[Definition] = field(default_factory=list)
+    imports: list[ImportDecl] = field(default_factory=list)
     loc: Loc = field(default_factory=lambda: Loc(1, 1))
 
 
@@ -201,8 +270,13 @@ class Program:
 FIELD_VALUE_HINTS: dict[str, tuple[type, ...]] = {
     "intent": (InlineText,),
     "schedule": (InlineText,),
-    "input": (InlineText, FieldGroup),
-    "output": (InlineText, FieldGroup),
+    # v0.7: inline I/O values are TypedAnnotation, not InlineText. Legacy
+    # free-English values (v0.6) parse as TypedAnnotation with
+    # description=None and type_ann carrying the raw text — the parser
+    # is lenient at parse time; strict Python-type validation is in
+    # ``al.parser.validate.validate_typed_annotations``.
+    "input": (TypedAnnotation, FieldGroup),
+    "output": (TypedAnnotation, FieldGroup),
     "prompt": (BlockScalar,),
     "body": (BlockScalar,),
     "memory": (BlockScalar,),

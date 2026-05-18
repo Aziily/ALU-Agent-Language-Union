@@ -1,16 +1,17 @@
-"""Indent-aware line-oriented tokenizer for agent-lang v0.6.
+"""Indent-aware line-oriented tokenizer for agent-lang v0.7.
 
 Pipeline: text → list[Token].
 
 Token kinds:
-    DECL              flow | agent | code | set
+    DECL              flow | agent | code | set | preamble
     IDENT             snake_case identifier
     COLON             ':'
     INLINE_VALUE      free text after ``key:`` until end of line
     BLOCK_SCALAR_OPEN '|' marker
     BLOCK_SCALAR_BODY captured multi-line text (already dedented)
     LIST_ITEM_DASH    '- ' bullet at line start
-    CONTROL           parallel | each <X> | if <expr> | else
+    CONTROL           parallel | each <X> | if <expr> | else | return <ref>
+    IMPORT_DECL       v0.7: full ``import X`` / ``from X import Y, Z`` line
     COMMENT           '# ...' to end of line (preserved as token; serializer can drop)
     NEWLINE           end of logical line
     INDENT / DEDENT   indentation change (relative to outer block)
@@ -49,7 +50,7 @@ class Token:
 # ---------------------------------------------------------------------------
 
 DECLARATORS = {"flow", "agent", "code", "set", "preamble"}
-CONTROL_HEADS = {"parallel", "each", "if", "else"}
+CONTROL_HEADS = {"parallel", "each", "if", "else", "return"}
 
 _IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
@@ -155,6 +156,17 @@ def tokenize(source: str) -> list[Token]:
             tokens.append(Token("DECL", decl, lineno, 1, 0))
             tokens.append(Token("IDENT", name, lineno, len(decl) + 2, 0))
             tokens.append(Token("COLON", ":", lineno, len(decl) + 2 + len(name), 0))
+            tokens.append(Token("NEWLINE", "", lineno, len(raw) + 1, 0))
+            i += 1
+            continue
+
+        # v0.7: top-level ``import X`` / ``import X as Y`` / ``from X import Y, Z``.
+        # Captured as a single IMPORT_DECL token; parser splits the form.
+        # Must be at indent 0 and precede any DECL (parser enforces order).
+        if indent == 0 and re.match(r"^(import|from)\s+\S", body):
+            # Strip trailing comment if any.
+            stripped = re.sub(r"\s*#.*$", "", body).rstrip()
+            tokens.append(Token("IMPORT_DECL", stripped, lineno, 1, 0))
             tokens.append(Token("NEWLINE", "", lineno, len(raw) + 1, 0))
             i += 1
             continue
@@ -272,6 +284,15 @@ def _emit_inline_or_header(
     if m:
         tokens.append(Token("CONTROL", "else", lineno, col, col - 1))
         tokens.append(Token("COLON", ":", lineno, col + len("else"), col - 1))
+        return
+
+    # v0.7: ``return <ref>`` — flow's explicit output. Single-line item,
+    # NO trailing colon (unlike parallel:/each X:/if X:). Parser handles
+    # the missing colon by checking ctrl.text.startswith("return ").
+    m = re.match(r"return\s+([A-Za-z_][A-Za-z0-9_]*)\s*$", after_dash)
+    if m:
+        target = m.group(1)
+        tokens.append(Token("CONTROL", f"return {target}", lineno, col, col - 1))
         return
 
     # bare ident (a node reference)

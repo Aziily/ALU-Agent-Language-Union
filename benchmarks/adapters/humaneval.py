@@ -131,9 +131,12 @@ def run_tests(
         encoding="utf-8",
     )
     try:
+        # Resolve to absolute — when workdir is relative and we pass
+        # cwd=workdir, Python would interpret the test_runner_path
+        # relative to cwd (i.e. workdir + workdir + filename).
         result = subprocess.run(
-            [sys.executable, str(test_runner_path)],
-            cwd=workdir,
+            [sys.executable, str(test_runner_path.resolve())],
+            cwd=str(workdir.resolve()),
             capture_output=True,
             timeout=timeout,
             check=False,

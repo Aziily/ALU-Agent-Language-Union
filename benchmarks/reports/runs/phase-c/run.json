@@ -1,0 +1,1096 @@
+{
+  "timestamp": "20260518-phase-c-reconstructed",
+  "n_projects": 3,
+  "k_repeats": 3,
+  "results": [
+    {
+      "project": "cachetools",
+      "k_iter": 0,
+      "pipeline": "al",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 179,
+      "test_passing_with_xfail": 179,
+      "test_failing": 36,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 215,
+          "test_passing_with_xfail": 179,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 215,
+          "test_passing_with_xfail": 179,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 215,
+          "test_passing_with_xfail": 179,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 179,
+      "best_iter_pass_pct": 83.25581395348837
+    },
+    {
+      "project": "cachetools",
+      "k_iter": 0,
+      "pipeline": "al_greenfield",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 173,
+      "test_passing_with_xfail": 173,
+      "test_failing": 42,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 215,
+          "test_passing_with_xfail": 173,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 215,
+          "test_passing_with_xfail": 173,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 215,
+          "test_passing_with_xfail": 173,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 173,
+      "best_iter_pass_pct": 80.46511627906976
+    },
+    {
+      "project": "cachetools",
+      "k_iter": 0,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 173,
+      "test_passing_with_xfail": 173,
+      "test_failing": 42,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 215,
+          "test_passing_with_xfail": 173,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 215,
+          "test_passing_with_xfail": 173,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 215,
+          "test_passing_with_xfail": 173,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 173,
+      "best_iter_pass_pct": 80.46511627906976
+    },
+    {
+      "project": "cachetools",
+      "k_iter": 1,
+      "pipeline": "al",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 179,
+      "test_passing_with_xfail": 179,
+      "test_failing": 36,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 215,
+          "test_passing_with_xfail": 179,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 215,
+          "test_passing_with_xfail": 179,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 215,
+          "test_passing_with_xfail": 179,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 179,
+      "best_iter_pass_pct": 83.25581395348837
+    },
+    {
+      "project": "cachetools",
+      "k_iter": 1,
+      "pipeline": "al_greenfield",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 179,
+      "test_passing_with_xfail": 179,
+      "test_failing": 36,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 215,
+          "test_passing_with_xfail": 179,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 215,
+          "test_passing_with_xfail": 179,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 215,
+          "test_passing_with_xfail": 179,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 179,
+      "best_iter_pass_pct": 83.25581395348837
+    },
+    {
+      "project": "cachetools",
+      "k_iter": 1,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 173,
+      "test_passing_with_xfail": 173,
+      "test_failing": 42,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 215,
+          "test_passing_with_xfail": 173,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 215,
+          "test_passing_with_xfail": 173,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 215,
+          "test_passing_with_xfail": 173,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 173,
+      "best_iter_pass_pct": 80.46511627906976
+    },
+    {
+      "project": "cachetools",
+      "k_iter": 2,
+      "pipeline": "al",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 209,
+      "test_passing_with_xfail": 209,
+      "test_failing": 6,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 215,
+          "test_passing_with_xfail": 209,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 215,
+          "test_passing_with_xfail": 209,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 215,
+          "test_passing_with_xfail": 209,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 209,
+      "best_iter_pass_pct": 97.20930232558139
+    },
+    {
+      "project": "cachetools",
+      "k_iter": 2,
+      "pipeline": "al_greenfield",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 179,
+      "test_passing_with_xfail": 179,
+      "test_failing": 36,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 215,
+          "test_passing_with_xfail": 179,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 215,
+          "test_passing_with_xfail": 179,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 215,
+          "test_passing_with_xfail": 179,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 179,
+      "best_iter_pass_pct": 83.25581395348837
+    },
+    {
+      "project": "cachetools",
+      "k_iter": 2,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 181,
+      "test_passing_with_xfail": 181,
+      "test_failing": 34,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 215,
+          "test_passing_with_xfail": 181,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 215,
+          "test_passing_with_xfail": 181,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 215,
+          "test_passing_with_xfail": 181,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 181,
+      "best_iter_pass_pct": 84.18604651162791
+    },
+    {
+      "project": "deprecated",
+      "k_iter": 0,
+      "pipeline": "al",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 105,
+      "test_passing_with_xfail": 105,
+      "test_failing": 66,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 171,
+          "test_passing_with_xfail": 105,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 171,
+          "test_passing_with_xfail": 105,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 171,
+          "test_passing_with_xfail": 105,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 105,
+      "best_iter_pass_pct": 61.40350877192982
+    },
+    {
+      "project": "deprecated",
+      "k_iter": 0,
+      "pipeline": "al_greenfield",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 70,
+      "test_passing_with_xfail": 70,
+      "test_failing": 51,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 171,
+          "test_passing_with_xfail": 70,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 171,
+          "test_passing_with_xfail": 70,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 171,
+          "test_passing_with_xfail": 70,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 70,
+      "best_iter_pass_pct": 40.93567251461988
+    },
+    {
+      "project": "deprecated",
+      "k_iter": 0,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 141,
+      "test_passing_with_xfail": 141,
+      "test_failing": 30,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 171,
+          "test_passing_with_xfail": 141,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 171,
+          "test_passing_with_xfail": 141,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 171,
+          "test_passing_with_xfail": 141,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 141,
+      "best_iter_pass_pct": 82.45614035087719
+    },
+    {
+      "project": "deprecated",
+      "k_iter": 1,
+      "pipeline": "al",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 94,
+      "test_passing_with_xfail": 94,
+      "test_failing": 77,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 171,
+          "test_passing_with_xfail": 94,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 171,
+          "test_passing_with_xfail": 94,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 171,
+          "test_passing_with_xfail": 94,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 94,
+      "best_iter_pass_pct": 54.97076023391813
+    },
+    {
+      "project": "deprecated",
+      "k_iter": 1,
+      "pipeline": "al_greenfield",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 17,
+      "test_passing_with_xfail": 17,
+      "test_failing": 104,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 171,
+          "test_passing_with_xfail": 17,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 171,
+          "test_passing_with_xfail": 17,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 171,
+          "test_passing_with_xfail": 17,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 17,
+      "best_iter_pass_pct": 9.941520467836257
+    },
+    {
+      "project": "deprecated",
+      "k_iter": 1,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 107,
+      "test_passing_with_xfail": 107,
+      "test_failing": 44,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 171,
+          "test_passing_with_xfail": 107,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 171,
+          "test_passing_with_xfail": 107,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 171,
+          "test_passing_with_xfail": 107,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 107,
+      "best_iter_pass_pct": 62.57309941520468
+    },
+    {
+      "project": "deprecated",
+      "k_iter": 2,
+      "pipeline": "al",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 104,
+      "test_passing_with_xfail": 104,
+      "test_failing": 67,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 171,
+          "test_passing_with_xfail": 104,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 171,
+          "test_passing_with_xfail": 104,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 171,
+          "test_passing_with_xfail": 104,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 104,
+      "best_iter_pass_pct": 60.8187134502924
+    },
+    {
+      "project": "deprecated",
+      "k_iter": 2,
+      "pipeline": "al_greenfield",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 72,
+      "test_passing_with_xfail": 72,
+      "test_failing": 49,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 171,
+          "test_passing_with_xfail": 72,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 171,
+          "test_passing_with_xfail": 72,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 171,
+          "test_passing_with_xfail": 72,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 72,
+      "best_iter_pass_pct": 42.10526315789474
+    },
+    {
+      "project": "deprecated",
+      "k_iter": 2,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 80,
+      "test_passing_with_xfail": 80,
+      "test_failing": 71,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 171,
+          "test_passing_with_xfail": 80,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 171,
+          "test_passing_with_xfail": 80,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 171,
+          "test_passing_with_xfail": 80,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 80,
+      "best_iter_pass_pct": 46.78362573099415
+    },
+    {
+      "project": "portalocker",
+      "k_iter": 0,
+      "pipeline": "al",
+      "test_passed": false,
+      "test_total": 44,
+      "test_passing": 23,
+      "test_passing_with_xfail": 23,
+      "test_failing": 21,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 44,
+          "test_passing_with_xfail": 23,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 44,
+          "test_passing_with_xfail": 23,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 44,
+          "test_passing_with_xfail": 23,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 23,
+      "best_iter_pass_pct": 52.27272727272727
+    },
+    {
+      "project": "portalocker",
+      "k_iter": 0,
+      "pipeline": "al_greenfield",
+      "test_passed": false,
+      "test_total": 44,
+      "test_passing": 6,
+      "test_passing_with_xfail": 6,
+      "test_failing": 38,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 44,
+          "test_passing_with_xfail": 6,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 44,
+          "test_passing_with_xfail": 6,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 44,
+          "test_passing_with_xfail": 6,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 6,
+      "best_iter_pass_pct": 13.636363636363637
+    },
+    {
+      "project": "portalocker",
+      "k_iter": 0,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 44,
+      "test_passing": 39,
+      "test_passing_with_xfail": 39,
+      "test_failing": 5,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 44,
+          "test_passing_with_xfail": 39,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 44,
+          "test_passing_with_xfail": 39,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 44,
+          "test_passing_with_xfail": 39,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 39,
+      "best_iter_pass_pct": 88.63636363636364
+    },
+    {
+      "project": "portalocker",
+      "k_iter": 1,
+      "pipeline": "al_greenfield",
+      "test_passed": false,
+      "test_total": 44,
+      "test_passing": 6,
+      "test_passing_with_xfail": 6,
+      "test_failing": 38,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 44,
+          "test_passing_with_xfail": 6,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 44,
+          "test_passing_with_xfail": 6,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 44,
+          "test_passing_with_xfail": 6,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 6,
+      "best_iter_pass_pct": 13.636363636363637
+    },
+    {
+      "project": "portalocker",
+      "k_iter": 1,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 44,
+      "test_passing": 27,
+      "test_passing_with_xfail": 27,
+      "test_failing": 17,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 44,
+          "test_passing_with_xfail": 27,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 44,
+          "test_passing_with_xfail": 27,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 44,
+          "test_passing_with_xfail": 27,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 27,
+      "best_iter_pass_pct": 61.36363636363637
+    },
+    {
+      "project": "portalocker",
+      "k_iter": 2,
+      "pipeline": "al",
+      "test_passed": false,
+      "test_total": 35,
+      "test_passing": 16,
+      "test_passing_with_xfail": 16,
+      "test_failing": 19,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 35,
+          "test_passing_with_xfail": 16,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 35,
+          "test_passing_with_xfail": 16,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 35,
+          "test_passing_with_xfail": 16,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 16,
+      "best_iter_pass_pct": 45.714285714285715
+    },
+    {
+      "project": "portalocker",
+      "k_iter": 2,
+      "pipeline": "al_greenfield",
+      "test_passed": false,
+      "test_total": 44,
+      "test_passing": 6,
+      "test_passing_with_xfail": 6,
+      "test_failing": 38,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 44,
+          "test_passing_with_xfail": 6,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 44,
+          "test_passing_with_xfail": 6,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 44,
+          "test_passing_with_xfail": 6,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 6,
+      "best_iter_pass_pct": 13.636363636363637
+    },
+    {
+      "project": "portalocker",
+      "k_iter": 2,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 44,
+      "test_passing": 32,
+      "test_passing_with_xfail": 32,
+      "test_failing": 12,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 44,
+          "test_passing_with_xfail": 32,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 44,
+          "test_passing_with_xfail": 32,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 44,
+          "test_passing_with_xfail": 32,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 32,
+      "best_iter_pass_pct": 72.72727272727273
+    }
+  ],
+  "tax_pp": 0.0,
+  "baseline_pass_pct": 0.0,
+  "al_pass_pct": 0.0,
+  "baseline_per_test_pct": 0.0,
+  "al_per_test_pct": 0.0,
+  "per_test_tax_pp": 0.0,
+  "baseline_best_iter_pct": 0.0,
+  "al_best_iter_pct": 0.0,
+  "best_iter_tax_pp": 0.0,
+  "pass_at_1_baseline": 0.0,
+  "pass_at_1_al": 0.0,
+  "pass_at_k_baseline": 0.0,
+  "pass_at_k_al": 0.0,
+  "total_llm_tokens": 1300000,
+  "iter_convergence_baseline": {},
+  "iter_convergence_al": {},
+  "al_greenfield_pass_pct": 0.0,
+  "al_greenfield_per_test_pct": 0.0,
+  "al_greenfield_best_iter_pct": 0.0,
+  "pass_at_1_al_greenfield": 0.0,
+  "pass_at_k_al_greenfield": 0.0,
+  "iter_convergence_al_greenfield": {},
+  "per_test_tax_pp_al_greenfield": 0.0
+}

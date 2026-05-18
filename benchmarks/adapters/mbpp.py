@@ -172,9 +172,10 @@ def run_tests(
     )
 
     try:
+        # Resolve to absolute (see humaneval.py for rationale).
         result = subprocess.run(
-            [sys.executable, str(test_runner_path)],
-            cwd=workdir,
+            [sys.executable, str(test_runner_path.resolve())],
+            cwd=str(workdir.resolve()),
             capture_output=True,
             timeout=timeout,
             check=False,

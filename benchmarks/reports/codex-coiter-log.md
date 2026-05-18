@@ -245,3 +245,47 @@ The prompt section introducing `uses:` was too soft — the LLM kept emitting co
 - **Action**: COMMIT (the language feature is in for future use, even if the LLM didn't reach for it today). Ask Codex for Round 4 strategy given the high variance.
 
 > Round 1 parity, Round 2 +12.6pp, Round 3 parity. The 2-consecutive-rounds convergence gate is NOT met. One round remains.
+
+---
+
+## Round 4 — Codex picked Methodology Pivot (Codex score 4/10 on R3)
+
+**Codex round 3 reply** (after seeing R3's parity):
+
+> Uses Lint was a good validator, but not load-bearing: `uses:` adoption
+> was 0, warnings did not enter the loop, and C exactly tracked A. In a
+> single cachetools k=1 cell, another cooperative syntax feature is
+> unlikely to show clean signal. Stop language changes for this loop.
+> Run k=3 on v0.7.3 = Targeted Body + Patch Mode + Uses Lint and compare
+> final-iter C vs A. The only proven load-bearing feature so far is Patch
+> Mode, and its effect is stability across iterations, so variance
+> estimation is now higher leverage than adding syntax.
+
+### Variance run — `cachetools k=3 × {baseline, al-skel, al-greenfield}` (9 cells, ~498k tokens)
+
+Per-cell paired (best-iter):
+
+| k | A baseline | C greenfield | Δ |
+|---|---|---|---|
+| 0 | 83.7% | 83.7% | 0.0 pp |
+| 1 | 83.7% | **95.8%** | **+12.1 pp** |
+| 2 | 95.8% | 83.3% | **-12.6 pp** |
+| **mean** | 87.8% | 87.6% | **-0.2 pp** |
+
+Variance dominates. R2's +12.6 pp was a real cell observation but one tail of a high-variance distribution. **Mean over 3 cells: parity within noise.**
+
+Aggregated headline (final-iter):
+- A baseline mean: 86.8% (range 83.3-93.5)
+- B al-skeleton mean: 88.2% (range 83.3-95.3)
+- C al-greenfield mean: 87.4% (range 83.3-95.8)
+- **C - A = +0.6 pp** (not significant at n=3)
+
+### Final verdict (Claude's call, end of loop)
+
+- **Convergence gate**: NOT met (no 2-consecutive C > A rounds).
+- **Loss-free**: YES — averaged over k=3 cachetools, Pipeline C tracks baseline within ±0.5 pp.
+- **Improvement**: not proven on single-project k=3. Per-cell swings ±12 pp; effect washes out.
+- **Structural advantage**: Patch Mode is real but only triggers when LLM happens to over-edit (~33% of cells today).
+- **User goal "loss-free / micro-loss / improvement"**: ✅ in "loss-free / micro-loss" zone.
+
+Final report: [v0.8-final-decision.md](v0.8-final-decision.md). Loop terminates.

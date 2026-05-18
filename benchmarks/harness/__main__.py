@@ -67,6 +67,13 @@ def main(argv: list[str] | None = None) -> int:
                         help="run independent (project, k, pipeline) cells in "
                              "a thread pool with N workers. Defaults to 1 "
                              "(sequential). Set to 4-8 for big runs.")
+    parser.add_argument(
+        "--pipelines", type=str, default="baseline,al",
+        help="comma-separated subset of {baseline, al, al_greenfield}. "
+             "v0.7 default keeps the legacy 2-pipeline matrix; add "
+             "``al_greenfield`` to enable Pipeline C (greenfield AL). "
+             "Example: --pipelines baseline,al,al_greenfield",
+    )
     args = parser.parse_args(argv)
 
     if args.setup_only:
@@ -141,6 +148,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.project_names:
         project_names = [n.strip() for n in args.project_names.split(",") if n.strip()]
 
+    pipelines = tuple(
+        p.strip() for p in args.pipelines.split(",") if p.strip()
+    )
     out_dir = run_pipeline(
         llm=llm,
         run_tests_fn=run_tests_fn,
@@ -149,6 +159,7 @@ def main(argv: list[str] | None = None) -> int:
         out_dir=args.out_dir,
         project_names=project_names,
         parallel_cells=args.parallel_cells,
+        pipelines=pipelines,
     )
     print(f"\nReport written: {out_dir}", file=sys.stderr)
     summary = (out_dir / "summary.md").read_text()

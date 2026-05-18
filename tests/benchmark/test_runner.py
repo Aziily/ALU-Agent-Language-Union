@@ -234,3 +234,91 @@ def test_run_pipeline_token_counting(tmp_path):
     run = json.loads((out_dir / "run.json").read_text())
     # 2 k × 2 pipelines × 150 tokens = 600
     assert run["total_llm_tokens"] == 600
+
+
+# ---------------------------------------------------------------------------
+# v0.7 Phase 5c — Pipeline C (al_greenfield) integration
+# ---------------------------------------------------------------------------
+
+
+GREENFIELD_CANNED = (
+    "---FILE: fakelib.al---\n"
+    "code double:\n"
+    "  body: |\n"
+    "    def double(x):\n"
+    "        return x * 2\n"
+)
+
+
+def test_run_pipeline_with_al_greenfield(tmp_path):
+    """``pipelines=("al_greenfield",)`` runs only Pipeline C."""
+    project = _make_fake_project(tmp_path)
+    llm = MockLLMClient(default=GREENFIELD_CANNED)
+    out_dir = run_pipeline(
+        llm=llm,
+        run_tests_fn=_stub_run_tests(passed=1),
+        project_loader_fn=_stub_loader(project),
+        n_projects=1, k_repeats=1,
+        project_names=["fakelib"],
+        skeletons_dir=tmp_path / "skeletons",  # not used when no `al` pipeline
+        out_dir=tmp_path / "report-c",
+        pipelines=("al_greenfield",),
+    )
+    assert (out_dir / "summary.md").exists()
+    per_repo = json.loads((out_dir / "per_repo" / "fakelib.json").read_text())
+    assert "al_greenfield" in per_repo
+    # baseline+al keys absent when not requested
+    assert "baseline" not in per_repo
+    # raw transcript written under the pipeline name
+    assert (out_dir / "raw" / "fakelib-k0-al_greenfield.txt").exists()
+
+
+def test_run_pipeline_three_pipelines_in_one_run(tmp_path):
+    """baseline + al + al_greenfield all run; summary table has 3 columns."""
+    project = _make_fake_project(tmp_path)
+    _make_fake_skeleton(tmp_path / "skeletons")
+    # MockLLMClient default fits all three pipelines because we re-use
+    # canned responses (LLM doesn't know which prompt it got).
+    llm = MockLLMClient(default=(
+        # Pipeline A expects raw Python (with file marker)
+        # Pipeline B expects filled .al
+        # Pipeline C expects ---FILE: ...--- blocks
+        # The simplest canned that satisfies the al_implementer parser is the
+        # filled .al; baseline parses the python_implementer output. For this
+        # smoke test we just verify wiring; pass% may not be 100.
+        "---FILE: fakelib.al---\n"
+        "code double:\n"
+        "  body: |\n"
+        "    def double(x):\n"
+        "        return x * 2\n"
+    ))
+    out_dir = run_pipeline(
+        llm=llm,
+        run_tests_fn=_stub_run_tests(passed=1),
+        project_loader_fn=_stub_loader(project),
+        n_projects=1, k_repeats=1,
+        project_names=["fakelib"],
+        skeletons_dir=tmp_path / "skeletons",
+        out_dir=tmp_path / "report-abc",
+        pipelines=("baseline", "al", "al_greenfield"),
+    )
+    summary_md = (out_dir / "summary.md").read_text()
+    assert "al_greenfield" in summary_md
+    per_repo = json.loads((out_dir / "per_repo" / "fakelib.json").read_text())
+    assert set(per_repo.keys()) >= {"baseline", "al", "al_greenfield"}
+
+
+def test_run_pipeline_invalid_pipeline_name_rejected(tmp_path):
+    project = _make_fake_project(tmp_path)
+    llm = MockLLMClient(default="")
+    with pytest.raises(ValueError, match="unknown pipeline"):
+        run_pipeline(
+            llm=llm,
+            run_tests_fn=_stub_run_tests(),
+            project_loader_fn=_stub_loader(project),
+            n_projects=1, k_repeats=1,
+            project_names=["fakelib"],
+            skeletons_dir=tmp_path / "skeletons",
+            out_dir=tmp_path / "report-bad",
+            pipelines=("garbage_pipeline",),
+        )

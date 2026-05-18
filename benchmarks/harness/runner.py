@@ -38,8 +38,10 @@ from pathlib import Path
 from typing import Callable, Iterable
 
 from benchmarks.agents import (
+    ALGreenfieldResult,
     ALImplementerResult,
     PythonImplementerResult,
+    run_al_greenfield_implementer,
     run_al_implementer,
     run_python_implementer,
 )
@@ -138,6 +140,16 @@ class RunSummary:
     # Phase 1.H'.F.2: iter convergence stats — how many cells pass on which iter.
     iter_convergence_baseline: dict = field(default_factory=dict)
     iter_convergence_al: dict = field(default_factory=dict)
+    # v0.7 Phase 5c: Pipeline C metrics. Same shapes as baseline/al fields
+    # above; zero when al_greenfield wasn't run.
+    al_greenfield_pass_pct: float = 0.0
+    al_greenfield_per_test_pct: float = 0.0
+    al_greenfield_best_iter_pct: float = 0.0
+    pass_at_1_al_greenfield: float = 0.0
+    pass_at_k_al_greenfield: float = 0.0
+    iter_convergence_al_greenfield: dict = field(default_factory=dict)
+    # Pipeline-C-specific deltas (positive = baseline ahead, negative = C ahead).
+    per_test_tax_pp_al_greenfield: float = 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -160,6 +172,7 @@ def run_pipeline(
     repos_base: Path | None = None,
     project_names: Iterable[str] | None = None,
     parallel_cells: int = 1,
+    pipelines: tuple[str, ...] = ("baseline", "al"),
 ) -> Path:
     """Run the full benchmark and write reports. Return report dir.
 
@@ -182,7 +195,21 @@ def run_pipeline(
             its own LLM calls + pytest subprocesses; cells don't share
             state so parallelism is safe. The LLM client is reused across
             threads (httpx is thread-safe). Defaults to 1 (sequential).
+        pipelines: which pipelines to include in this run. Valid names:
+            ``"baseline"`` (Pipeline A), ``"al"`` (Pipeline B,
+            skeleton-based), ``"al_greenfield"`` (Pipeline C, v0.7
+            greenfield AL authoring). Default ``("baseline", "al")``
+            preserves the v0.6 cell matrix.
     """
+    valid_pipelines = {"baseline", "al", "al_greenfield"}
+    for p in pipelines:
+        if p not in valid_pipelines:
+            raise ValueError(
+                f"unknown pipeline {p!r}; must be one of {sorted(valid_pipelines)}"
+            )
+    # al_greenfield needs a skeleton-less path; baseline + al keep their
+    # existing skeleton-required behavior. (Pipeline C doesn't use the
+    # skeleton, only stripped Python.)
     ts = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
     out_dir = out_dir or _default_report_dir(ts)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -209,8 +236,11 @@ def run_pipeline(
             )
             continue
 
+        # Pipeline B needs a skeleton; A and C don't. If only C is
+        # requested, missing skeleton is fine — fall through with empty
+        # skeleton_text.
         skeleton_path = skeletons_dir / f"{project_name}.al"
-        if not skeleton_path.exists():
+        if "al" in pipelines and not skeleton_path.exists():
             summary.results.append(
                 PipelineRunResult(
                     project=project_name, k_iter=-1, pipeline="setup",
@@ -219,20 +249,25 @@ def run_pipeline(
                 )
             )
             continue
+        skeleton_text = (
+            skeleton_path.read_text(encoding="utf-8")
+            if skeleton_path.exists() else ""
+        )
         repo_meta[project_name] = {
             "project": project,
-            "skeleton_text": skeleton_path.read_text(encoding="utf-8"),
+            "skeleton_text": skeleton_text,
             "spec_text": _load_spec(project.path),
             "stripped_files": _collect_stripped_files(project.path),
         }
 
-    # 2. Build the cell work list: every (project, k, pipeline) triple.
+    # 2. Build the cell work list: every (project, k, pipeline) triple
+    #    from the ``pipelines`` argument.
     Cell = tuple  # (name, k, pipeline)
     cells: list[Cell] = []
     for project_name in repo_meta:
         for k in range(k_repeats):
-            cells.append((project_name, k, "baseline"))
-            cells.append((project_name, k, "al"))
+            for p in pipelines:
+                cells.append((project_name, k, p))
 
     def _execute_cell(triple: Cell) -> PipelineRunResult:
         name, k, pipeline = triple
@@ -243,11 +278,20 @@ def run_pipeline(
                 spec_text=m["spec_text"], stripped_files=m["stripped_files"],
                 llm=llm, run_tests_fn=run_tests_fn, out_dir=out_dir,
             )
-        return _run_al_cell(
-            project=m["project"], project_name=name, k=k,
-            spec_text=m["spec_text"], skeleton_text=m["skeleton_text"],
-            llm=llm, run_tests_fn=run_tests_fn, out_dir=out_dir,
-        )
+        if pipeline == "al":
+            return _run_al_cell(
+                project=m["project"], project_name=name, k=k,
+                spec_text=m["spec_text"], skeleton_text=m["skeleton_text"],
+                llm=llm, run_tests_fn=run_tests_fn, out_dir=out_dir,
+            )
+        if pipeline == "al_greenfield":
+            return _run_al_greenfield_cell(
+                project=m["project"], project_name=name, k=k,
+                spec_text=m["spec_text"],
+                stripped_files=m["stripped_files"],
+                llm=llm, run_tests_fn=run_tests_fn, out_dir=out_dir,
+            )
+        raise AssertionError(f"unknown pipeline: {pipeline!r}")
 
     # 3. Run cells — sequentially if parallel_cells <= 1, else thread pool.
     cell_results: list[tuple[Cell, PipelineRunResult]] = []
@@ -275,12 +319,14 @@ def run_pipeline(
                     )
                 cell_results.append((triple, res))
 
-    # 4. Stable order: by (project, k, pipeline) — pipeline 'baseline' first.
+    # 4. Stable order: by (project, k, pipeline) — pipeline order
+    # baseline → al → al_greenfield for readable summaries.
+    _pipeline_rank = {"baseline": 0, "al": 1, "al_greenfield": 2}
     cell_results.sort(
         key=lambda x: (
             list(repo_meta).index(x[0][0]),
             x[0][1],
-            0 if x[0][2] == "baseline" else 1,
+            _pipeline_rank.get(x[0][2], 99),
         )
     )
     for triple, res in cell_results:
@@ -289,17 +335,12 @@ def run_pipeline(
     # 5. Write per-repo aggregate JSON (always created so the file layout
     # matches the sequential path).
     for project_name in repo_meta:
-        per_repo_data: dict = {
-            "project": project_name,
-            "baseline": [
+        per_repo_data: dict = {"project": project_name}
+        for pipeline_name in pipelines:
+            per_repo_data[pipeline_name] = [
                 asdict(r) for (t, r) in cell_results
-                if t[0] == project_name and t[2] == "baseline"
-            ],
-            "al": [
-                asdict(r) for (t, r) in cell_results
-                if t[0] == project_name and t[2] == "al"
-            ],
-        }
+                if t[0] == project_name and t[2] == pipeline_name
+            ]
         (out_dir / "per_repo" / f"{project_name}.json").write_text(
             json.dumps(per_repo_data, indent=2, ensure_ascii=False),
             encoding="utf-8",
@@ -639,6 +680,149 @@ def _run_al_cell(
     )
 
 
+def _run_al_greenfield_cell(
+    *,
+    project: ProjectRef,
+    project_name: str,
+    k: int,
+    spec_text: str,
+    stripped_files: dict[str, str],
+    llm: LLMClient,
+    run_tests_fn: Callable[[ProjectRef, Path], TestResult],
+    out_dir: Path,
+) -> PipelineRunResult:
+    """v0.7 Pipeline C — greenfield AL authoring.
+
+    Same shape as ``_run_al_cell`` but driving the greenfield
+    implementer (no skeleton; LLM authors .al from stripped Python).
+    Each iter:
+      1. Run :func:`run_al_greenfield_implementer` → ALGreenfieldResult
+         with one or more GreenfieldFile blocks.
+      2. For each file that parsed cleanly, call ``inject_filled_al``
+         on its al_text. We aggregate the InjectReports across files
+         into one combined report for the iter.
+      3. Run pytest on the workdir.
+      4. On failure, feed back the raw LLM output + pytest stdout to
+         the next iter.
+    """
+    workdir = out_dir / "workdirs" / f"{project_name}-k{k}-al_greenfield"
+    _copy_repo(project.path, workdir)
+
+    last_filled: str | None = None
+    last_test_output: str | None = None
+    iter_outcomes: list[dict] = []
+    final_test: TestResult | None = None
+    final_inject = InjectReport()
+    total_tokens = 0
+    final_impl_ok = False
+    final_impl_error = ""
+    final_iter_idx = -1
+    last_gf_res: ALGreenfieldResult | None = None
+    last_prompt = ""
+    last_completion_text = ""
+    injected_files_so_far: set[str] = set()
+
+    for iter_idx in range(MAX_ITERATIONS):
+        print(f"  [{project_name}] k={k} al_greenfield iter={iter_idx} ...",
+              file=sys.stderr, flush=True)
+        try:
+            gf_res = run_al_greenfield_implementer(
+                spec_text=spec_text, stripped_files=stripped_files,
+                llm=llm,
+                previous_filled=last_filled,
+                previous_test_output=last_test_output,
+                iter_idx=iter_idx,
+            )
+        except Exception as e:
+            iter_outcomes.append(_iter_outcome_dict(
+                iter_idx, final_test, 0, False, InjectReport(),
+                error=f"LLM call failed: {e!r}",
+            ))
+            print(f"    ⚠ al_greenfield iter {iter_idx} LLM failed: {e!r}",
+                  file=sys.stderr, flush=True)
+            break
+
+        last_gf_res = gf_res
+        last_prompt = gf_res.prompt_used
+        last_completion_text = (
+            gf_res.raw_completion.text if gf_res.raw_completion else ""
+        )
+        total_tokens += gf_res.total_tokens
+
+        if iter_idx > 0 and injected_files_so_far:
+            _revert_files(project.path, workdir, injected_files_so_far)
+
+        # Inject every file that parsed cleanly. Aggregate reports.
+        combined_inject = InjectReport()
+        any_injected = False
+        for gf in gf_res.files:
+            if gf.program is None or gf.parse_error:
+                continue
+            inj = inject_filled_al(workdir, gf.al_text)
+            combined_inject.injected.extend(inj.injected)
+            for k_, v_ in inj.skipped.items():
+                combined_inject.skipped[k_] = v_
+            combined_inject.files_modified.update(inj.files_modified)
+            any_injected = any_injected or bool(inj.injected)
+            for rel_str in inj.files_modified:
+                injected_files_so_far.add(rel_str)
+
+        test = run_tests_fn(project, workdir, skip_install=(iter_idx > 0))
+        final_test = test
+        final_inject = combined_inject
+        final_impl_ok = gf_res.all_files_clean and any_injected
+        final_impl_error = "; ".join(
+            f.parse_error for f in gf_res.files if f.parse_error
+        ) or gf_res.resolver_error or ""
+        iter_outcomes.append(_iter_outcome_dict(
+            iter_idx, test, gf_res.total_tokens, final_impl_ok,
+            combined_inject, error=final_impl_error,
+        ))
+        if test.all_passed:
+            final_iter_idx = iter_idx
+            break
+        last_filled = last_completion_text
+        last_test_output = _truncate_tail(test.raw_stdout)
+
+    if last_gf_res is not None:
+        _save_raw(out_dir / "raw", project_name, k, "al_greenfield",
+                  prompt=last_prompt, completion=last_completion_text)
+
+    best_iter_idx, best_passing_x, best_pct = _compute_best_iter(iter_outcomes)
+    if final_test is None:
+        return PipelineRunResult(
+            project=project_name, k_iter=k, pipeline="al_greenfield",
+            test_passed=False, error="all iterations failed at LLM call",
+            llm_total_tokens=total_tokens,
+            n_iterations=len(iter_outcomes),
+            iter_outcomes=iter_outcomes,
+            final_iter_idx=-1,
+            best_iter_idx=best_iter_idx,
+            best_iter_passing_with_xfail=best_passing_x,
+            best_iter_pass_pct=best_pct,
+        )
+    return PipelineRunResult(
+        project=project_name, k_iter=k, pipeline="al_greenfield",
+        test_passed=final_test.all_passed,
+        test_total=final_test.total,
+        test_passing=final_test.passed,
+        test_passing_with_xfail=final_test.passed_with_xfail,
+        test_failing=final_test.failed,
+        duration_sec=final_test.duration_sec,
+        llm_total_tokens=total_tokens,
+        implementer_ok=final_impl_ok,
+        inject_injected=len(final_inject.injected),
+        inject_skipped=len(final_inject.skipped),
+        error=final_impl_error if not final_impl_ok else "",
+        best_iter_idx=best_iter_idx,
+        best_iter_passing_with_xfail=best_passing_x,
+        best_iter_pass_pct=best_pct,
+        n_iterations=len(iter_outcomes),
+        iter_outcomes=iter_outcomes,
+        final_iter_idx=final_iter_idx,
+    )
+
+
 def _reset_workdir(src: Path, dst: Path) -> None:
     """Wipe ``dst`` and re-copy ``src``. Heavy reset; only used at cell
     start now — between iters we use the lighter ``_revert_files``."""
@@ -798,11 +982,16 @@ def _save_raw(
 def _compute_summary_metrics(summary: RunSummary) -> None:
     by_project_baseline: dict[str, list[bool]] = {}
     by_project_al: dict[str, list[bool]] = {}
+    by_project_alg: dict[str, list[bool]] = {}
     for r in summary.results:
         if r.k_iter < 0:
             continue
-        d = by_project_baseline if r.pipeline == "baseline" else by_project_al
-        d.setdefault(r.project, []).append(r.test_passed)
+        if r.pipeline == "baseline":
+            by_project_baseline.setdefault(r.project, []).append(r.test_passed)
+        elif r.pipeline == "al":
+            by_project_al.setdefault(r.project, []).append(r.test_passed)
+        elif r.pipeline == "al_greenfield":
+            by_project_alg.setdefault(r.project, []).append(r.test_passed)
         summary.total_llm_tokens += r.llm_total_tokens
 
     pa1_b = compute_pass_at_k(list(by_project_baseline.values()), k=summary.k_repeats)
@@ -811,6 +1000,10 @@ def _compute_summary_metrics(summary: RunSummary) -> None:
     summary.pass_at_1_al = pa1_a.pass_at_1
     summary.pass_at_k_baseline = pa1_b.pass_at_k
     summary.pass_at_k_al = pa1_a.pass_at_k
+    if by_project_alg:
+        pa1_alg = compute_pass_at_k(list(by_project_alg.values()), k=summary.k_repeats)
+        summary.pass_at_1_al_greenfield = pa1_alg.pass_at_1
+        summary.pass_at_k_al_greenfield = pa1_alg.pass_at_k
 
     # Roundtrip tax over individual runs (not aggregated by project)
     bl_results = [r.test_passed for r in summary.results if r.pipeline == "baseline" and r.k_iter >= 0]
@@ -832,8 +1025,12 @@ def _compute_summary_metrics(summary: RunSummary) -> None:
 
     summary.baseline_per_test_pct = _per_test_pct("baseline")
     summary.al_per_test_pct = _per_test_pct("al")
+    summary.al_greenfield_per_test_pct = _per_test_pct("al_greenfield")
     summary.per_test_tax_pp = (
         summary.baseline_per_test_pct - summary.al_per_test_pct
+    )
+    summary.per_test_tax_pp_al_greenfield = (
+        summary.baseline_per_test_pct - summary.al_greenfield_per_test_pct
     )
 
     # Round 0.2: best-iter aggregate.
@@ -859,6 +1056,7 @@ def _compute_summary_metrics(summary: RunSummary) -> None:
 
     summary.baseline_best_iter_pct = _best_iter_pct("baseline")
     summary.al_best_iter_pct = _best_iter_pct("al")
+    summary.al_greenfield_best_iter_pct = _best_iter_pct("al_greenfield")
     summary.best_iter_tax_pp = (
         summary.baseline_best_iter_pct - summary.al_best_iter_pct
     )
@@ -879,6 +1077,18 @@ def _compute_summary_metrics(summary: RunSummary) -> None:
 
     summary.iter_convergence_baseline = _iter_hist("baseline")
     summary.iter_convergence_al = _iter_hist("al")
+    summary.iter_convergence_al_greenfield = _iter_hist("al_greenfield")
+
+    # v0.7: binary all-pass% for al_greenfield. Mirrors how compute_roundtrip_tax
+    # reports for AL — we just don't use the tax struct since that's pairwise.
+    alg_results = [
+        r.test_passed for r in summary.results
+        if r.pipeline == "al_greenfield" and r.k_iter >= 0
+    ]
+    if alg_results:
+        summary.al_greenfield_pass_pct = (
+            100.0 * sum(alg_results) / len(alg_results)
+        )
 
 
 def _write_summary_files(out_dir: Path, summary: RunSummary) -> None:
@@ -913,29 +1123,85 @@ def _format_summary_md(s: RunSummary) -> str:
         else "agent-lang ↓ (loss)" if s.tax_pp > 0
         else "tie"
     )
+    has_alg = (
+        s.al_greenfield_per_test_pct > 0
+        or s.al_greenfield_pass_pct > 0
+        or any(r.pipeline == "al_greenfield" for r in s.results)
+    )
+    alg_col = (
+        f" | {s.al_greenfield_per_test_pct:.1f}%"
+        if has_alg else ""
+    )
+    alg_header = " | agent-lang (greenfield)" if has_alg else ""
+
+    headline_rows = [
+        "| **per-test pass% (final iter)** | "
+        f"**{s.baseline_per_test_pct:.1f}%** | "
+        f"**{s.al_per_test_pct:.1f}%** | "
+        f"{-s.per_test_tax_pp:+.1f} pp"
+        + (f" | **{s.al_greenfield_per_test_pct:.1f}%** | "
+           f"{-s.per_test_tax_pp_al_greenfield:+.1f} pp" if has_alg else "")
+        + " |",
+        "| per-test pass% (best iter) | "
+        f"{s.baseline_best_iter_pct:.1f}% | "
+        f"{s.al_best_iter_pct:.1f}% | "
+        f"{-s.best_iter_tax_pp:+.1f} pp"
+        + (f" | {s.al_greenfield_best_iter_pct:.1f}% | "
+           f"{s.baseline_best_iter_pct - s.al_greenfield_best_iter_pct:+.1f} pp"
+           if has_alg else "")
+        + " |",
+        f"| binary all-pass% (per-cell) | "
+        f"{s.baseline_pass_pct:.1f}% | {s.al_pass_pct:.1f}% | "
+        f"{-s.tax_pp:+.1f} pp"
+        + (f" | {s.al_greenfield_pass_pct:.1f}% | "
+           f"{s.baseline_pass_pct - s.al_greenfield_pass_pct:+.1f} pp"
+           if has_alg else "")
+        + " |",
+        f"| pass^1 (any of {s.k_repeats}) | "
+        f"{s.pass_at_1_baseline:.1%} | {s.pass_at_1_al:.1%} | —"
+        + (f" | {s.pass_at_1_al_greenfield:.1%} | —" if has_alg else "")
+        + " |",
+        f"| pass^{s.k_repeats} (all of {s.k_repeats}) | "
+        f"{s.pass_at_k_baseline:.1%} | {s.pass_at_k_al:.1%} | —"
+        + (f" | {s.pass_at_k_al_greenfield:.1%} | —" if has_alg else "")
+        + " |",
+    ]
+    headline_header = (
+        "| 指标 | Baseline | agent-lang | Δ"
+        + (" | agent-lang (greenfield) | Δ_C" if has_alg else "")
+        + " |\n"
+        + "|---|---|---|---"
+        + ("|---|---" if has_alg else "")
+        + "|\n"
+    )
+    headline_table = headline_header + "\n".join(headline_rows)
+
+    iter_rows = [
+        f"| baseline  | {s.iter_convergence_baseline.get('iter_0', 0)} | "
+        f"{s.iter_convergence_baseline.get('iter_1', 0)} | "
+        f"{s.iter_convergence_baseline.get('iter_2', 0)} | "
+        f"{s.iter_convergence_baseline.get('never_passed', 0)} |",
+        f"| al | {s.iter_convergence_al.get('iter_0', 0)} | "
+        f"{s.iter_convergence_al.get('iter_1', 0)} | "
+        f"{s.iter_convergence_al.get('iter_2', 0)} | "
+        f"{s.iter_convergence_al.get('never_passed', 0)} |",
+    ]
+    if has_alg:
+        iter_rows.append(
+            f"| al_greenfield | "
+            f"{s.iter_convergence_al_greenfield.get('iter_0', 0)} | "
+            f"{s.iter_convergence_al_greenfield.get('iter_1', 0)} | "
+            f"{s.iter_convergence_al_greenfield.get('iter_2', 0)} | "
+            f"{s.iter_convergence_al_greenfield.get('never_passed', 0)} |"
+        )
+
     return (
         f"# Benchmark Run — {s.timestamp}\n\n"
         f"**Projects**: {s.n_projects}  **k**: {s.k_repeats}  "
         f"**Max iterations per cell**: {MAX_ITERATIONS}  "
         f"**LLM tokens total**: {s.total_llm_tokens:,}\n\n"
         f"## Headline numbers\n\n"
-        f"| 指标 | Baseline | agent-lang | Δ |\n"
-        f"|---|---|---|---|\n"
-        f"| **per-test pass% (final iter — commit0-aligned)** | "
-        f"**{s.baseline_per_test_pct:.1f}%** | "
-        f"**{s.al_per_test_pct:.1f}%** | "
-        f"{-s.per_test_tax_pp:+.1f} pp |\n"
-        f"| per-test pass% (best iter — strongest signal) | "
-        f"{s.baseline_best_iter_pct:.1f}% | "
-        f"{s.al_best_iter_pct:.1f}% | "
-        f"{-s.best_iter_tax_pp:+.1f} pp |\n"
-        f"| binary all-pass% (per-cell, n={s.k_repeats * s.n_projects}) | "
-        f"{s.baseline_pass_pct:.1f}% | {s.al_pass_pct:.1f}% | "
-        f"{-s.tax_pp:+.1f} pp |\n"
-        f"| pass^1 (any of {s.k_repeats}) | "
-        f"{s.pass_at_1_baseline:.1%} | {s.pass_at_1_al:.1%} | — |\n"
-        f"| pass^{s.k_repeats} (all of {s.k_repeats}) | "
-        f"{s.pass_at_k_baseline:.1%} | {s.pass_at_k_al:.1%} | — |\n\n"
+        + headline_table + "\n\n"
         f"**往返税 (per-test, commit0-aligned)** = "
         f"baseline_per_test% - al_per_test% = "
         f"**{s.per_test_tax_pp:.1f} pp**\n\n"
@@ -945,32 +1211,41 @@ def _format_summary_md(s: RunSummary) -> str:
         f"## Iter convergence (how many cells passed at which iter idx)\n\n"
         f"| pipeline | iter 0 | iter 1 | iter 2 | never |\n"
         f"|---|---|---|---|---|\n"
-        f"| baseline  | {s.iter_convergence_baseline.get('iter_0', 0)} | "
-        f"{s.iter_convergence_baseline.get('iter_1', 0)} | "
-        f"{s.iter_convergence_baseline.get('iter_2', 0)} | "
-        f"{s.iter_convergence_baseline.get('never_passed', 0)} |\n"
-        f"| al | {s.iter_convergence_al.get('iter_0', 0)} | "
-        f"{s.iter_convergence_al.get('iter_1', 0)} | "
-        f"{s.iter_convergence_al.get('iter_2', 0)} | "
-        f"{s.iter_convergence_al.get('never_passed', 0)} |\n\n"
-        f"## Per-project pass^1\n\n"
-        f"| repo | baseline_passes | al_passes | k |\n"
-        f"|---|---|---|---|\n"
-        + "\n".join(_per_repo_lines(s))
-        + "\n"
+        + "\n".join(iter_rows)
+        + "\n\n## Per-project pass^1\n\n"
+        + _per_repo_table(s)
     )
 
 
+def _per_repo_table(s: RunSummary) -> str:
+    """Build a per-repo pass table whose columns adapt to which pipelines
+    actually ran in this summary."""
+    has_alg = any(r.pipeline == "al_greenfield" for r in s.results)
+    header = (
+        "| repo | baseline | al"
+        + (" | al_greenfield" if has_alg else "")
+        + f" | k |\n"
+        "|---|---|---"
+        + ("|---" if has_alg else "")
+        + "|---|\n"
+    )
+    return header + "\n".join(_per_repo_lines(s)) + "\n"
+
+
 def _per_repo_lines(s: RunSummary) -> list[str]:
+    has_alg = any(r.pipeline == "al_greenfield" for r in s.results)
+    pipelines = ["baseline", "al"] + (["al_greenfield"] if has_alg else [])
     by_proj: dict[str, dict[str, list[bool]]] = {}
     for r in s.results:
         if r.k_iter < 0:
             continue
-        by_proj.setdefault(r.project, {"baseline": [], "al": []})
-        by_proj[r.project][r.pipeline].append(r.test_passed)
+        by_proj.setdefault(r.project, {p: [] for p in pipelines})
+        if r.pipeline in by_proj[r.project]:
+            by_proj[r.project][r.pipeline].append(r.test_passed)
     lines = []
     for proj, d in by_proj.items():
-        b = sum(d["baseline"])
-        a = sum(d["al"])
-        lines.append(f"| {proj} | {b}/{len(d['baseline'])} | {a}/{len(d['al'])} | {s.k_repeats} |")
+        cells = [
+            f"{sum(d[p])}/{len(d[p])}" for p in pipelines
+        ]
+        lines.append(f"| {proj} | " + " | ".join(cells) + f" | {s.k_repeats} |")
     return lines

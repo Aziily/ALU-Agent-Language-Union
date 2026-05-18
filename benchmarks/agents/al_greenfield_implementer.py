@@ -139,7 +139,7 @@ def run_al_greenfield_implementer(
     previous_test_output: str | None = None,
     iter_idx: int = 0,
     temperature: float = 0.0,
-    max_tokens: int = 16384,
+    max_tokens: int = 12288,
 ) -> ALGreenfieldResult:
     """Run pipeline C — greenfield agent-lang implementer.
 
@@ -155,7 +155,8 @@ def run_al_greenfield_implementer(
         previous_test_output: Last iter's pytest stdout (tail-truncated).
         iter_idx: 0-indexed iteration.
         temperature, max_tokens: passed to llm.complete. Default
-            max_tokens=16384 (greenfield can be larger than skeleton).
+            max_tokens=12288 — kept in sync with Pipeline A & B for
+            fair 3-way comparison (Phase 6 fairness audit).
 
     Returns:
         ALGreenfieldResult with parsed files, resolver graph, and any

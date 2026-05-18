@@ -167,8 +167,15 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def _stub_run_tests(project: ProjectRef, py_dir: Path) -> TestResult:
-    """Mock test runner — claims 1 test passing. Used in --mock mode."""
+def _stub_run_tests(
+    project: ProjectRef, py_dir: Path, *, skip_install: bool = False,
+) -> TestResult:
+    """Mock test runner — claims 1 test passing. Used in --mock mode.
+
+    Accepts ``skip_install`` (added in Phase 1.H'.F.2) as a keyword so
+    the runner's multi-iter loop can call it the same way it calls
+    the real ``commit0_adapter.run_tests``.
+    """
     return TestResult(
         project=project, total=1, passed=1, failed=0,
         duration_sec=0.0,

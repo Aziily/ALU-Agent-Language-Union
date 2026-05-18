@@ -75,20 +75,21 @@ python -m benchmarks.webui                      # http://127.0.0.1:8765
 
 ### Local proxy status (2026-05-15)
 
-- `http://127.0.0.1:9000` — **WORKING** OpenAI-compatible proxy. Key
-  `<redacted-proxy-token>` + model `gpt-5.4`. This is what `--host` mode
-  uses. Configure via `.env`:
+- `http://127.0.0.1:9000` — **WORKING** OpenAI-compatible proxy. Set
+  `LLM_API_KEY` (see local notes — **do NOT commit the real key**) +
+  model `gpt-5.4`. This is what `--host` mode uses. Configure via `.env`
+  (which is `.gitignore`d):
   ```
-  LLM_API_KEY=<redacted-proxy-token>
+  LLM_API_KEY=<your-proxy-token>
   LLM_BASE_URL=http://127.0.0.1:9000/v1
   LLM_MODEL=gpt-5.4
   ```
 - `http://127.0.0.1:8787` — **BROKEN** Anthropic-format proxy. Diagnosed
   via `/private/tmp/opencc.log`: the proxy correctly translates
   Anthropic→OpenAI format but uses a hardcoded upstream key
-  `<redacted-sk-key>` that :9000 rejects (401). To
-  fix: edit the proxy's config in `~/Downloads/proxy/opencc/` to
-  use `<redacted-proxy-token>` then restart. Until fixed, use `--host`
+  `<redacted — see ~/Downloads/proxy/opencc/ config>` that :9000 rejects
+  (401). To fix: edit the proxy's config in `~/Downloads/proxy/opencc/`
+  to use the same `LLM_API_KEY` then restart. Until fixed, use `--host`
   mode (not the Docker `--use-claude-code` path).
 
 ## Why `preamble`?

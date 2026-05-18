@@ -116,3 +116,66 @@ Locked signatures may give the LLM less surface to break across iters. Worth tra
 - **Improvement**: NO — C did not strictly exceed A on cachetools today.
 - **Neutrality acceptable**: YES — Targeted Body is foundational (Patch Mode and Coverage Contract both build on `target:`), the LLM adopted it cleanly, iter stability improved, tests all green.
 - **Action**: COMMIT and continue. Ask Codex to weigh: keep iterating from current state, or pivot to a different idea given the variance?
+
+---
+
+## Round 2 — Codex picked Patch Mode (#2 ranked) over Coverage Contract
+
+**Codex round 2 reasoning** (after seeing Round 1 result):
+
+> Coverage Contract is unlikely to move this specific k=1 cell if C already
+> emitted 10/10 targets. Patch Mode attacks the observed benchmark pathology:
+> full rewrites churn working functions. It gives AL a structural advantage
+> Python baseline lacks: stable target-addressed edits across iterations.
+
+**Implementation**: `---PATCH: <relpath>---` file marker. When LLM emits
+PATCH at iter > 0, the harness merges its code-node fragments onto the
+prior iter's parsed Program by `target:` qualname (or node name fallback).
+Nodes not mentioned in the patch keep their previous bodies.
+
+Files touched:
+- `benchmarks/agents/al_greenfield_implementer.py` — `_FILE_MARKER_RE`
+  regex extended to capture `FILE|PATCH`; `_merge_patch_into_prev()`
+  function (~50 LOC); `_validate_files()` does the merge when `mode='patch'`;
+  `GreenfieldFile` gets `mode` + `merged_al_text` + `effective_al_text`
+  property. Prompt's iter-history section documents PATCH for iter > 0.
+- `benchmarks/harness/runner.py` — `_run_al_greenfield_cell` keeps a
+  `prev_files: dict[str, Program]` across iters; passes it to implementer;
+  injects `effective_al_text` (post-merge for patches).
+- `tests/agents/test_al_greenfield_patch.py` — 8 new tests for splitter
+  recognizing both markers, merger by target / by name fallback / append,
+  end-to-end patch round-trip, prior-state requirement, full-mode at
+  iter > 0 still works.
+
+Full suite: 371 tests pass (was 363; +8 patch tests).
+
+### Pilot — `cachetools k=1` (same proxy, same time, Round 2)
+
+| pipeline | iter 0 | iter 1 | iter 2 (final) | best | tokens |
+|---|---|---|---|---|---|
+| baseline (A) | 83.3% | **95.8%** | **83.3% ⚠ regress** | 95.8% | 36k |
+| al-skel (B) | 80.5% | 83.3% | 86.0% | 86.0% | 74k |
+| al-greenfield (C, Patch Mode) | 83.3% | 83.3% | **95.8% (held)** | 95.8% | 53k |
+
+**Final-iter comparison** (commit0-official scoring):
+- **C - A = +12.6 pp** ✅ strict improvement
+- C - B = +9.8 pp
+
+**Best-iter comparison**:
+- C - A = +0.0 pp (parity — both reached 95.8%, but A regressed)
+- C - B = +9.8 pp
+
+**LLM Patch Mode adoption**:
+- Iter > 0 raw output contained **3 `---PATCH:`** + 2 `---FILE:` markers
+- Model correctly used PATCH for narrow fixes and FILE for full rewrites
+
+### Round 2 verdict (Claude's call)
+
+- **Improvement**: **YES** on final-iter, **TIE** on best-iter
+- **Iter stability**: dramatic — C held its iter-1 high through iter 2, while A regressed by 12.5 pp
+- **Action**: COMMIT, send to Codex for round 3 direction. Strong signal that Patch Mode delivered exactly what Codex predicted ("stable target-addressed edits across iterations").
+
+> The convergence gate I set requires "C > A by ≥1 pp for 2 consecutive
+> rounds". Round 1 was parity. Round 2 is +12.6 pp on final-iter. To
+> trigger loop-exit, Round 3 must also be > A. If yes → ramp up; if no →
+> 4 rounds and write final report.

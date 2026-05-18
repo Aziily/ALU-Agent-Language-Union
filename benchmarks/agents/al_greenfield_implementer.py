@@ -50,9 +50,11 @@ GUIDE_PATH = (
 
 
 # Marker recognized at the start of every emitted file block.
-# Example: ``---FILE: cachetools/lru.al---``
+# Example: ``---FILE: cachetools/lru.al---`` (full replace, iter 0 default)
+# Example: ``---PATCH: cachetools/lru.al---`` (v0.7.2 round 2: merge with
+# previous iter's file by ``target:`` qualname — see _merge_patch_into_prev)
 _FILE_MARKER_RE = re.compile(
-    r"^---FILE:\s*(?P<path>[^\s]+\.al)\s*---\s*$",
+    r"^---(?P<mode>FILE|PATCH):\s*(?P<path>[^\s]+\.al)\s*---\s*$",
     re.MULTILINE,
 )
 
@@ -70,10 +72,17 @@ class GreenfieldFile:
     """Project-relative path to the .al (e.g. ``cachetools/lru.al``)."""
 
     al_text: str
-    """Raw .al source as emitted."""
+    """Raw .al source as emitted. For mode=patch, this is just the
+    patch fragment; ``merged_al_text`` carries the post-merge full file."""
+
+    mode: str = "full"
+    """``"full"`` (``---FILE:``, replace prior file) or ``"patch"``
+    (``---PATCH:``, merge with prior iter's file by code-node ``target:``).
+    v0.7.2 Codex co-iter round 2."""
 
     program: Program | None = None
-    """Parsed Program; None if parse failed."""
+    """Parsed Program; None if parse failed. For patches, this is the
+    post-merge program (i.e. al_text + prior iter's nodes overlaid)."""
 
     parse_error: str = ""
 
@@ -83,6 +92,10 @@ class GreenfieldFile:
     validation_issues: list[ValidationIssue] = field(default_factory=list)
     """Strict TypedAnnotation issues (warning-level — non-fatal)."""
 
+    merged_al_text: str = ""
+    """For mode=patch, the post-merge AL source (al_text + prior iter
+    nodes that the patch didn't override). Empty for mode=full."""
+
     @property
     def ok(self) -> bool:
         return (
@@ -90,6 +103,11 @@ class GreenfieldFile:
             and not self.parse_error
             and not self.body_errors
         )
+
+    @property
+    def effective_al_text(self) -> str:
+        """The AL text to pass to inject_filled_al — post-merge for patches."""
+        return self.merged_al_text if self.mode == "patch" and self.merged_al_text else self.al_text
 
 
 @dataclass
@@ -137,6 +155,7 @@ def run_al_greenfield_implementer(
     guide_text: str | None = None,
     previous_filled: str | None = None,
     previous_test_output: str | None = None,
+    prev_files: dict[str, Program] | None = None,
     iter_idx: int = 0,
     temperature: float = 0.0,
     max_tokens: int = 12288,
@@ -181,7 +200,7 @@ def run_al_greenfield_implementer(
         prompt_used=prompt,
     )
     result.files = _split_files(completion.text)
-    _validate_files(result)
+    _validate_files(result, prev_files=prev_files or {})
     _link_files(result)
     return result
 
@@ -242,7 +261,34 @@ def _format_iter_history(
         "",
         "Your previous attempt produced this multi-file .al output, which "
         "did not fully pass the test suite. Read the pytest output below, "
-        "identify the bugs, and emit a corrected full output.",
+        "identify the bugs, and emit a corrected output.",
+        "",
+        "**v0.7.2 Patch Mode (preferred for fix iters):** instead of "
+        "re-emitting every file with ``---FILE:``, you may emit only the "
+        "files / code nodes that need changes using ``---PATCH: <path>---``. "
+        "The harness merges your patch onto the previous iter's parsed AL "
+        "by ``target:`` qualname — nodes you DON'T include keep their prior "
+        "bodies. This means: don't rewrite functions that already passed; "
+        "only re-emit the failing ones.",
+        "",
+        "Patch example:",
+        "```",
+        "---PATCH: src/cachetools/func.al---",
+        "code fifo_cache:",
+        "  target: src/cachetools/func.py::fifo_cache",
+        "  body: |",
+        "    # only emit the body — preamble + other code nodes are preserved",
+        "    ...",
+        "```",
+        "",
+        "Rules for PATCH:",
+        "- The file ``---PATCH: <path>---`` must already exist from a prior "
+        "iter (i.e. iter ≥ 1 only).",
+        "- Every code node in the patch SHOULD have ``target:`` so the merger "
+        "knows which prior node to replace.",
+        "- You may add new code nodes by giving them a ``target:`` that didn't "
+        "appear before.",
+        "- ``---FILE:`` is still allowed if you want to fully rewrite a file.",
         "",
     ]
     if previous_filled:
@@ -260,8 +306,9 @@ def _format_iter_history(
         parts.append("```")
         parts.append("")
     parts.append(
-        "### Now: emit a corrected multi-file output. Same rules: "
-        "``---FILE: <path>---`` markers, one .al per .py, no new files."
+        "### Now: emit a corrected output. Prefer ``---PATCH:`` to "
+        "narrowly fix only the failing functions; use ``---FILE:`` "
+        "only when a file needs a full rewrite."
     )
     parts.append("")
     return "\n".join(parts)
@@ -283,7 +330,7 @@ def _load_guide() -> str:
 
 
 def _split_files(raw_text: str) -> list[GreenfieldFile]:
-    """Split LLM output into files at ``---FILE: <path>---`` markers.
+    """Split LLM output into files at ``---FILE:|PATCH: <path>---`` markers.
 
     Tolerates leading prose (skipped); first marker starts file 0.
     Markers must appear at the start of a line (regex uses MULTILINE).
@@ -296,15 +343,84 @@ def _split_files(raw_text: str) -> list[GreenfieldFile]:
     out: list[GreenfieldFile] = []
     for i, m in enumerate(matches):
         path = m.group("path")
+        mode = m.group("mode").lower()  # "file" → "full"; "patch" → "patch"
         body_start = m.end()
         body_end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
         body = text[body_start:body_end].strip()
-        out.append(GreenfieldFile(relpath=path, al_text=body))
+        out.append(GreenfieldFile(
+            relpath=path,
+            al_text=body,
+            mode="patch" if mode == "patch" else "full",
+        ))
     return out
 
 
-def _validate_files(result: ALGreenfieldResult) -> None:
-    """Parse each file + ast-check every code body. Sets per-file errors."""
+def _merge_patch_into_prev(
+    patch_program: Program, prev_program: Program,
+) -> tuple[Program, list[str]]:
+    """Overlay ``patch_program``'s code nodes onto ``prev_program`` by
+    ``target:`` qualname.
+
+    Rules (v0.7.2 Patch Mode):
+    - For each code node in ``patch_program`` with a ``target:``, replace
+      the corresponding node in ``prev_program`` (matched by target value).
+      If no prior node carries the same target, append it.
+    - For each code node in ``patch_program`` WITHOUT a ``target:``, match
+      by node name as a fallback (less precise; logged).
+    - Non-code top-level defs (preamble, flow, agent, set) in patch
+      REPLACE the prior ones if names match, else append. (Round 2 keeps
+      this simple — patches are expected to be code-node-only in practice.)
+    - Returns ``(merged_program, replaced_targets_or_names)``.
+    """
+    from al.parser.ast_nodes import Definition, InlineText, Program as _Program
+
+    def _target_of(d: Definition) -> str | None:
+        for f in d.fields:
+            if f.name == "target" and isinstance(f.value, InlineText):
+                return f.value.text.strip()
+        return None
+
+    # Index prior by (target_or_name, kind) so we know where to substitute.
+    prev_index: dict[tuple[str, str], int] = {}
+    for i, d in enumerate(prev_program.defs):
+        key = (_target_of(d) or d.name, d.kind)
+        prev_index[key] = i
+
+    merged_defs = list(prev_program.defs)
+    replaced: list[str] = []
+    for pd in patch_program.defs:
+        key = (_target_of(pd) or pd.name, pd.kind)
+        if key in prev_index:
+            merged_defs[prev_index[key]] = pd
+            replaced.append(key[0])
+        else:
+            merged_defs.append(pd)
+            replaced.append(f"+{key[0]}")
+
+    merged = _Program(
+        defs=merged_defs,
+        imports=list(patch_program.imports) or list(prev_program.imports),
+        loc=prev_program.loc,
+    )
+    return merged, replaced
+
+
+def _validate_files(
+    result: ALGreenfieldResult,
+    *,
+    prev_files: dict[str, Program] | None = None,
+) -> None:
+    """Parse each file + ast-check every code body. Sets per-file errors.
+
+    v0.7.2 Patch Mode: when a file has ``mode='patch'`` and a previous
+    iter's parsed Program exists for the same ``relpath``, merge the
+    parsed patch onto the previous program by ``target:`` qualname.
+    The downstream injector reads ``effective_al_text`` (which serializes
+    the merged program for patches).
+    """
+    from al.parser.serializer import serialize
+
+    prev_files = prev_files or {}
     any_failed = False
     for f in result.files:
         try:
@@ -313,6 +429,25 @@ def _validate_files(result: ALGreenfieldResult) -> None:
             f.parse_error = str(e)
             any_failed = True
             continue
+        # Patch-mode merge: overlay onto previous iter's parsed Program.
+        if f.mode == "patch":
+            prev = prev_files.get(f.relpath)
+            if prev is None:
+                f.parse_error = (
+                    f"PATCH mode requested for {f.relpath!r} but no prior "
+                    f"iter's full file exists. The first iter must use "
+                    f"---FILE: instead."
+                )
+                any_failed = True
+                continue
+            merged, _replaced = _merge_patch_into_prev(f.program, prev)
+            f.program = merged
+            try:
+                f.merged_al_text = serialize(merged)
+            except Exception as e:
+                f.parse_error = f"merge serialize failed: {e!r}"
+                any_failed = True
+                continue
 
         # ast.parse every code body to flag SyntaxErrors before injection.
         for d in f.program.defs:

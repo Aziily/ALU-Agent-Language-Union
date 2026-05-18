@@ -60,6 +60,7 @@ from benchmarks.harness.inject import (
 from benchmarks.metrics.pass_at_k import compute as compute_pass_at_k
 from benchmarks.metrics.roundtrip_loss import compute as compute_roundtrip_tax
 from al.llm import LLMClient
+from al.parser.ast_nodes import Program  # v0.7.2 Patch Mode prev_files typing
 
 
 # ---------------------------------------------------------------------------
@@ -721,6 +722,10 @@ def _run_al_greenfield_cell(
     last_prompt = ""
     last_completion_text = ""
     injected_files_so_far: set[str] = set()
+    # v0.7.2 Patch Mode (Codex co-iter round 2): persist each file's
+    # last-successful parsed Program across iters so a later
+    # ``---PATCH: <relpath>---`` can merge into it.
+    prev_files: dict[str, "Program"] = {}
 
     for iter_idx in range(MAX_ITERATIONS):
         print(f"  [{project_name}] k={k} al_greenfield iter={iter_idx} ...",
@@ -731,6 +736,7 @@ def _run_al_greenfield_cell(
                 llm=llm,
                 previous_filled=last_filled,
                 previous_test_output=last_test_output,
+                prev_files=prev_files,
                 iter_idx=iter_idx,
             )
         except Exception as e:
@@ -753,12 +759,13 @@ def _run_al_greenfield_cell(
             _revert_files(project.path, workdir, injected_files_so_far)
 
         # Inject every file that parsed cleanly. Aggregate reports.
+        # For patches, use ``effective_al_text`` (post-merge with prior).
         combined_inject = InjectReport()
         any_injected = False
         for gf in gf_res.files:
             if gf.program is None or gf.parse_error:
                 continue
-            inj = inject_filled_al(workdir, gf.al_text)
+            inj = inject_filled_al(workdir, gf.effective_al_text)
             combined_inject.injected.extend(inj.injected)
             for k_, v_ in inj.skipped.items():
                 combined_inject.skipped[k_] = v_
@@ -766,6 +773,8 @@ def _run_al_greenfield_cell(
             any_injected = any_injected or bool(inj.injected)
             for rel_str in inj.files_modified:
                 injected_files_so_far.add(rel_str)
+            # Record this iter's merged Program for the next iter's patch base.
+            prev_files[gf.relpath] = gf.program
 
         test = run_tests_fn(project, workdir, skip_install=(iter_idx > 0))
         final_test = test

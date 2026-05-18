@@ -107,6 +107,35 @@ to commit to each function's contract BEFORE writing the body. The
 contract becomes a sanity check — if your `body:` doesn't return what
 `output:` claims, you'll catch the mismatch yourself.
 
+### `uses:` — explicit dependency declaration (v0.7.3)
+
+Each `code` node may declare a `uses:` list of external names its
+body depends on:
+
+```
+code ttl_cache:
+  target: src/cachetools/func.py::ttl_cache
+  uses:
+    - cached
+    - TTLCache
+    - _UnboundTTLCache
+    - keys
+    - RLock
+  body: |
+    ...
+```
+
+The harness AST-walks your `body:` for free names (anything not local,
+not a builtin, not declared in a preamble's imports / constants /
+body). Any name that isn't in `uses:` either is a typo, a hallucinated
+helper, or a missing import — these surface as validation warnings
+fed back to your next iter.
+
+You don't NEED to declare names already visible in a `preamble`
+(imports, top-level class/function defs, constants). Use `uses:` for
+names you import from sibling .al files or names the harness should
+trust are real.
+
 ## Strict rules
 
 1. **One `.al` per `.py` file** with the same relative path (drop the

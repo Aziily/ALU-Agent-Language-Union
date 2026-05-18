@@ -288,6 +288,12 @@ FIELD_VALUE_HINTS: dict[str, tuple[type, ...]] = {
     "steps": (StepList,),
     "fallback": (Reference,),
     "use": (Reference, ReferenceList),
+    # v0.7.3 (Codex co-iter round 3): ``uses:`` declares external names
+    # a code node's body depends on (functions, classes, modules).
+    # Validator AST-walks the body and warns on free names absent from
+    # both ``uses:`` and the file's preamble symbols. Distinct from
+    # agent's ``use:`` (no s) field above.
+    "uses": (ReferenceList,),
     "tools": (ReferenceList,),
     "skills": (ReferenceList,),
     "extensions": (ReferenceList,),
@@ -318,6 +324,7 @@ CANONICAL_FIELD_ORDER: tuple[str, ...] = (
     "input",
     "output",
     "use",
+    "uses",       # v0.7.3 Uses Lint: code-node external dependency list
     "tools",
     "skills",
     "extensions",
@@ -333,7 +340,7 @@ CANONICAL_FIELD_ORDER: tuple[str, ...] = (
 #: Used by serializer + new fairness tests as a single source of truth.
 ALLOWED_FIELDS_BY_KIND: dict[str, set[str]] = {
     "flow": {"intent", "schedule", "input", "output", "steps"},
-    "code": {"intent", "target", "input", "output", "body"},
+    "code": {"intent", "target", "input", "output", "uses", "body"},
     "agent": {"intent", "input", "output", "prompt", "fallback", "use"},
     "set": {"intent", "tools", "skills", "extensions", "memory"},
     # Phase 1.AL.2: preamble takes optional `source:` hint and

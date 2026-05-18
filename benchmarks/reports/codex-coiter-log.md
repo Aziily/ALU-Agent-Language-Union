@@ -179,3 +179,69 @@ Full suite: 371 tests pass (was 363; +8 patch tests).
 > rounds". Round 1 was parity. Round 2 is +12.6 pp on final-iter. To
 > trigger loop-exit, Round 3 must also be > A. If yes → ramp up; if no →
 > 4 rounds and write final report.
+
+---
+
+## Round 3 — Codex picked Uses Lint (#5 ranked)
+
+**Codex round 2 reply** (after seeing the +12.6pp result):
+
+> Coverage Contract is useful, but cachetools already showed full
+> `target:` coverage. Patch Mode preserves working code; Uses Lint
+> makes each patch less likely to introduce a bogus dependency.
+
+**Implementation**: New `uses:` ReferenceList field on `code` nodes.
+`validate_uses(program)` AST-walks each body's free Load names; rejects
+ones not in (uses, preamble symbols, top-level imports, builtins).
+Warnings surface to next iter via `previous_validation_warnings`.
+
+Files touched:
+- `al/parser/ast_nodes.py` — add `uses` to FIELD_VALUE_HINTS,
+  ALLOWED_FIELDS_BY_KIND["code"], CANONICAL_FIELD_ORDER
+- `al/parser/parser.py` — REFERENCE_LIST_FIELDS gets `uses`
+- `al/parser/validate.py` — `validate_uses` (~180 LOC) with full
+  scope tracker (function args + for-targets + with-targets + comprehensions
+  + try-except-import boundaries + Lambda + Global/Nonlocal)
+- `benchmarks/agents/al_greenfield_implementer.py` — runs `validate_uses`,
+  surfaces issues via `previous_validation_warnings`; prompt template
+  documents `uses:` and gets a warnings-feedback section for iter > 0
+- `benchmarks/harness/runner.py` — collects warnings per iter, passes
+  to next call
+- `docs/al-spec.md` — new §4.15 documenting Uses Lint
+- `tests/parser/test_validate_uses.py` — 11 tests for clean cases
+  (builtins / preamble / top-level imports / explicit uses / self / for-target)
+  + failure cases (undeclared helper / module attr root / multiple / uses silences)
+
+Full suite: 382 tests pass (was 371; +11).
+
+### Pilot — `cachetools k=1` (same proxy, same time, Round 3)
+
+| pipeline | iter 0 | iter 1 | iter 2 (final) | best | tokens | inject |
+|---|---|---|---|---|---|---|
+| baseline (A) | 83.3% | 74.0% ⚠ | 80.5% | 83.3% | 37k | 2/2 |
+| al-skel (B) | 83.3% | 83.3% | 83.3% | 83.3% | 74k | 11/11 |
+| al-greenfield (C) | 83.3% | 74.0% ⚠ | 80.5% | 83.3% | 54k | 10/11 |
+
+**Final-iter comparison**:
+- C - A = +0.0 pp (parity)
+- C - B = -2.8 pp
+
+**Best-iter comparison**: all tied at 83.3%.
+
+### LLM adoption of `uses:` field — ZERO
+
+- `target:` count: **11** (full adoption, unchanged from R2)
+- `uses:` count: **0** ❌ — LLM completely ignored the new field
+- `---PATCH:` markers in iter > 0: **2** (Patch Mode still used)
+- `---FILE:` markers in iter > 0: **0**
+
+The prompt section introducing `uses:` was too soft — the LLM kept emitting code without explicit dependency declarations. Since `uses:` was empty, the validator's warnings WERE generated (against undeclared names visible in preamble — which it correctly tolerated), but they didn't translate into LLM behavior change because no actual undeclared-name failures showed up.
+
+### Round 3 verdict (Claude's call)
+
+- **Improvement**: NO — C tied A, both 80.5% final.
+- **Adoption**: ZERO for `uses:`, prompt change wasn't directive enough.
+- **Variance**: TODAY's run had everyone at 80-83%, vs R2 where everyone reached 95.8% best. Same proxy, same time-window, same model — high variance is real.
+- **Action**: COMMIT (the language feature is in for future use, even if the LLM didn't reach for it today). Ask Codex for Round 4 strategy given the high variance.
+
+> Round 1 parity, Round 2 +12.6pp, Round 3 parity. The 2-consecutive-rounds convergence gate is NOT met. One round remains.

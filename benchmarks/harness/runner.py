@@ -726,6 +726,10 @@ def _run_al_greenfield_cell(
     # last-successful parsed Program across iters so a later
     # ``---PATCH: <relpath>---`` can merge into it.
     prev_files: dict[str, "Program"] = {}
+    # v0.7.3 Uses Lint (Codex co-iter round 3): feed last iter's
+    # validate_uses + validate_typed_annotations warnings back to the
+    # LLM so it can address them in the patch.
+    last_validation_warnings: list[str] = []
 
     for iter_idx in range(MAX_ITERATIONS):
         print(f"  [{project_name}] k={k} al_greenfield iter={iter_idx} ...",
@@ -736,6 +740,7 @@ def _run_al_greenfield_cell(
                 llm=llm,
                 previous_filled=last_filled,
                 previous_test_output=last_test_output,
+                previous_validation_warnings=last_validation_warnings,
                 prev_files=prev_files,
                 iter_idx=iter_idx,
             )
@@ -792,6 +797,13 @@ def _run_al_greenfield_cell(
             break
         last_filled = last_completion_text
         last_test_output = _truncate_tail(test.raw_stdout)
+        # Collect validation warnings from this iter for next-iter feedback.
+        last_validation_warnings = [
+            f"[{f.relpath}] {issue.code} (line {issue.line}, node {issue.node_name!r}): "
+            f"{issue.message}"
+            for f in gf_res.files
+            for issue in f.validation_issues
+        ][:30]  # cap at 30 to keep feedback section bounded
 
     if last_gf_res is not None:
         _save_raw(out_dir / "raw", project_name, k, "al_greenfield",

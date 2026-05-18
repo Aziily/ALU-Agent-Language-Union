@@ -84,7 +84,7 @@ class _Parser:
     """Mutable cursor over the token stream. Hand-written recursive descent."""
 
     REFERENCE_FIELDS = {"fallback", "use"}
-    REFERENCE_LIST_FIELDS = {"tools", "skills", "extensions"}
+    REFERENCE_LIST_FIELDS = {"tools", "skills", "extensions", "uses"}
     # v0.7: keys whose inline value parses as TypedAnnotation
     # (``T(description)`` form). Also applied to nested FieldGroup leaves
     # via the same code path so ``output: { title: str(headline) }`` works.

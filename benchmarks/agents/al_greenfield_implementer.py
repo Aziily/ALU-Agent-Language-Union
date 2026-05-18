@@ -40,6 +40,7 @@ from al.parser.resolver import (
 from al.parser.validate import (
     ValidationIssue,
     validate_typed_annotations,
+    validate_uses,
 )
 
 
@@ -155,6 +156,7 @@ def run_al_greenfield_implementer(
     guide_text: str | None = None,
     previous_filled: str | None = None,
     previous_test_output: str | None = None,
+    previous_validation_warnings: list[str] | None = None,
     prev_files: dict[str, Program] | None = None,
     iter_idx: int = 0,
     temperature: float = 0.0,
@@ -189,6 +191,7 @@ def run_al_greenfield_implementer(
         stripped_files=stripped_files,
         previous_filled=previous_filled,
         previous_test_output=previous_test_output,
+        previous_validation_warnings=previous_validation_warnings,
         iter_idx=iter_idx,
     )
     completion = llm.complete(
@@ -217,12 +220,16 @@ def _build_prompt(
     stripped_files: dict[str, str],
     previous_filled: str | None,
     previous_test_output: str | None,
+    previous_validation_warnings: list[str] | None,
     iter_idx: int,
 ) -> str:
     template = PROMPT_PATH.read_text(encoding="utf-8")
     stripped_section = _render_stripped_files(stripped_files)
     iter_history = _format_iter_history(
-        iter_idx, previous_filled, previous_test_output
+        iter_idx,
+        previous_filled,
+        previous_test_output,
+        previous_validation_warnings,
     )
     return (
         template
@@ -252,6 +259,7 @@ def _format_iter_history(
     iter_idx: int,
     previous_filled: str | None,
     previous_test_output: str | None,
+    previous_validation_warnings: list[str] | None = None,
 ) -> str:
     if iter_idx <= 0:
         return ""
@@ -304,6 +312,19 @@ def _format_iter_history(
         parts.append("```")
         parts.append(_truncate_tail(previous_test_output))
         parts.append("```")
+        parts.append("")
+    if previous_validation_warnings:
+        parts.append("### Validation warnings from previous .al output")
+        parts.append("")
+        parts.append("These are AL-language-level lints that are NON-FATAL "
+                     "(your output still got injected) but flag likely bugs:")
+        parts.append("")
+        for w in previous_validation_warnings:
+            parts.append(f"- {w}")
+        parts.append("")
+        parts.append("Address each one: either add the missing dependency "
+                     "to ``uses:`` / a preamble import, or rename the body's "
+                     "reference if it was a typo / hallucinated helper.")
         parts.append("")
     parts.append(
         "### Now: emit a corrected output. Prefer ``---PATCH:`` to "
@@ -466,8 +487,8 @@ def _validate_files(
             except SyntaxError as e:
                 f.body_errors[d.name] = str(e)
 
-        # Strict TypedAnnotation validation — warnings, non-fatal.
-        f.validation_issues = validate_typed_annotations(f.program)
+        # Strict TypedAnnotation validation + Uses Lint — warnings, non-fatal.
+        f.validation_issues = validate_typed_annotations(f.program) + validate_uses(f.program)
 
     result.parse_overall_ok = not any_failed and bool(result.files)
 

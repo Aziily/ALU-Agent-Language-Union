@@ -392,7 +392,41 @@ code LRUCache__get:
 
 v0.7 pilot 显示 LLM 在 greenfield 模式下逐字抄写 stripped Python 里的 `def name(args):` 行 — 重复劳动，且默认值/decorator 复写出错会让整个函数失效。Targeted Body 让 LLM 只写**实现语句**（model writes strictly less than the Python baseline），把签名锁死在源文件里。这是 Codex round 0 评 6/10 时的 ranked-1 建议（见 [benchmarks/reports/codex-coiter-log.md](../benchmarks/reports/codex-coiter-log.md)）。
 
-### 4.15 v0.7 相对 v0.6 的变更
+### 4.15 Uses Lint（v0.7.3 — Codex co-iter round 3）
+
+`code` 节点新增**可选** `uses:` 字段，类型为 ReferenceList（裸名列表，与 `tools:`/`skills:` 语法一致）：
+
+```al
+code ttl_cache:
+  target: src/cachetools/func.py::ttl_cache
+  uses:
+    - cached
+    - TTLCache
+    - _UnboundTTLCache
+    - keys
+    - RLock
+  body: |
+    if maxsize is None:
+        cache = {}
+    elif maxsize == 0:
+        cache = None
+    else:
+        cache = _UnboundTTLCache(ttl, timer) if not maxsize else TTLCache(maxsize, ttl, timer)
+    ...
+```
+
+**语义**：`al.parser.validate.validate_uses(program)` AST-walk 每个 `code` body 的 free Load names（不含本地变量 / 参数 / for-target / 嵌套定义 / Python builtins），逐个检查：
+
+1. 在本节点 `uses:` 列表里 → ok
+2. 在同文件内任一 `preamble` 的 `imports` / `constants` / `body:` 顶层名字空间里 → ok
+3. 在 `Program.imports` （顶层 `from X import Y` / `import X`）里 → ok
+4. 否则 → `ValidationIssue(code="uses-undeclared")`
+
+警告级（warning-level），不阻塞 inject；通过 greenfield implementer 的 iter feedback 回传给 LLM 让它下一轮修。
+
+**为什么加这个字段**：Round 2 Patch Mode 让 working bodies 不被擦掉；Round 3 Uses Lint 让 patch 进来的新 body 更难引入幻觉助手（cachetools pilot 历史上有 LLM 调用未定义 `_cache(...)` 的失败模式）。把「这个 body 的外部依赖」从隐式变成可声明 + 可校验。
+
+### 4.16 v0.7 相对 v0.6 的变更
 
 - **破坏性**：`input:` / `output:` 自由英语单独出现 → ParseError。必须用 `T(description)` 或嵌套 FieldGroup。详见 §4.12。
 - **新增** 顶层 `import` / `from ... import ...` 声明 + 多文件解析 + 循环检测。详见 §4.13。

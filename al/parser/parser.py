@@ -187,8 +187,13 @@ class _Parser:
             )
         if text.startswith("from "):
             rest = text[len("from "):].strip()
+            # v0.7.1: accept Python-style relative imports.
+            # ``from . import X`` / ``from .. import X`` / ``from .pkg import X``
+            # as well as the original absolute form ``from pkg.sub import X``.
+            # Module part = optional leading dots + optional dotted identifier
+            # path, but at least one of the two must be present.
             m = re.match(
-                r"^([A-Za-z_][\w.]*)\s+import\s+(.+?)\s*$", rest,
+                r"^(\.+|\.*[A-Za-z_][\w.]*)\s+import\s+(.+?)\s*$", rest,
             )
             if not m:
                 raise ParseError(

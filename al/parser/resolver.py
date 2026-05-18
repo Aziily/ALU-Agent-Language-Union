@@ -196,6 +196,12 @@ def _load_module(
     module = Module(name=name, path=path, program=program)
 
     for imp in program.imports:
+        if _is_relative_import(imp.module):
+            # v0.7.1: relative imports (``from . import X``) are a
+            # Python-side concern — they translate verbatim to the
+            # emitted Python and don't need AL-level cross-file
+            # linking. Skip without recording in imports_resolved.
+            continue
         target_name = imp.module
         target_path = _path_for_module_name(target_name, project_root)
         if not target_path.exists():
@@ -208,6 +214,13 @@ def _load_module(
     # Add to graph AFTER children resolve, so cycle detection on the
     # stack works correctly.
     graph.modules[name] = module
+
+
+def _is_relative_import(module: str) -> bool:
+    """True if ``module`` is a Python-style relative import (``.``,
+    ``..pkg``, ``...pkg.sub``). These bypass AL multi-file resolution
+    because they refer to Python siblings, not other .al files."""
+    return module.startswith(".")
 
 
 def _load_text_module(
@@ -227,6 +240,8 @@ def _load_text_module(
     module = Module(name=name, path=Path(f"<memory:{name}>"), program=program)
 
     for imp in program.imports:
+        if _is_relative_import(imp.module):
+            continue  # Python-side concern; see _is_relative_import.
         target_name = imp.module
         if target_name not in project_files:
             raise ModuleNotFoundError(

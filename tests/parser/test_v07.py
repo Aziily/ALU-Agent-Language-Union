@@ -350,3 +350,53 @@ def test_full_v07_program():
     assert "import data_models as dm" in ser
     assert "input: list[str](article urls)" in ser
     assert "- return fetch" in ser
+
+
+# ---------------------------------------------------------------------------
+# v0.7.1: Python-style relative imports
+# ---------------------------------------------------------------------------
+
+
+def test_from_import_relative_current_package():
+    """``from . import X`` (current package)."""
+    src = "from . import FIFOCache\n\ncode f:\n  body: |\n    def f(): pass\n"
+    prog = parse(src)
+    assert prog.imports[0].kind == "from"
+    assert prog.imports[0].module == "."
+    assert prog.imports[0].names == ["FIFOCache"]
+
+
+def test_from_import_relative_multiple_names():
+    src = "from . import FIFOCache, LFUCache, LRUCache\n\ncode f:\n  body: |\n    def f(): pass\n"
+    prog = parse(src)
+    assert prog.imports[0].names == ["FIFOCache", "LFUCache", "LRUCache"]
+
+
+def test_from_import_relative_parent_package():
+    """``from .. import X`` (parent package)."""
+    src = "from .. import X\n\ncode f:\n  body: |\n    def f(): pass\n"
+    prog = parse(src)
+    assert prog.imports[0].module == ".."
+
+
+def test_from_import_relative_submodule():
+    """``from .lru import LRUCache`` (relative submodule)."""
+    src = "from .lru import LRUCache\n\ncode f:\n  body: |\n    def f(): pass\n"
+    prog = parse(src)
+    assert prog.imports[0].module == ".lru"
+    assert prog.imports[0].names == ["LRUCache"]
+
+
+def test_relative_import_resolver_skips_gracefully():
+    """Resolver should not raise on relative imports — they're Python-side."""
+    from al.parser.resolver import resolve_from_text
+
+    main_text = (
+        "from . import FIFOCache\n\n"
+        "code use:\n  body: |\n    def use(): return FIFOCache()\n"
+    )
+    # No project_files mapping for "." — should NOT raise.
+    g = resolve_from_text(main_text, "main", {})
+    assert "main" in g.modules
+    # The relative import is NOT in imports_resolved.
+    assert not g.root.imports_resolved

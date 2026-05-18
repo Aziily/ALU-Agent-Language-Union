@@ -27,32 +27,71 @@ tests pass.
 
 Emit each file using a `---FILE: <relative_path>.al---` separator. The
 relative path mirrors the corresponding .py file (e.g. `cachetools/lru.py`
-→ `cachetools/lru.al`). Example:
+→ `cachetools/lru.al`).
+
+### Worked example — rich v0.7 usage
+
+This example shows the **full v0.7 vocabulary**: `intent:` on every
+node, structured `input:` / `output:` with `T(description)` form,
+top-level `from X import Y` for cross-file references, and the
+class-method dunder convention. **Use these features in your output —
+they help you (and any reader) reason about each function's contract
+before writing the body.**
 
 ```
 ---FILE: cachetools/__init__.al---
+from .lru import LRUCache
+
 preamble cachetools_init:
+  intent: package entry — re-export the public LRUCache class
   source: cachetools/__init__.py
-  imports: |
-    from .lru import LRUCache
   body: |
     __all__ = ['LRUCache']
 
 
 ---FILE: cachetools/lru.al---
 preamble lru_module:
+  intent: LRU cache class with size-bounded fifo eviction
   source: cachetools/lru.py
   body: |
+    from collections import OrderedDict
+
     class LRUCache:
         def __init__(self, maxsize):
-            ...
+            self._store = OrderedDict()
+            self._maxsize = maxsize
+
 
 code LRUCache__get:
+  intent: lookup key, return default on miss, refresh LRU order on hit
+  input: tuple[Any, Any](key, default=None)
+  output: Any(stored value or default)
   body: |
     def get(self, key, default=None):
-        # inject-into: cachetools/lru.py
-        return self._store.get(key, default)
+        if key not in self._store:
+            return default
+        self._store.move_to_end(key)
+        return self._store[key]
+
+
+code LRUCache__set:
+  intent: insert or update, evicting LRU when at capacity
+  input: tuple[Any, Any](key, value)
+  output: None
+  body: |
+    def set(self, key, value):
+        if key in self._store:
+            self._store.move_to_end(key)
+        elif len(self._store) >= self._maxsize:
+            self._store.popitem(last=False)
+        self._store[key] = value
 ```
+
+**Why `intent:` + typed `input:` / `output:` matter**: they force you
+to commit to each function's contract BEFORE writing the body. The
+contract becomes a sanity check — if your `body:` doesn't return what
+`output:` claims, you'll catch the mismatch yourself. Treat them as
+thinking aids, not decoration.
 
 ## Strict rules
 
@@ -103,8 +142,21 @@ code LRUCache__get:
 
 You're testing a hypothesis: structured AL nodes (one `code` per
 function, `preamble` for module-level context, explicit cross-file
-`import`) help YOU keep multi-file projects organized in mind, leading
-to better implementations. Treat the AL structure as a thinking aid.
+`import`, **typed `input:`/`output:`, and one-line `intent:`**) help
+YOU keep multi-file projects organized in mind, leading to better
+implementations. Treat the AL structure as a thinking aid.
+
+**The key v0.7 thinking aids — use them on every code/preamble node:**
+
+- `intent:` — one plain-English sentence per node, summarizing what it
+  does. Forces you to articulate the goal before coding.
+- `input:` / `output:` — Python type annotation `T` with optional
+  `(description)`. Forces you to commit to the function's contract.
+  When the body's actual signature / return value disagrees with what
+  `input:` and `output:` claim, you'll spot the bug yourself.
+- top-level `import` / `from X import Y` — explicit cross-file
+  declarations at the file head. Forces you to think about module
+  boundaries instead of stuffing everything in one file.
 
 ## Authoring guide (v0.7)
 

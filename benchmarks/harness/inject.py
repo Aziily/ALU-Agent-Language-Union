@@ -130,15 +130,44 @@ def inject_filled_al(
         # v0.7.1: if ``target:`` is set and body has no ``def`` line,
         # synthesize a full def using the signature from the stripped
         # source. Lets the LLM emit just function-body statements.
+        # v0.7.3+: if the target's qualname does NOT exist in the stripped
+        # file (commit0 sometimes strips the whole def, not just the body),
+        # append the synthesized def to the file (similar to the H12
+        # dangling-name mechanism for Pipeline B). This unblocks Pipeline C
+        # on projects like portalocker that have entirely-stripped functions.
         target = _get_target(d)
-        if target and not _body_has_def(body_text):
-            synth = _synthesize_def_for_target(workdir, target, body_text)
-            if synth is None:
-                report.skipped[d.name] = (
-                    f"target {target!r} not found in workdir"
-                )
-                continue
-            body_text = synth
+        target_append_path: Path | None = None  # set when we'll need to append
+        if target:
+            has_def_in_body = _body_has_def(body_text)
+            if not has_def_in_body:
+                synth = _synthesize_def_for_target(workdir, target, body_text)
+                if synth is None:
+                    # Target qualname not found in stripped file. Append-fallback
+                    # for top-level functions only (class methods need a class
+                    # body to insert into — too brittle without explicit hints).
+                    parsed_tgt = _parse_target(target)
+                    if parsed_tgt is not None and "." not in parsed_tgt[1]:
+                        target_append_path = workdir / parsed_tgt[0]
+                        # Re-synthesize the def by treating body_text as
+                        # *function body*; we don't know the original
+                        # signature, so use ``def <qualname>(*args, **kwargs):``
+                        # as a permissive shim.
+                        rel, qualname = parsed_tgt
+                        body_indented = "\n".join(
+                            ("    " + ln) if ln.strip() else ln
+                            for ln in body_text.splitlines()
+                        )
+                        body_text = (
+                            f"def {qualname}(*args, **kwargs):\n"
+                            + (body_indented or "    pass") + "\n"
+                        )
+                    else:
+                        report.skipped[d.name] = (
+                            f"target {target!r} not found in workdir"
+                        )
+                        continue
+                else:
+                    body_text = synth
         try:
             target_fn_name, body_ast = _parse_body_function(body_text)
         except ValueError as e:
@@ -148,6 +177,34 @@ def inject_filled_al(
         file_hint = _extract_file_hint(body_text)
         class_hint = _class_hint_from_node_name(d.name)
         dangling = _extract_dangling_marker(body_text)
+
+        # v0.7.3+: when ``target:`` set and the qualname is missing,
+        # append directly to the target file (no find-and-replace search).
+        if target_append_path is not None:
+            from al.parser.ast_nodes import Definition  # not used; kept for clarity
+            # Convert the synthesized body_text into ast for _append_to_file.
+            try:
+                synth_tree = ast.parse(body_text)
+                synth_node = next(
+                    n for n in synth_tree.body
+                    if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+                )
+            except (SyntaxError, StopIteration):
+                report.skipped[d.name] = f"target-append: body did not yield a def"
+                continue
+            rel = target_append_path.relative_to(workdir).as_posix()
+            appended = _append_to_file(
+                workdir=workdir, file_hint=rel, body_ast=synth_node,
+                fn_name=synth_node.name,
+            )
+            if appended is not None:
+                report.injected.append(d.name)
+                report.files_modified.add(str(appended))
+            else:
+                report.skipped[d.name] = (
+                    f"target-append: failed to append to {rel}"
+                )
+            continue  # don't fall through to find-and-inject
 
         matched = _find_and_inject(
             workdir=workdir,

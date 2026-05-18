@@ -454,12 +454,16 @@ def _validate_files(
         if f.mode == "patch":
             prev = prev_files.get(f.relpath)
             if prev is None:
-                f.parse_error = (
-                    f"PATCH mode requested for {f.relpath!r} but no prior "
-                    f"iter's full file exists. The first iter must use "
-                    f"---FILE: instead."
-                )
-                any_failed = True
+                # v0.7.3+: when LLM emits ---PATCH: at iter 0 (no prior
+                # state), fall back to treating the patch as a FULL file.
+                # The model's intent is clearly "here are these nodes" —
+                # rejecting the whole file is overly strict and was the
+                # root cause of catastrophic regression on Phase C
+                # deprecated/portalocker cells. Log to validation_issues
+                # for next-iter prompt nudge.
+                f.mode = "full"
+                # Best-effort note for caller (no real ValidationIssue
+                # available here since the parse succeeded).
                 continue
             merged, _replaced = _merge_patch_into_prev(f.program, prev)
             f.program = merged

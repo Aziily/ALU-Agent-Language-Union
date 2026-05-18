@@ -165,7 +165,9 @@ def test_target_overrides_when_body_has_def(tmp_path):
 # ---------------------------------------------------------------------------
 
 
-def test_target_not_found_skipped(tmp_path):
+def test_target_not_found_appends_toplevel(tmp_path):
+    """v0.7.3+: when target's qualname is missing AND it's a top-level
+    function name (no dot in qualname), append the def to the file."""
     _write_stripped(
         tmp_path, "mylib/x.py",
         "def real_function():\n    pass\n",
@@ -177,8 +179,10 @@ def test_target_not_found_skipped(tmp_path):
         "    return 1\n"
     )
     report = inject_filled_al(tmp_path, al_text)
-    assert "ghost" in report.skipped
-    assert "target" in report.skipped["ghost"].lower()
+    assert "ghost" in report.injected, report.skipped
+    out = (tmp_path / "mylib/x.py").read_text()
+    assert "def ghost(" in out
+    assert "return 1" in out
 
 
 def test_target_file_missing_skipped(tmp_path):
@@ -203,3 +207,48 @@ def test_target_malformed_skipped(tmp_path):
     )
     report = inject_filled_al(tmp_path, al_text)
     assert "bad" in report.skipped
+
+
+# ---------------------------------------------------------------------------
+# v0.7.3+ — Append when target's qualname doesn't exist
+# ---------------------------------------------------------------------------
+
+
+def test_target_append_when_qualname_missing(tmp_path):
+    """When ``target:`` points to a function NOT in the stripped file (commit0
+    sometimes strips the whole def), inject should APPEND it to the file."""
+    _write_stripped(
+        tmp_path, "pkg/mod.py",
+        "import os\n"
+        "\n"
+        "class Existing: pass\n",  # no `def lock` here
+    )
+    al_text = (
+        "code lock:\n"
+        "  target: pkg/mod.py::lock\n"
+        "  body: |\n"
+        "    return os.path.exists('lockfile')\n"
+    )
+    report = inject_filled_al(tmp_path, al_text)
+    assert "lock" in report.injected
+    out = (tmp_path / "pkg/mod.py").read_text()
+    # The function got appended
+    assert "def lock(" in out
+    assert "os.path.exists('lockfile')" in out
+
+
+def test_target_append_skips_class_method(tmp_path):
+    """Class methods need a class body to insert into — too brittle to
+    auto-append. Should fail-skip cleanly."""
+    _write_stripped(
+        tmp_path, "pkg/mod.py", "class A: pass\n",
+    )
+    al_text = (
+        "code A_get:\n"
+        "  target: pkg/mod.py::A.get\n"
+        "  body: |\n"
+        "    return self._x\n"
+    )
+    report = inject_filled_al(tmp_path, al_text)
+    # Should skip with "not found" — not crash
+    assert "A_get" in report.skipped

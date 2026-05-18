@@ -98,8 +98,11 @@ def test_merge_falls_back_to_name_when_no_target():
 # ---------------------------------------------------------------------------
 
 
-def test_patch_mode_requires_prior_file_state():
-    """Iter > 0 with PATCH but no prev_files → parse_error."""
+def test_patch_mode_falls_back_to_full_when_no_prior_state():
+    """v0.7.3+ behavior change: when iter > 0 has ---PATCH: but no prior
+    file in prev_files, fall back to mode='full' (LLM intent is clear).
+    Was the root cause of Phase C catastrophic regression on
+    deprecated/portalocker — fixed by relaxing the strict-reject."""
     canned = (
         "---PATCH: main.al---\n"
         "code f:\n  target: main.py::f\n  body: |\n    return 1\n"
@@ -108,11 +111,12 @@ def test_patch_mode_requires_prior_file_state():
     r = run_al_greenfield_implementer(
         spec_text="", stripped_files={"main.py": "def f(): pass\n"},
         llm=llm, guide_text="(mock guide)",
-        prev_files={},  # no prior state — patch should fail
+        prev_files={},
         iter_idx=1,
     )
     f = r.files[0]
-    assert "PATCH mode requested" in f.parse_error
+    assert not f.parse_error  # no more rejection
+    assert f.mode == "full"  # silently downgraded
 
 
 def test_patch_mode_merges_with_prior_state():

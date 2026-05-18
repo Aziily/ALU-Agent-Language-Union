@@ -363,7 +363,36 @@ Parser DFS 检测：A 文件 `import B` 且 B 文件 `import A` → `ImportCycle
 - 16 个 benchmark skeleton 不需要立刻迁移到多文件
 - v0.6 单文件示例 `examples/daily_news.al` 在 v0.7 解析器下仍然解析（只需 I/O 标注按 §4.12 迁移）
 
-### 4.14 v0.7 相对 v0.6 的变更
+### 4.14 Targeted Body（v0.7.1 — Codex co-iter round 1）
+
+`code` 节点新增**可选** `target:` 字段，格式 `<relpath>::<qualname>`：
+
+```al
+code LRUCache__get:
+  intent: lookup key, return default on miss, refresh LRU order on hit
+  target: cachetools/lru.py::LRUCache.get
+  input: tuple[Any, Any](key, default=None)
+  output: Any(stored value or default)
+  body: |
+    if key not in self._store:
+        return default
+    self._store.move_to_end(key)
+    return self._store[key]
+```
+
+**语义**：
+
+- `<relpath>` 是工程内 .py 文件的相对路径。
+- `<qualname>` 是 Python `__qualname__` 风格的点分路径（`hashkey` / `LRUCache.get` / `Outer.Inner.method`）。
+- 当 `body:` 内**不含** `def` 行时，inject pipeline 从 stripped .py 中查 target 函数的签名（含装饰器、默认参数、注解），把 `body:` 内容作为该函数的函数体插入。
+- 当 `body:` 内含完整 `def name(...):` 时，`target:` 仅作为元数据保留（current behavior 不变）。
+- `target:` 缺失时退回到原 v0.7 行为（`<Class>__<method>` dunder + `# inject-into:` 启发式）。
+
+**为什么加这个字段**：
+
+v0.7 pilot 显示 LLM 在 greenfield 模式下逐字抄写 stripped Python 里的 `def name(args):` 行 — 重复劳动，且默认值/decorator 复写出错会让整个函数失效。Targeted Body 让 LLM 只写**实现语句**（model writes strictly less than the Python baseline），把签名锁死在源文件里。这是 Codex round 0 评 6/10 时的 ranked-1 建议（见 [benchmarks/reports/codex-coiter-log.md](../benchmarks/reports/codex-coiter-log.md)）。
+
+### 4.15 v0.7 相对 v0.6 的变更
 
 - **破坏性**：`input:` / `output:` 自由英语单独出现 → ParseError。必须用 `T(description)` 或嵌套 FieldGroup。详见 §4.12。
 - **新增** 顶层 `import` / `from ... import ...` 声明 + 多文件解析 + 循环检测。详见 §4.13。

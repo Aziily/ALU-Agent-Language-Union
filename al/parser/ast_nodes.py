@@ -270,6 +270,11 @@ class Program:
 FIELD_VALUE_HINTS: dict[str, tuple[type, ...]] = {
     "intent": (InlineText,),
     "schedule": (InlineText,),
+    # v0.7.1 (Codex co-iter round 1): ``target:`` on code nodes says
+    # exactly which ``<relpath>::<qualname>`` to patch. When present,
+    # ``body:`` may contain just statements (no ``def`` line) — inject
+    # reconstructs the signature from the stripped Python.
+    "target": (InlineText,),
     # v0.7: inline I/O values are TypedAnnotation, not InlineText. Legacy
     # free-English values (v0.6) parse as TypedAnnotation with
     # description=None and type_ann carrying the raw text — the parser
@@ -306,6 +311,7 @@ FIELD_VALUE_HINTS: dict[str, tuple[type, ...]] = {
 CANONICAL_FIELD_ORDER: tuple[str, ...] = (
     "intent",
     "schedule",
+    "target",     # v0.7.1: code node's <relpath>::<qualname> target
     "source",     # Phase 1.AL.2: preamble's file-path hint, near top
     "imports",    # Phase 1.AL-LOOP H4: preamble structured imports
     "constants",  # Phase 1.AL-LOOP H5: preamble structured constants
@@ -327,7 +333,7 @@ CANONICAL_FIELD_ORDER: tuple[str, ...] = (
 #: Used by serializer + new fairness tests as a single source of truth.
 ALLOWED_FIELDS_BY_KIND: dict[str, set[str]] = {
     "flow": {"intent", "schedule", "input", "output", "steps"},
-    "code": {"intent", "input", "output", "body"},
+    "code": {"intent", "target", "input", "output", "body"},
     "agent": {"intent", "input", "output", "prompt", "fallback", "use"},
     "set": {"intent", "tools", "skills", "extensions", "memory"},
     # Phase 1.AL.2: preamble takes optional `source:` hint and

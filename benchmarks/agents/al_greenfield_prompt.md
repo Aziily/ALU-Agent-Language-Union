@@ -29,14 +29,16 @@ Emit each file using a `---FILE: <relative_path>.al---` separator. The
 relative path mirrors the corresponding .py file (e.g. `cachetools/lru.py`
 → `cachetools/lru.al`).
 
-### Worked example — rich v0.7 usage
+### Worked example — v0.7.1 with Targeted Body
 
-This example shows the **full v0.7 vocabulary**: `intent:` on every
-node, structured `input:` / `output:` with `T(description)` form,
-top-level `from X import Y` for cross-file references, and the
-class-method dunder convention. **Use these features in your output —
-they help you (and any reader) reason about each function's contract
-before writing the body.**
+This example shows the **full v0.7.1 vocabulary**: `intent:` on every
+node, structured `input:` / `output:` with `T(description)` form, AND
+the new **`target:` + body-without-def** pattern (Codex co-iter
+round 1). With `target:` set, your `body:` contains **just the
+function-body statements** — no `def` line, no parameter list, no
+docstring re-statement. The harness reads the original signature
+(arguments, defaults, decorators) from the stripped Python file and
+slots your statements in as the function body.
 
 ```
 ---FILE: cachetools/__init__.al---
@@ -64,34 +66,46 @@ preamble lru_module:
 
 code LRUCache__get:
   intent: lookup key, return default on miss, refresh LRU order on hit
+  target: cachetools/lru.py::LRUCache.get
   input: tuple[Any, Any](key, default=None)
   output: Any(stored value or default)
   body: |
-    def get(self, key, default=None):
-        if key not in self._store:
-            return default
-        self._store.move_to_end(key)
-        return self._store[key]
+    if key not in self._store:
+        return default
+    self._store.move_to_end(key)
+    return self._store[key]
 
 
 code LRUCache__set:
   intent: insert or update, evicting LRU when at capacity
+  target: cachetools/lru.py::LRUCache.set
   input: tuple[Any, Any](key, value)
   output: None
   body: |
-    def set(self, key, value):
-        if key in self._store:
-            self._store.move_to_end(key)
-        elif len(self._store) >= self._maxsize:
-            self._store.popitem(last=False)
-        self._store[key] = value
+    if key in self._store:
+        self._store.move_to_end(key)
+    elif len(self._store) >= self._maxsize:
+        self._store.popitem(last=False)
+    self._store[key] = value
 ```
+
+**Why `target:` matters**: the original Python's `def get(self, key,
+default=None):` line is verbatim correct — defaults, parameter names,
+decorators, type hints. Re-stating it in your `body:` is wasted
+tokens and a chance to mistranscribe. With `target:`, you write only
+the implementation logic; the harness keeps the signature exact.
+
+**Format**: `target: <relpath>::<qualname>` where
+- `<relpath>` matches the stripped Python file (e.g.
+  `src/cachetools/keys.py`).
+- `<qualname>` is the dotted path to the function: top-level
+  `hashkey`, class method `LRUCache.get`, nested
+  `Outer.Inner.method`. Standard Python `__qualname__` semantics.
 
 **Why `intent:` + typed `input:` / `output:` matter**: they force you
 to commit to each function's contract BEFORE writing the body. The
 contract becomes a sanity check — if your `body:` doesn't return what
-`output:` claims, you'll catch the mismatch yourself. Treat them as
-thinking aids, not decoration.
+`output:` claims, you'll catch the mismatch yourself.
 
 ## Strict rules
 
@@ -107,9 +121,14 @@ thinking aids, not decoration.
    - private class method `<Class>._<method>` → `code <Class>___<method>:`
      (triple-underscore for the leading `_`)
 
-3. **`body:` must be a valid Python function definition** matching the
-   node name's expected Python name (per rule 2). The first `def` line
-   IS validated: name mismatch → codegen error.
+3. **`body:` rules**:
+   - If the `code` node has a `target:` field (**v0.7.1, preferred**),
+     the `body:` contains only the function-body statements — no `def`
+     line, no parameter list, no docstring re-statement. The harness
+     synthesizes the signature from the stripped Python.
+   - Otherwise the `body:` must be a valid Python function definition
+     matching the node name's expected Python name (per rule 2). The
+     first `def` line IS validated: name mismatch → codegen error.
 
 4. **Use `preamble` nodes** for module-level Python that lives outside
    any function body — imports, class definitions (signatures only),

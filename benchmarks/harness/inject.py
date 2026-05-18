@@ -97,13 +97,17 @@ def inject_filled_al(
 
     Algorithm per code node:
 
-      1. Parse the node's body to find ``def <fn_name>(...):``. Skip on parse fail.
-      2. Detect ``# inject-into: <relpath>`` comment as a file hint.
-      3. Detect ``Class__method`` form in node name for class scoping.
-      4. Walk workdir .py files; find the (still-stripped) target by
+      1. If the node has a ``target: <relpath>::<qualname>`` field (v0.7.1)
+         and its ``body:`` lacks a ``def`` line, synthesize a full def from
+         the stripped Python's signature so the existing inject path can
+         proceed unchanged. See ``_synthesize_def_for_target``.
+      2. Parse the node's body to find ``def <fn_name>(...):``. Skip on parse fail.
+      3. Detect ``# inject-into: <relpath>`` comment as a file hint.
+      4. Detect ``Class__method`` form in node name for class scoping.
+      5. Walk workdir .py files; find the (still-stripped) target by
          (fn_name, optional class, optional file). Inject body if exactly
          one match.
-      5. Otherwise record in report.skipped with reason.
+      6. Otherwise record in report.skipped with reason.
 
     Phase 1.AL.6: top-level defs other than ``code`` are skipped silently:
       - ``preamble`` defs are LLM-facing module-level context (imports,
@@ -123,6 +127,18 @@ def inject_filled_al(
         if body_text is None:
             report.skipped[d.name] = "no body field"
             continue
+        # v0.7.1: if ``target:`` is set and body has no ``def`` line,
+        # synthesize a full def using the signature from the stripped
+        # source. Lets the LLM emit just function-body statements.
+        target = _get_target(d)
+        if target and not _body_has_def(body_text):
+            synth = _synthesize_def_for_target(workdir, target, body_text)
+            if synth is None:
+                report.skipped[d.name] = (
+                    f"target {target!r} not found in workdir"
+                )
+                continue
+            body_text = synth
         try:
             target_fn_name, body_ast = _parse_body_function(body_text)
         except ValueError as e:
@@ -172,6 +188,156 @@ def _get_body(d: Definition) -> str | None:
         if f.name == "body" and isinstance(f.value, BlockScalar):
             return f.value.text
     return None
+
+
+def _get_target(d: Definition) -> str | None:
+    """Return the ``target:`` field text if present (v0.7.1 Targeted Body)."""
+    from al.parser.ast_nodes import InlineText
+    for f in d.fields:
+        if f.name == "target" and isinstance(f.value, InlineText):
+            return f.value.text.strip()
+    return None
+
+
+_DEF_RE = re.compile(r"^\s*(?:@[^\n]+\n\s*)*\s*(?:async\s+)?def\s+", re.MULTILINE)
+
+
+def _body_has_def(body_text: str) -> bool:
+    """True if ``body_text`` starts (after optional decorators / leading
+    blank lines) with a ``def`` or ``async def`` statement.
+
+    Targeted-Body mode triggers when ``target:`` is set AND this returns
+    False — we then synthesize the def line from the stripped Python's
+    signature, so the LLM's body is treated as function-body statements.
+    """
+    if not body_text.strip():
+        return False
+    # Strict check via ast — body must parse as Python and contain at
+    # least one top-level FunctionDef at the top.
+    try:
+        tree = ast.parse(body_text)
+    except SyntaxError:
+        return False
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            return True
+        # Skip leading docstring / comment-likes
+        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):
+            continue
+        # First real statement that isn't a def → body-without-def shape
+        return False
+    return False
+
+
+def _parse_target(target: str) -> tuple[str, str] | None:
+    """Split ``relpath.py::qualname`` into ``(relpath, qualname)``.
+
+    Returns None if malformed.
+    """
+    if "::" not in target:
+        return None
+    relpath, _, qualname = target.partition("::")
+    relpath = relpath.strip()
+    qualname = qualname.strip()
+    if not relpath or not qualname:
+        return None
+    return relpath, qualname
+
+
+def _synthesize_def_for_target(
+    workdir: Path, target: str, body_statements: str,
+) -> str | None:
+    """Synthesize a full ``def <name>(...): <body>`` block from the
+    stripped Python's signature.
+
+    ``target`` is ``relpath::qualname``; we read ``workdir/relpath``,
+    locate the function by qualname (supports ``Class.method`` and
+    ``Class.Inner.method``), grab its decorator list + ``def`` line
+    verbatim from the source text, and append the LLM's body
+    statements at the function's body indent level + 4 spaces.
+
+    Returns the synthesized text, or None if the target cannot be
+    resolved (file missing, function not found, or source unparseable).
+    """
+    parsed = _parse_target(target)
+    if parsed is None:
+        return None
+    relpath, qualname = parsed
+    file_path = workdir / relpath
+    if not file_path.exists():
+        return None
+    try:
+        src_text = file_path.read_text(encoding="utf-8")
+        tree = ast.parse(src_text)
+    except (OSError, UnicodeDecodeError, SyntaxError):
+        return None
+    func_node = _find_func_by_qualname(tree, qualname)
+    if func_node is None:
+        return None
+
+    src_lines = src_text.splitlines()
+    # Decorator-list lines + def-line, taken verbatim from source so we
+    # preserve original argument list, annotations, defaults, etc.
+    head_start = func_node.lineno  # 1-indexed, points to def line
+    if func_node.decorator_list:
+        head_start = min(d.lineno for d in func_node.decorator_list)
+    # Find the def-line's column-zero indent so we know where to dedent
+    # for the synthesized body. Code nodes typically inject at module
+    # level (top-level def) or via the Class__method dunder convention;
+    # for class methods we want the body dedented to the *function*'s
+    # own indent + 4 (so the synthesized text remains valid Python on
+    # its own and the rest of the inject pipeline replaces it correctly).
+    def_line = src_lines[func_node.lineno - 1]
+    leading = len(def_line) - len(def_line.lstrip())
+    # Decorator+signature, dedented so the synthesized snippet starts
+    # at column 0 — matching how AL body: blocks are emitted.
+    head_lines = []
+    for ln_idx in range(head_start - 1, func_node.lineno):
+        head_lines.append(src_lines[ln_idx][leading:])
+    # The ``def name(args):`` line. Find its end (where ``:`` is, after
+    # multi-line signatures) — we'll fall through to ``func_node.body[0].lineno``.
+    body_first_line = func_node.body[0].lineno  # 1-indexed
+    # If signature spans multiple lines, include all lines up to (but not
+    # including) the first body line.
+    for ln_idx in range(func_node.lineno, body_first_line - 1):
+        head_lines.append(src_lines[ln_idx][leading:])
+
+    # Body statements — indent by 4 spaces from column 0.
+    body_indented = "\n".join(
+        ("    " + ln) if ln.strip() else ln
+        for ln in body_statements.splitlines()
+    )
+    return "\n".join(head_lines) + "\n" + body_indented + "\n"
+
+
+def _find_func_by_qualname(
+    tree: ast.AST, qualname: str,
+) -> ast.FunctionDef | ast.AsyncFunctionDef | None:
+    """Find a function whose dotted qualname matches.
+
+    ``hashkey`` → top-level ``def hashkey``
+    ``Cache.__init__`` → ``Cache`` class → ``__init__`` method
+    ``Outer.Inner.method`` → nested classes
+    """
+    parts = qualname.split(".")
+
+    def _walk(scope_nodes, parts_left):
+        if not parts_left:
+            return None
+        head, rest = parts_left[0], parts_left[1:]
+        for node in scope_nodes:
+            if isinstance(node, ast.ClassDef) and node.name == head and rest:
+                found = _walk(node.body, rest)
+                if found is not None:
+                    return found
+            elif (
+                isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and node.name == head and not rest
+            ):
+                return node
+        return None
+
+    return _walk(tree.body, parts)
 
 
 def _parse_body_function(body_text: str) -> tuple[str, ast.AST]:

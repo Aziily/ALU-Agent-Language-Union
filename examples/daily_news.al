@@ -10,7 +10,7 @@ flow daily_news_digest:
 
 flow fetch_sources:
   intent: fetch from RSS feeds and news sites in parallel
-  output: list[article]
+  output: list[Article](article objects)
   steps:
     - parallel:
         - read_feeds
@@ -20,8 +20,8 @@ flow fetch_sources:
 
 code read_feeds:
   intent: read RSS feeds and parse entries
-  input: list[url]
-  output: list[article]
+  input: list[str](URLs)
+  output: list[Article](article objects)
   body: |
     import feedparser
 
@@ -40,8 +40,8 @@ code read_feeds:
 
 agent scrape_html:
   intent: scrape sites without RSS, adapt when page structure changes
-  input: list[site]
-  output: list[article]
+  input: list[Site](site definitions)
+  output: list[Article](article objects)
   steps:
     - each site:
         - fetch_page
@@ -50,8 +50,8 @@ agent scrape_html:
 
 code fetch_page:
   intent: HTTP GET, handle redirects / UA / throttling
-  input: url
-  output: html
+  input: str(URL)
+  output: str(HTML body)
   body: |
     import httpx
 
@@ -85,7 +85,7 @@ set scraping_kit:
 
 agent extract_article:
   intent: extract structured fields from HTML, adapt when pages change
-  input: raw HTML
+  input: str(raw HTML)
   output:
     title: str
     author: str
@@ -100,8 +100,8 @@ agent extract_article:
 
 code merge_results:
   intent: merge feed + scrape results, dedupe by URL
-  input: list[article], list[article]
-  output: list[article]
+  input: tuple[list[Article], list[Article]](feed_results, scrape_results)
+  output: list[Article](deduped articles)
   body: |
     def merge_results(a, b):
         seen = set()
@@ -144,8 +144,8 @@ agent filter_spam:
 
 code normalize:
   intent: standardize fields — ISO dates, trimmed authors, lowercase tags
-  input: article
-  output: article
+  input: Article(one article)
+  output: Article(normalized article)
   body: |
     from dateutil import parser as dateparser
 
@@ -175,8 +175,8 @@ agent summarize_item:
 
 agent rank_items:
   intent: rank by user interest, novelty, importance
-  input: items, user profile
-  output: top 10 items, ordered
+  input: tuple[list[Article], UserProfile](items, user profile)
+  output: list[Article](top 10 ranked items)
   prompt: |
     Score each item on relevance to user, novelty vs recent items,
     and broad importance. Return the top 10 by combined score.
@@ -200,8 +200,8 @@ flow deliver:
 
 code render_email:
   intent: MJML to HTML
-  input: digest
-  output: html
+  input: Digest(daily digest)
+  output: str(rendered email HTML)
   body: |
     from mjml import mjml_to_html
 
@@ -211,7 +211,7 @@ code render_email:
 
 code send_smtp:
   intent: send via SMTP, retry with exponential backoff on failure
-  input: html, list[email]
+  input: tuple[str, list[str]](html body, recipient emails)
   body: |
     from tenacity import retry, stop_after_attempt, wait_exponential
 
@@ -222,7 +222,7 @@ code send_smtp:
 
 code log_delivery:
   intent: write delivery log (success / failure / open rate)
-  input: result
+  input: dict[str, str](delivery result)
   body: |
     def log_delivery(result):
         db.deliveries.insert_one(result)

@@ -6,6 +6,11 @@ v0.6 骨架: emit a runnable Python module with:
   - one ``SetDefinition`` literal per ``set`` node
   - one orchestrator entry function per ``flow`` node
 
+v0.7 adds :func:`emit_project` for multi-file projects: given a
+:class:`ModuleGraph` it returns ``{module_name: python_source}`` and
+translates each .al's top-level ``import`` / ``from`` declarations into
+the equivalent Python imports.
+
 Runtime hooks (``agent_call`` / ``flow_call`` / ``SetDefinition``) are
 **not provided in this focused /AL workspace** — the runtime layer was
 deliberately excluded so the language design can be verified via the
@@ -20,7 +25,8 @@ from __future__ import annotations
 
 from io import StringIO
 
-from al.parser.ast_nodes import Program, Definition
+from al.parser.ast_nodes import Program, Definition, ImportDecl
+from al.parser.resolver import Module, ModuleGraph
 from al.codegen.emit_code import emit_code_node
 from al.codegen.emit_agent import emit_agent_node
 from al.codegen.emit_set import emit_set_node
@@ -43,28 +49,48 @@ AST round-tripping and codegen tests, not for running.
 '''
 
 
-def emit_python(program: Program, source_name: str = "<unknown>") -> str:
+def emit_python(
+    program: Program,
+    source_name: str = "<unknown>",
+    *,
+    strict: bool = True,
+) -> str:
     """Emit a complete Python module from a parsed AST.
 
     Output is intended to be importable, but most runtime hooks are stubs
     until 阶段 ②. Use this in 阶段 ③ to feed Commit0 pytest harness.
+
+    v0.7: ``program.imports`` are emitted at the top as Python
+    ``import`` / ``from`` lines. ``strict`` is forwarded to
+    :func:`emit_code_node` — defaults to True so name mismatches fail
+    loud (greenfield safety).
     """
     out = StringIO()
     out.write(PREAMBLE.format(source_name=source_name))
     out.write("\n\n")
+
+    # v0.7: emit imports first.
+    for imp in program.imports:
+        out.write(_emit_python_import(imp))
+    if program.imports:
+        out.write("\n")
 
     # Emit in dependency-friendly order: set → code → agent → flow
     # (sets first so agents can reference them; flows last because they
     # call everything else.)
     by_kind: dict[str, list[Definition]] = {"set": [], "code": [], "agent": [], "flow": []}
     for d in program.defs:
+        if d.kind == "preamble":
+            # preambles are module-level context shown to LLM, not part
+            # of the emitted runtime module — skip in codegen.
+            continue
         by_kind[d.kind].append(d)
 
     for d in by_kind["set"]:
         out.write(emit_set_node(d))
         out.write("\n\n")
     for d in by_kind["code"]:
-        out.write(emit_code_node(d))
+        out.write(emit_code_node(d, strict=strict))
         out.write("\n\n")
     for d in by_kind["agent"]:
         out.write(emit_agent_node(d))
@@ -74,3 +100,33 @@ def emit_python(program: Program, source_name: str = "<unknown>") -> str:
         out.write("\n\n")
 
     return out.getvalue()
+
+
+def emit_project(
+    graph: ModuleGraph,
+    *,
+    strict: bool = True,
+) -> dict[str, str]:
+    """Emit Python source for every module in ``graph``.
+
+    Returns ``{module_name: python_source}``. Module names use the
+    dotted-path form (e.g. ``pkg.sub`` → key ``"pkg.sub"``); callers
+    that write to disk should translate to ``pkg/sub.py`` themselves.
+    Emission order follows ``graph.order`` (dependency order — leaves
+    first, root last).
+    """
+    out: dict[str, str] = {}
+    for name in graph.order:
+        mod = graph.get(name)
+        out[name] = emit_python(mod.program, source_name=name, strict=strict)
+    return out
+
+
+def _emit_python_import(imp: ImportDecl) -> str:
+    """Translate an AL :class:`ImportDecl` into a Python import line."""
+    if imp.kind == "import":
+        if imp.alias:
+            return f"import {imp.module} as {imp.alias}\n"
+        return f"import {imp.module}\n"
+    # from
+    return f"from {imp.module} import {', '.join(imp.names)}\n"

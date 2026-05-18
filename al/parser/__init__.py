@@ -1,9 +1,10 @@
-"""Parser package — source ⇄ AST for agent-lang v0.6.
+"""Parser package — source ⇄ AST for agent-lang v0.7.
 
 Public API:
     parse(source: str)     -> Program          AST root
     serialize(ast: Program) -> str              canonical .al text
     tokenize(source: str)  -> list[Token]      token stream (advanced)
+    resolve_project(root)  -> ModuleGraph       v0.7 multi-file resolver
 
 The AST shape is defined in :mod:`al.parser.ast_nodes` and is the
 public contract consumed by codegen, runtime, and any tools.
@@ -13,6 +14,7 @@ Internals:
     parser.py      hand-written recursive descent
     serializer.py  AST → text (canonical formatting)
     ast_nodes.py   dataclass AST definitions
+    resolver.py    v0.7 multi-file import resolution + cycle detection
     errors.py      ParseError, LexError exceptions
 """
 
@@ -24,7 +26,9 @@ from al.parser.ast_nodes import (
     Program,
     Definition,
     Field,
+    ImportDecl,
     InlineText,
+    TypedAnnotation,
     BlockScalar,
     FieldGroup,
     StepList,
@@ -34,7 +38,16 @@ from al.parser.ast_nodes import (
     ParallelStep,
     EachStep,
     IfStep,
+    ReturnStep,
     Loc,
+)
+from al.parser.resolver import (
+    ModuleGraph,
+    Module,
+    ImportCycleError,
+    ModuleNotFoundError,
+    resolve_project,
+    resolve_from_text,
 )
 
 __all__ = [
@@ -46,7 +59,9 @@ __all__ = [
     "Program",
     "Definition",
     "Field",
+    "ImportDecl",
     "InlineText",
+    "TypedAnnotation",
     "BlockScalar",
     "FieldGroup",
     "StepList",
@@ -56,5 +71,12 @@ __all__ = [
     "ParallelStep",
     "EachStep",
     "IfStep",
+    "ReturnStep",
     "Loc",
+    "ModuleGraph",
+    "Module",
+    "ImportCycleError",
+    "ModuleNotFoundError",
+    "resolve_project",
+    "resolve_from_text",
 ]

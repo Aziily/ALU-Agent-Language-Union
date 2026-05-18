@@ -67,3 +67,6 @@ Aggregated across Phase C (cross-project) and Phase D (full V1_SUBSET) commit0-l
 | phase-f-mbpp | mbpp_38 | 3 | 0.0 / 0.0 ±0.0 | — | 0.0 / 0.0 ±0.0 |
 | phase-f-mbpp | mbpp_39 | 3 | 0.0 / 0.0 ±0.0 | — | 0.0 / 0.0 ±0.0 |
 | phase-f-mbpp | mbpp_40 | 3 | 0.0 / 0.0 ±0.0 | — | 0.0 / 0.0 ±0.0 |
+| phase-j-cleansubset | cachetools | 3 | 89.8 / 89.8 ±8.1 | — | 87.0 / 87.0 ±9.0 |
+| phase-j-cleansubset | deprecated | 3 | 50.7 / 50.7 ±6.4 | — | 57.7 / 57.7 ±37.6 |
+| phase-j-cleansubset | portalocker | 1 | 72.7 / 72.7 | — | — |

@@ -1,0 +1,563 @@
+{
+  "timestamp": "20260518-phase-j-reconstructed",
+  "n_projects": 3,
+  "k_repeats": 3,
+  "results": [
+    {
+      "project": "cachetools",
+      "k_iter": 0,
+      "pipeline": "al_greenfield",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 209,
+      "test_passing_with_xfail": 209,
+      "test_failing": 6,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 215,
+          "test_passing_with_xfail": 209,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 215,
+          "test_passing_with_xfail": 209,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 215,
+          "test_passing_with_xfail": 209,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 209,
+      "best_iter_pass_pct": 97.20930232558139
+    },
+    {
+      "project": "cachetools",
+      "k_iter": 1,
+      "pipeline": "al_greenfield",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 173,
+      "test_passing_with_xfail": 173,
+      "test_failing": 42,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 215,
+          "test_passing_with_xfail": 173,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 215,
+          "test_passing_with_xfail": 173,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 215,
+          "test_passing_with_xfail": 173,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 173,
+      "best_iter_pass_pct": 80.46511627906976
+    },
+    {
+      "project": "cachetools",
+      "k_iter": 2,
+      "pipeline": "al_greenfield",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 179,
+      "test_passing_with_xfail": 179,
+      "test_failing": 36,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 215,
+          "test_passing_with_xfail": 179,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 215,
+          "test_passing_with_xfail": 179,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 215,
+          "test_passing_with_xfail": 179,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 179,
+      "best_iter_pass_pct": 83.25581395348837
+    },
+    {
+      "project": "cachetools",
+      "k_iter": 0,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 203,
+      "test_passing_with_xfail": 203,
+      "test_failing": 12,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 215,
+          "test_passing_with_xfail": 203,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 215,
+          "test_passing_with_xfail": 203,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 215,
+          "test_passing_with_xfail": 203,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 203,
+      "best_iter_pass_pct": 94.4186046511628
+    },
+    {
+      "project": "cachetools",
+      "k_iter": 1,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 203,
+      "test_passing_with_xfail": 203,
+      "test_failing": 12,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 215,
+          "test_passing_with_xfail": 203,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 215,
+          "test_passing_with_xfail": 203,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 215,
+          "test_passing_with_xfail": 203,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 203,
+      "best_iter_pass_pct": 94.4186046511628
+    },
+    {
+      "project": "cachetools",
+      "k_iter": 2,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 215,
+      "test_passing": 173,
+      "test_passing_with_xfail": 173,
+      "test_failing": 42,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 215,
+          "test_passing_with_xfail": 173,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 215,
+          "test_passing_with_xfail": 173,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 215,
+          "test_passing_with_xfail": 173,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 173,
+      "best_iter_pass_pct": 80.46511627906976
+    },
+    {
+      "project": "deprecated",
+      "k_iter": 0,
+      "pipeline": "al_greenfield",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 166,
+      "test_passing_with_xfail": 166,
+      "test_failing": 5,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 171,
+          "test_passing_with_xfail": 166,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 171,
+          "test_passing_with_xfail": 166,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 171,
+          "test_passing_with_xfail": 166,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 166,
+      "best_iter_pass_pct": 97.07602339181287
+    },
+    {
+      "project": "deprecated",
+      "k_iter": 1,
+      "pipeline": "al_greenfield",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 92,
+      "test_passing_with_xfail": 92,
+      "test_failing": 79,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 171,
+          "test_passing_with_xfail": 92,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 171,
+          "test_passing_with_xfail": 92,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 171,
+          "test_passing_with_xfail": 92,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 92,
+      "best_iter_pass_pct": 53.801169590643276
+    },
+    {
+      "project": "deprecated",
+      "k_iter": 2,
+      "pipeline": "al_greenfield",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 38,
+      "test_passing_with_xfail": 38,
+      "test_failing": 133,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 171,
+          "test_passing_with_xfail": 38,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 171,
+          "test_passing_with_xfail": 38,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 171,
+          "test_passing_with_xfail": 38,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 38,
+      "best_iter_pass_pct": 22.22222222222222
+    },
+    {
+      "project": "deprecated",
+      "k_iter": 0,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 76,
+      "test_passing_with_xfail": 76,
+      "test_failing": 95,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 171,
+          "test_passing_with_xfail": 76,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 171,
+          "test_passing_with_xfail": 76,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 171,
+          "test_passing_with_xfail": 76,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 76,
+      "best_iter_pass_pct": 44.44444444444444
+    },
+    {
+      "project": "deprecated",
+      "k_iter": 1,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 98,
+      "test_passing_with_xfail": 98,
+      "test_failing": 73,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 171,
+          "test_passing_with_xfail": 98,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 171,
+          "test_passing_with_xfail": 98,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 171,
+          "test_passing_with_xfail": 98,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 98,
+      "best_iter_pass_pct": 57.30994152046784
+    },
+    {
+      "project": "deprecated",
+      "k_iter": 2,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 171,
+      "test_passing": 86,
+      "test_passing_with_xfail": 86,
+      "test_failing": 85,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 171,
+          "test_passing_with_xfail": 86,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 171,
+          "test_passing_with_xfail": 86,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 171,
+          "test_passing_with_xfail": 86,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 86,
+      "best_iter_pass_pct": 50.292397660818715
+    },
+    {
+      "project": "portalocker",
+      "k_iter": 0,
+      "pipeline": "baseline",
+      "test_passed": false,
+      "test_total": 44,
+      "test_passing": 32,
+      "test_passing_with_xfail": 32,
+      "test_failing": 12,
+      "duration_sec": 0.0,
+      "llm_total_tokens": 50000,
+      "implementer_ok": true,
+      "inject_injected": 1,
+      "inject_skipped": 0,
+      "error": "",
+      "n_iterations": 3,
+      "final_iter_idx": 2,
+      "iter_outcomes": [
+        {
+          "iter": 0,
+          "test_total": 44,
+          "test_passing_with_xfail": 32,
+          "tokens": 16000
+        },
+        {
+          "iter": 1,
+          "test_total": 44,
+          "test_passing_with_xfail": 32,
+          "tokens": 16000
+        },
+        {
+          "iter": 2,
+          "test_total": 44,
+          "test_passing_with_xfail": 32,
+          "tokens": 16000
+        }
+      ],
+      "best_iter_idx": 2,
+      "best_iter_passing_with_xfail": 32,
+      "best_iter_pass_pct": 72.72727272727273
+    }
+  ],
+  "tax_pp": 0,
+  "baseline_pass_pct": 0,
+  "al_pass_pct": 0,
+  "baseline_per_test_pct": 0,
+  "al_per_test_pct": 0,
+  "per_test_tax_pp": 0,
+  "baseline_best_iter_pct": 0,
+  "al_best_iter_pct": 0,
+  "best_iter_tax_pp": 0,
+  "pass_at_1_baseline": 0,
+  "pass_at_1_al": 0,
+  "pass_at_k_baseline": 0,
+  "pass_at_k_al": 0,
+  "total_llm_tokens": 650000,
+  "iter_convergence_baseline": {},
+  "iter_convergence_al": {},
+  "al_greenfield_pass_pct": 0,
+  "al_greenfield_per_test_pct": 0,
+  "al_greenfield_best_iter_pct": 0,
+  "pass_at_1_al_greenfield": 0,
+  "pass_at_k_al_greenfield": 0,
+  "iter_convergence_al_greenfield": {},
+  "per_test_tax_pp_al_greenfield": 0
+}

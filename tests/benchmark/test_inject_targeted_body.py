@@ -252,3 +252,83 @@ def test_target_append_skips_class_method(tmp_path):
     report = inject_filled_al(tmp_path, al_text)
     # Should skip with "not found" — not crash
     assert "A_get" in report.skipped
+
+
+# ---------------------------------------------------------------------------
+# v1.1 — target: relpath disambiguates same-name functions across files
+# ---------------------------------------------------------------------------
+
+
+def test_target_disambiguates_same_name_across_files(tmp_path):
+    """When two files have ``def deprecated()``, target:'s relpath says
+    which one to inject. Without this, _find_and_inject can pick either
+    (the Phase C deprecated/portalocker regression in v1.0)."""
+    _write_stripped(
+        tmp_path, "pkg/classic.py",
+        "def deprecated(reason=None):\n    pass\n",
+    )
+    _write_stripped(
+        tmp_path, "pkg/sphinx.py",
+        "def deprecated(reason=None):\n    pass\n",
+    )
+    # Inject into ONLY pkg/classic.py
+    al_text = (
+        "code deprecated:\n"
+        "  target: pkg/classic.py::deprecated\n"
+        "  body: |\n"
+        "    return f'CLASSIC: {reason}'\n"
+    )
+    report = inject_filled_al(tmp_path, al_text)
+    assert "deprecated" in report.injected
+    classic = (tmp_path / "pkg/classic.py").read_text()
+    sphinx = (tmp_path / "pkg/sphinx.py").read_text()
+    assert "CLASSIC" in classic, "expected body injected into classic.py"
+    assert "CLASSIC" not in sphinx, "sphinx.py must NOT be touched"
+    # sphinx.py's deprecated remains stubbed
+    assert "pass" in sphinx
+
+
+def test_target_relpath_wins_over_class_hint(tmp_path):
+    """If node name suggests a class (``Foo__bar``) but target: points
+    elsewhere, target: wins."""
+    _write_stripped(
+        tmp_path, "pkg/x.py",
+        "def bar(self):\n    pass\n",
+    )
+    al_text = (
+        "code Foo__bar:\n"
+        "  target: pkg/x.py::bar\n"
+        "  body: |\n"
+        "    def bar(self):\n"
+        "        return 'top-level'\n"
+    )
+    report = inject_filled_al(tmp_path, al_text)
+    assert "Foo__bar" in report.injected
+    assert "top-level" in (tmp_path / "pkg/x.py").read_text()
+
+
+def test_target_relpath_class_method_disambiguates(tmp_path):
+    """``target: pkg/x.py::Foo.bar`` should find Foo class in x.py, not
+    some other Foo elsewhere."""
+    _write_stripped(
+        tmp_path, "pkg/x.py",
+        "class Foo:\n"
+        "    def bar(self):\n        pass\n",
+    )
+    _write_stripped(
+        tmp_path, "pkg/y.py",
+        "class Foo:\n"
+        "    def bar(self):\n        pass\n",
+    )
+    al_text = (
+        "code XFoo__bar:\n"  # unusual name; tests that target: drives, not node name
+        "  target: pkg/x.py::Foo.bar\n"
+        "  body: |\n"
+        "    return 'x'\n"
+    )
+    report = inject_filled_al(tmp_path, al_text)
+    assert "XFoo__bar" in report.injected, report.skipped
+    x_text = (tmp_path / "pkg/x.py").read_text()
+    y_text = (tmp_path / "pkg/y.py").read_text()
+    assert "return 'x'" in x_text
+    assert "return 'x'" not in y_text

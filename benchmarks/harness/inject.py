@@ -137,7 +137,19 @@ def inject_filled_al(
         # on projects like portalocker that have entirely-stripped functions.
         target = _get_target(d)
         target_append_path: Path | None = None  # set when we'll need to append
+        # v1.1: when target: is set, its relpath authoritatively narrows
+        # _find_and_inject to one file — fixing the name-collision
+        # regression on deprecated (def deprecated in both classic.py
+        # and sphinx.py) found in v1.0 Phase C.
+        target_file_hint: str | None = None
+        target_class_hint: str | None = None
         if target:
+            parsed_tgt = _parse_target(target)
+            if parsed_tgt is not None:
+                target_file_hint = parsed_tgt[0]
+                # Class qualname like "Cache.get" → class hint = "Cache".
+                if "." in parsed_tgt[1]:
+                    target_class_hint = parsed_tgt[1].split(".", 1)[0]
             has_def_in_body = _body_has_def(body_text)
             if not has_def_in_body:
                 synth = _synthesize_def_for_target(workdir, target, body_text)
@@ -145,7 +157,6 @@ def inject_filled_al(
                     # Target qualname not found in stripped file. Append-fallback
                     # for top-level functions only (class methods need a class
                     # body to insert into — too brittle without explicit hints).
-                    parsed_tgt = _parse_target(target)
                     if parsed_tgt is not None and "." not in parsed_tgt[1]:
                         target_append_path = workdir / parsed_tgt[0]
                         # Re-synthesize the def by treating body_text as
@@ -173,9 +184,10 @@ def inject_filled_al(
         except ValueError as e:
             report.skipped[d.name] = f"body parse failed: {e}"
             continue
-        # File hint from comment + class hint from node name
-        file_hint = _extract_file_hint(body_text)
-        class_hint = _class_hint_from_node_name(d.name)
+        # File hint from comment + class hint from node name.
+        # Precedence: target: > # inject-into: comment > Class__method dunder.
+        file_hint = target_file_hint or _extract_file_hint(body_text)
+        class_hint = target_class_hint or _class_hint_from_node_name(d.name)
         dangling = _extract_dangling_marker(body_text)
 
         # v0.7.3+: when ``target:`` set and the qualname is missing,

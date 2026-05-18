@@ -164,6 +164,14 @@ trust are real.
    constants, type aliases. Each preamble has `source:` pointing to the
    originating .py path.
 
+   **CRITICAL**: do NOT put the functions you're supposed to implement
+   inside a `preamble` body. `preamble` is module-level *non-function*
+   context (preamble body is shown to the LLM but NOT injected into the
+   .py file). Every function that needs to be filled MUST live in its
+   own `code <name>:` node with a matching `target:`. If the spec lists
+   one function (e.g. HumanEval / MBPP), that function goes in exactly
+   ONE `code` node, never in `preamble`.
+
 5. **`input:` / `output:`** (v0.7): use Python type annotations with
    optional natural-language description in parens. Examples:
    - `input: list[str](article urls)`

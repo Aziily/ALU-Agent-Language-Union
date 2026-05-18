@@ -765,6 +765,13 @@ def _run_al_greenfield_cell(
 
         # Inject every file that parsed cleanly. Aggregate reports.
         # For patches, use ``effective_al_text`` (post-merge with prior).
+        # v1.1+: also re-inject any prev_files NOT mentioned in this iter's
+        # output. Otherwise revert-then-iter leaves them stubbed (was the
+        # cause of Phase C v1.1 deprecated k=1/k=2 regression: iter 1's
+        # patch only mentioned classic.al, and sphinx.al got reverted but
+        # not re-injected).
+        from al.parser.serializer import serialize as _serialize_al
+        current_iter_relpaths = {gf.relpath for gf in gf_res.files}
         combined_inject = InjectReport()
         any_injected = False
         for gf in gf_res.files:
@@ -780,6 +787,21 @@ def _run_al_greenfield_cell(
                 injected_files_so_far.add(rel_str)
             # Record this iter's merged Program for the next iter's patch base.
             prev_files[gf.relpath] = gf.program
+        # Re-inject prev_files that this iter didn't include.
+        for relpath, prev_prog in prev_files.items():
+            if relpath in current_iter_relpaths:
+                continue
+            try:
+                prev_al_text = _serialize_al(prev_prog)
+                inj = inject_filled_al(workdir, prev_al_text)
+                combined_inject.injected.extend(inj.injected)
+                for k_, v_ in inj.skipped.items():
+                    combined_inject.skipped[k_] = v_
+                combined_inject.files_modified.update(inj.files_modified)
+                any_injected = any_injected or bool(inj.injected)
+            except Exception as e:
+                print(f"    ⚠ re-inject prev_file {relpath} failed: {e!r}",
+                      file=sys.stderr, flush=True)
 
         test = run_tests_fn(project, workdir, skip_install=(iter_idx > 0))
         final_test = test
